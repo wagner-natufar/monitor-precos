@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor de Preços</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;800&display=swap');
+  :root {
+    --bg:#0a0a0f;--bg2:#111118;--bg3:#1a1a24;--border:#2a2a38;
+    --accent:#00e5a0;--accent2:#7c5cff;--danger:#ff4d6d;--warn:#f59e0b;
+    --text:#e8e8f0;--muted:#6b6b80;--card:#13131e;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(ellipse at 20% 50%,rgba(124,92,255,.06) 0%,transparent 60%),radial-gradient(ellipse at 80% 20%,rgba(0,229,160,.05) 0%,transparent 50%);pointer-events:none;z-index:0;}
+
+  /* AUTH */
+  .auth-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;position:relative;z-index:1;}
+  .auth-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px;width:420px;animation:slideUp .2s ease;}
+  .auth-logo{font-size:11px;font-family:'DM Mono',monospace;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px;}
+  .auth-title{font-size:24px;font-weight:800;margin-bottom:28px;}
+  .auth-switch{text-align:center;margin-top:20px;font-size:13px;color:var(--muted);}
+  .auth-switch a{color:var(--accent);cursor:pointer;text-decoration:none;}
+  .auth-switch a:hover{text-decoration:underline;}
+  .auth-msg{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none;}
+  .auth-msg.success{background:rgba(0,229,160,.1);color:var(--accent);border:1px solid rgba(0,229,160,.2);}
+  .auth-msg.error{background:rgba(255,77,109,.1);color:var(--danger);border:1px solid rgba(255,77,109,.2);}
+  .auth-msg.show{display:block;}
+  .pending-box{text-align:center;padding:20px 0;}
+  .pending-icon{font-size:48px;margin-bottom:12px;}
+  .pending-box p{color:var(--muted);font-size:14px;line-height:1.6;}
+
+  /* LAYOUT */
+  .app{display:none;}
+  .app.show{display:grid;grid-template-columns:260px 1fr;min-height:100vh;position:relative;z-index:1;}
+  .sidebar{background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;}
+  .logo{padding:28px 24px 20px;border-bottom:1px solid var(--border);}
+  .logo-mark{font-size:11px;font-family:'DM Mono',monospace;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px;}
+  .logo h1{font-size:20px;font-weight:800;line-height:1.1;}
+  .nav{padding:16px 12px;flex:1;}
+  .nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600;color:var(--muted);transition:all .15s;margin-bottom:2px;position:relative;}
+  .nav-item:hover{background:var(--bg3);color:var(--text);}
+  .nav-item.active{background:rgba(0,229,160,.1);color:var(--accent);}
+  .nav-item[data-admin]{display:none;}
+  .nav-icon{font-size:16px;width:20px;text-align:center;}
+  .badge{background:var(--danger);color:#fff;font-size:10px;font-family:'DM Mono',monospace;padding:2px 6px;border-radius:10px;position:absolute;right:10px;}
+  .sidebar-footer{padding:16px 24px;border-top:1px solid var(--border);}
+  .user-info{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+  .user-avatar{width:32px;height:32px;border-radius:50%;background:rgba(0,229,160,.15);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--accent);font-weight:800;}
+  .user-name{font-size:13px;font-weight:600;}
+  .user-role{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);}
+  .btn-logout{width:100%;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Syne',sans-serif;font-size:12px;padding:7px;border-radius:7px;cursor:pointer;transition:all .15s;}
+  .btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+  .status-dot{display:flex;align-items:center;gap:8px;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:8px;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  .main{display:flex;flex-direction:column;overflow:hidden;}
+  .topbar{padding:20px 32px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);}
+  .page-title{font-size:22px;font-weight:800;}
+  .page-title span{color:var(--accent);}
+  .topbar-actions{display:flex;gap:10px;}
+
+  .btn{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;padding:9px 18px;border-radius:8px;border:none;cursor:pointer;transition:all .15s;}
+  .btn-primary{background:var(--accent);color:#000;}
+  .btn-primary:hover{background:#00ffb3;transform:translateY(-1px);}
+  .btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+  .btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+  .btn-danger{background:rgba(255,77,109,.1);color:var(--danger);border:1px solid rgba(255,77,109,.2);font-size:12px;padding:6px 12px;}
+  .btn-danger:hover{background:rgba(255,77,109,.2);}
+  .btn-success{background:rgba(0,229,160,.1);color:var(--accent);border:1px solid rgba(0,229,160,.2);font-size:12px;padding:6px 12px;}
+  .btn-success:hover{background:rgba(0,229,160,.2);}
+  .btn-warn{background:rgba(245,158,11,.1);color:var(--warn);border:1px solid rgba(245,158,11,.2);font-size:12px;padding:6px 12px;}
+
+  .content{padding:28px 32px;flex:1;overflow-y:auto;}
+  .page{display:none;}
+  .page.active{display:block;}
+
+  .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px;}
+  .stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 22px;}
+  .stat-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;}
+  .stat-value{font-size:32px;font-weight:800;}
+  .stat-value.accent{color:var(--accent);}
+
+  .search-bar{display:flex;gap:12px;margin-bottom:20px;}
+  .input{font-family:'DM Mono',monospace;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);outline:none;transition:border-color .15s;}
+  .input:focus{border-color:var(--accent);}
+  .input::placeholder{color:var(--muted);}
+  .input-grow{flex:1;}
+
+  .table-wrap{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+  table{width:100%;border-collapse:collapse;}
+  thead{background:var(--bg3);}
+  th{padding:12px 16px;text-align:left;font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:400;}
+  td{padding:13px 16px;font-size:13px;border-top:1px solid var(--border);}
+  tr:hover td{background:var(--bg3);}
+  .tag{display:inline-block;font-family:'DM Mono',monospace;font-size:11px;padding:3px 8px;border-radius:4px;background:rgba(124,92,255,.15);color:#a78bfa;margin-right:4px;}
+  .ean-code{font-family:'DM Mono',monospace;font-size:12px;color:var(--muted);}
+  .empty-state{padding:60px;text-align:center;color:var(--muted);font-size:14px;}
+  .empty-state .icon{font-size:40px;margin-bottom:12px;}
+
+  /* STATUS BADGES */
+  .status{display:inline-block;font-family:'DM Mono',monospace;font-size:11px;padding:3px 8px;border-radius:4px;}
+  .status.pendente{background:rgba(245,158,11,.15);color:var(--warn);}
+  .status.aprovado{background:rgba(0,229,160,.15);color:var(--accent);}
+  .status.rejeitado{background:rgba(255,77,109,.15);color:var(--danger);}
+  .perfil-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:11px;padding:3px 8px;border-radius:4px;background:rgba(124,92,255,.15);color:#a78bfa;}
+
+  /* MODAL */
+  .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+  .modal-bg.open{display:flex;}
+  .modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:32px;width:480px;animation:slideUp .2s ease;}
+  @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .modal h2{font-size:18px;font-weight:800;margin-bottom:24px;}
+  .form-group{margin-bottom:16px;}
+  .form-label{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;display:block;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;}
+
+  /* GRÁFICO */
+  .chart-controls{display:flex;gap:12px;margin-bottom:24px;align-items:center;flex-wrap:wrap;}
+  .select{font-family:'DM Mono',monospace;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);outline:none;cursor:pointer;}
+  .select:focus{border-color:var(--accent);}
+  .period-btns{display:flex;gap:4px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:4px;}
+  .period-btn{font-family:'DM Mono',monospace;font-size:12px;padding:6px 12px;border-radius:6px;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;}
+  .period-btn.active{background:var(--accent);color:#000;font-weight:500;}
+  .chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:20px;}
+  .chart-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;}
+  .chart-product-name{font-size:18px;font-weight:800;}
+  .chart-ean{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:4px;}
+  .price-current{font-size:28px;font-weight:800;color:var(--accent);font-family:'DM Mono',monospace;text-align:right;}
+  .price-change{font-family:'DM Mono',monospace;font-size:12px;margin-top:4px;text-align:right;}
+  .price-change.up{color:var(--danger);}
+  .price-change.down{color:var(--accent);}
+  canvas{max-height:300px;}
+  .history-title{font-size:14px;font-weight:600;color:var(--muted);margin-bottom:12px;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.1em;}
+  .no-product{text-align:center;padding:80px 0;color:var(--muted);}
+  .no-product .big{font-size:48px;margin-bottom:12px;}
+  ::-webkit-scrollbar{width:6px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div class="auth-wrap" id="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-logo">● monitor de preços</div>
+
+    <!-- LOGIN -->
+    <div id="view-login">
+      <div class="auth-title">Entrar na conta</div>
+      <div class="auth-msg" id="login-msg"></div>
+      <div class="form-group">
+        <label class="form-label">E-mail</label>
+        <input class="input" style="width:100%" type="email" id="login-email" placeholder="seu@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Senha</label>
+        <input class="input" style="width:100%" type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()">
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="fazerLogin()">Entrar</button>
+      <div class="auth-switch">Não tem conta? <a onclick="mostrarView('cadastro')">Solicitar acesso</a></div>
+    </div>
+
+    <!-- CADASTRO -->
+    <div id="view-cadastro" style="display:none">
+      <div class="auth-title">Solicitar acesso</div>
+      <div class="auth-msg" id="cadastro-msg"></div>
+      <div class="form-group">
+        <label class="form-label">Nome</label>
+        <input class="input" style="width:100%" type="text" id="cad-nome" placeholder="Seu nome completo">
+      </div>
+      <div class="form-group">
+        <label class="form-label">E-mail</label>
+        <input class="input" style="width:100%" type="email" id="cad-email" placeholder="seu@email.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Senha</label>
+        <input class="input" style="width:100%" type="password" id="cad-senha" placeholder="Mínimo 6 caracteres">
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="solicitarAcesso()">Solicitar acesso</button>
+      <div class="auth-switch">Já tem conta? <a onclick="mostrarView('login')">Entrar</a></div>
+    </div>
+
+    <!-- PENDENTE -->
+    <div id="view-pendente" style="display:none">
+      <div class="pending-box">
+        <div class="pending-icon">⏳</div>
+        <div class="auth-title" style="margin-bottom:12px">Aguardando aprovação</div>
+        <p>Sua solicitação foi enviada ao administrador.<br>Você receberá acesso assim que for aprovado.</p>
+      </div>
+      <div class="auth-switch" style="margin-top:24px"><a onclick="mostrarView('login')">← Voltar ao login</a></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- APP -->
+<div class="app" id="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">● sistema</div>
+      <h1>Monitor<br>de Preços</h1>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" onclick="showPage('produtos', this)">
+        <span class="nav-icon">◈</span> Produtos
+      </div>
+      <div class="nav-item" onclick="showPage('grafico', this)">
+        <span class="nav-icon">◉</span> Histórico
+      </div>
+      <div class="nav-item" data-admin onclick="showPage('usuarios', this)">
+        <span class="nav-icon">◎</span> Usuários
+        <span class="badge" id="badge-pendentes" style="display:none">0</span>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div>
+          <div class="user-name" id="user-name">—</div>
+          <div class="user-role" id="user-role">—</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()">Sair da conta</button>
+      <div class="status-dot"><div class="dot"></div>MongoDB local</div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="page-title" id="topbar-title">Produtos <span>cadastrados</span></div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" id="btn-novo-produto" onclick="openModal()" style="display:none">+ Novo produto</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- PRODUTOS -->
+      <div class="page active" id="page-produtos">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Total de produtos</div><div class="stat-value accent" id="stat-total">0</div></div>
+          <div class="stat-card"><div class="stat-label">Registros de preço</div><div class="stat-value" id="stat-registros">0</div></div>
+          <div class="stat-card"><div class="stat-label">Última coleta</div><div class="stat-value" style="font-size:18px" id="stat-ultima">—</div></div>
+        </div>
+        <div class="search-bar">
+          <input class="input input-grow" type="text" placeholder="Buscar por nome ou EAN..." id="search-input" oninput="renderTabela()">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Produto</th><th>EAN</th><th>Palavras-chave</th><th>Menor preço</th><th></th></tr></thead>
+            <tbody id="tabela-body"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- GRÁFICO -->
+      <div class="page" id="page-grafico">
+        <div class="chart-controls">
+          <select class="select" id="select-produto" onchange="renderGrafico()" style="min-width:240px">
+            <option value="">Selecione um produto...</option>
+          </select>
+          <div class="period-btns">
+            <button class="period-btn active" onclick="setPeriodo(7,this)">7d</button>
+            <button class="period-btn" onclick="setPeriodo(15,this)">15d</button>
+            <button class="period-btn" onclick="setPeriodo(30,this)">30d</button>
+            <button class="period-btn" onclick="setPeriodo(90,this)">90d</button>
+          </div>
+        </div>
+        <div id="grafico-content">
+          <div class="no-product"><div class="big">◉</div><p>Selecione um produto para ver o histórico</p></div>
+        </div>
+      </div>
+
+      <!-- USUÁRIOS -->
+      <div class="page" id="page-usuarios">
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Cadastro</th><th></th></tr></thead>
+            <tbody id="tabela-usuarios"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODAL PRODUTO -->
+<div class="modal-bg" id="modal-bg" onclick="closeModalBg(event)">
+  <div class="modal">
+    <h2>Cadastrar produto</h2>
+    <div class="form-group">
+      <label class="form-label">Nome do produto</label>
+      <input class="input" style="width:100%" type="text" id="f-nome" placeholder="Ex: Ferrix Ferro Infantil">
+    </div>
+    <div class="form-group">
+      <label class="form-label">EAN</label>
+      <input class="input" style="width:100%" type="text" id="f-ean" placeholder="Ex: 7908041914238">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Palavras-chave (OU — pelo menos uma no título)</label>
+      <div class="form-row">
+        <input class="input" type="text" id="f-kw1" placeholder="Palavra-chave 1">
+        <input class="input" type="text" id="f-kw2" placeholder="Palavra-chave 2 (opcional)">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarProduto()">Salvar produto</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = `${window.location.protocol}//${window.location.hostname}:8080`;
+let token = localStorage.getItem('token') || null;
+let perfil = localStorage.getItem('perfil') || null;
+let nomeUsuario = localStorage.getItem('nomeUsuario') || null;
+let produtos = [];
+let periodoAtivo = 7;
+let chartInstance = null;
+
+// ── HELPERS API ──────────────────────────────────────────
+async function apiReq(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json', ...(token ? {'Authorization': `Bearer ${token}`} : {}) }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  const data = await r.json();
+  if (!r.ok) throw new Error(data.detail || 'Erro desconhecido');
+  return data;
+}
+const apiGet  = (p)    => apiReq('GET', p);
+const apiPost = (p, b) => apiReq('POST', p, b);
+const apiPut  = (p, b) => apiReq('PUT', p, b);
+const apiDel  = (p)    => apiReq('DELETE', p);
+
+// ── AUTH ──────────────────────────────────────────────
+function mostrarView(view) {
+  ['login','cadastro','pendente'].forEach(v => document.getElementById('view-'+v).style.display = v===view ? 'block' : 'none');
+}
+
+function showMsg(id, msg, tipo) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.className = `auth-msg ${tipo} show`;
+}
+
+async function fazerLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  if (!email || !senha) return showMsg('login-msg', 'Preencha e-mail e senha.', 'error');
+  try {
+    const data = await apiPost('/auth/login', { email, senha });
+    token = data.token;
+    perfil = data.perfil;
+    nomeUsuario = data.nome;
+    localStorage.setItem('token', token);
+    localStorage.setItem('perfil', perfil);
+    localStorage.setItem('nomeUsuario', nomeUsuario);
+    iniciarApp();
+  } catch(e) {
+    if (e.message.includes('aprovada')) mostrarView('pendente');
+    else showMsg('login-msg', e.message, 'error');
+  }
+}
+
+async function solicitarAcesso() {
+  const nome  = document.getElementById('cad-nome').value.trim();
+  const email = document.getElementById('cad-email').value.trim();
+  const senha = document.getElementById('cad-senha').value;
+  if (!nome || !email || !senha) return showMsg('cadastro-msg', 'Preencha todos os campos.', 'error');
+  if (senha.length < 6) return showMsg('cadastro-msg', 'Senha mínima de 6 caracteres.', 'error');
+  try {
+    const data = await apiPost('/auth/solicitar', { nome, email, senha });
+    if (data.token) {
+      token = data.token; perfil = data.perfil; nomeUsuario = data.nome;
+      localStorage.setItem('token', token);
+      localStorage.setItem('perfil', perfil);
+      localStorage.setItem('nomeUsuario', nomeUsuario);
+      iniciarApp();
+    } else {
+      mostrarView('pendente');
+    }
+  } catch(e) {
+    showMsg('cadastro-msg', e.message, 'error');
+  }
+}
+
+function logout() {
+  token = null; perfil = null; nomeUsuario = null;
+  localStorage.removeItem('token');
+  localStorage.removeItem('perfil');
+  localStorage.removeItem('nomeUsuario');
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('auth-wrap').style.display = 'flex';
+  mostrarView('login');
+}
+
+// ── INICIAR APP ──────────────────────────────────────────
+function iniciarApp() {
+  document.getElementById('auth-wrap').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+
+  // Info do usuário
+  document.getElementById('user-name').textContent = nomeUsuario;
+  document.getElementById('user-role').textContent = perfil === 'admin' ? 'Administrador' : 'Visualizador';
+  document.getElementById('user-avatar').textContent = nomeUsuario ? nomeUsuario[0].toUpperCase() : '?';
+
+  // Mostrar itens de admin
+  if (perfil === 'admin') {
+    document.querySelectorAll('[data-admin]').forEach(el => el.style.display = 'flex');
+    document.getElementById('btn-novo-produto').style.display = '';
+    verificarPendentes();
+  }
+
+  carregarProdutos();
+  atualizarStats();
+}
+
+// Verificar sessão existente
+if (token) iniciarApp();
+
+// ── PÁGINAS ──────────────────────────────────────────────
+function showPage(page, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  el.classList.add('active');
+
+  const titles = { produtos: 'Produtos <span>cadastrados</span>', grafico: 'Histórico <span>de preços</span>', usuarios: 'Gerenciar <span>usuários</span>' };
+  document.getElementById('topbar-title').innerHTML = titles[page];
+
+  if (page === 'grafico') { atualizarSelectProduto(); renderGrafico(); }
+  if (page === 'usuarios') carregarUsuarios();
+}
+
+// ── MODAL ──────────────────────────────────────────────
+function openModal() { document.getElementById('modal-bg').classList.add('open'); document.getElementById('f-nome').focus(); }
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('open');
+  ['f-nome','f-ean','f-kw1','f-kw2'].forEach(id => document.getElementById(id).value = '');
+}
+function closeModalBg(e) { if (e.target === document.getElementById('modal-bg')) closeModal(); }
+
+// ── PRODUTOS ──────────────────────────────────────────────
+async function carregarProdutos() {
+  produtos = await apiGet('/produtos');
+  renderTabela();
+}
+
+function renderTabela() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const filtrados = produtos.filter(p => p.nome.toLowerCase().includes(q) || p.ean.includes(q));
+  const tbody = document.getElementById('tabela-body');
+  if (!filtrados.length) {
+    tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="icon">◈</div>${q ? 'Nenhum produto encontrado.' : 'Nenhum produto cadastrado ainda.'}</div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = filtrados.map(p => `
+    <tr>
+      <td><strong>${p.nome}</strong></td>
+      <td><span class="ean-code">${p.ean}</span></td>
+      <td><span class="tag">${p.kw1}</span>${p.kw2 ? `<span class="tag">${p.kw2}</span>` : ''}</td>
+      <td style="font-family:'DM Mono',monospace;color:var(--accent);font-weight:500">${p.menor_preco ? 'R$ '+parseFloat(p.menor_preco).toFixed(2) : '—'}</td>
+      <td>${perfil==='admin' ? `<button class="btn btn-danger" onclick="excluirProduto('${p.id}')">Excluir</button>` : ''}</td>
+    </tr>`).join('');
+}
+
+async function salvarProduto() {
+  const nome = document.getElementById('f-nome').value.trim();
+  const ean  = document.getElementById('f-ean').value.trim();
+  const kw1  = document.getElementById('f-kw1').value.trim().toLowerCase();
+  const kw2  = document.getElementById('f-kw2').value.trim().toLowerCase();
+  if (!nome || !ean || !kw1) return alert('Preencha nome, EAN e pelo menos uma palavra-chave.');
+  await apiPost('/produtos', { nome, ean, kw1, kw2 });
+  closeModal();
+  await carregarProdutos();
+  await atualizarStats();
+}
+
+async function excluirProduto(id) {
+  if (!confirm('Excluir produto e todo seu histórico?')) return;
+  await apiDel('/produtos/'+id);
+  await carregarProdutos();
+  await atualizarStats();
+}
+
+async function atualizarStats() {
+  try {
+    const s = await apiGet('/stats');
+    document.getElementById('stat-total').textContent = s.total_produtos;
+    document.getElementById('stat-registros').textContent = s.total_registros;
+    document.getElementById('stat-ultima').textContent = s.ultima_coleta
+      ? new Date(s.ultima_coleta).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '—';
+  } catch(e) {}
+}
+
+// ── GRÁFICO ──────────────────────────────────────────────
+function atualizarSelectProduto() {
+  const sel = document.getElementById('select-produto');
+  const atual = sel.value;
+  sel.innerHTML = '<option value="">Selecione um produto...</option>';
+  produtos.forEach(p => sel.innerHTML += `<option value="${p.id}" ${p.id===atual?'selected':''}>${p.nome}</option>`);
+}
+
+function setPeriodo(dias, btn) {
+  periodoAtivo = dias;
+  document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGrafico();
+}
+
+async function renderGrafico() {
+  const produtoId = document.getElementById('select-produto').value;
+  const container = document.getElementById('grafico-content');
+  if (!produtoId) { container.innerHTML = `<div class="no-product"><div class="big">◉</div><p>Selecione um produto para ver o histórico</p></div>`; return; }
+  const produto = produtos.find(p => p.id === produtoId);
+  const hist = await apiGet(`/historico/${produtoId}?dias=${periodoAtivo}`);
+  if (!hist.length) { container.innerHTML = `<div class="no-product"><div class="big">◉</div><p>Sem dados para o período selecionado.<br>Aguarde a próxima coleta do n8n.</p></div>`; return; }
+  const precos = hist.map(h => h.preco);
+  const labels = hist.map(h => { const d = new Date(h.data); return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); });
+  const atual = precos[precos.length-1], anterior = precos[0];
+  const diff = atual - anterior, diffPct = ((diff/anterior)*100).toFixed(1);
+  container.innerHTML = `
+    <div class="chart-card">
+      <div class="chart-header">
+        <div><div class="chart-product-name">${produto.nome}</div><div class="chart-ean">EAN: ${produto.ean}</div></div>
+        <div><div class="price-current">R$ ${atual.toFixed(2)}</div><div class="price-change ${diff>0?'up':'down'}">${diff>0?'▲':'▼'} ${Math.abs(diffPct)}% nos últimos ${periodoAtivo}d</div></div>
+      </div>
+      <canvas id="chart-canvas"></canvas>
+    </div>
+    <div class="history-title">Registros recentes</div>
+    <div class="table-wrap"><table>
+      <thead><tr><th>Data e hora</th><th>Preço</th><th>Vendedor</th></tr></thead>
+      <tbody>${[...hist].reverse().slice(0,20).map(h=>`<tr><td class="ean-code">${new Date(h.data).toLocaleString('pt-BR')}</td><td style="font-family:'DM Mono',monospace;color:var(--accent)">R$ ${h.preco.toFixed(2)}</td><td style="color:var(--muted);font-size:12px">${h.vendedor}</td></tr>`).join('')}</tbody>
+    </table></div>`;
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(document.getElementById('chart-canvas').getContext('2d'), {
+    type:'line',
+    data:{ labels, datasets:[{ label:'Preço (R$)', data:precos, borderColor:'#00e5a0', backgroundColor:'rgba(0,229,160,.05)', borderWidth:2, pointRadius:hist.length>100?0:3, pointBackgroundColor:'#00e5a0', fill:true, tension:.3 }] },
+    options:{ responsive:true, plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'#1a1a24', borderColor:'#2a2a38', borderWidth:1, titleColor:'#6b6b80', bodyColor:'#00e5a0', bodyFont:{family:'DM Mono',size:13}, callbacks:{label:c=>'R$ '+c.parsed.y.toFixed(2)} } },
+      scales:{ x:{ticks:{color:'#6b6b80',font:{family:'DM Mono',size:10},maxTicksLimit:8,maxRotation:0},grid:{color:'rgba(42,42,56,.8)'}}, y:{ticks:{color:'#6b6b80',font:{family:'DM Mono',size:11},callback:v=>'R$ '+v.toFixed(0)},grid:{color:'rgba(42,42,56,.8)'}} } }
+  });
+}
+
+// ── USUÁRIOS ──────────────────────────────────────────────
+async function carregarUsuarios() {
+  const usuarios = await apiGet('/usuarios');
+  const tbody = document.getElementById('tabela-usuarios');
+  if (!usuarios.length) { tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">◎</div>Nenhum usuário cadastrado.</div></td></tr>`; return; }
+  tbody.innerHTML = usuarios.map(u => `
+    <tr>
+      <td><strong>${u.nome}</strong></td>
+      <td class="ean-code">${u.email}</td>
+      <td><span class="perfil-badge">${u.perfil}</span></td>
+      <td><span class="status ${u.status}">${u.status}</span></td>
+      <td class="ean-code">${new Date(u.criadoEm).toLocaleDateString('pt-BR')}</td>
+      <td style="display:flex;gap:6px;flex-wrap:wrap">
+        ${u.status==='pendente' ? `
+          <button class="btn btn-success" onclick="aprovarUsuario('${u.id}','admin')">Admin</button>
+          <button class="btn btn-warn" onclick="aprovarUsuario('${u.id}','visualizador')">Visualizador</button>
+          <button class="btn btn-danger" onclick="rejeitarUsuario('${u.id}')">Rejeitar</button>
+        ` : u.status==='aprovado' ? `
+          <button class="btn btn-danger" onclick="excluirUsuario('${u.id}')">Excluir</button>
+        ` : `
+          <button class="btn btn-ghost" onclick="aprovarUsuario('${u.id}','visualizador')" style="font-size:12px;padding:6px 12px">Reativar</button>
+        `}
+      </td>
+    </tr>`).join('');
+}
+
+async function aprovarUsuario(id, perfil) {
+  await apiPut(`/usuarios/${id}/aprovar`, { perfil });
+  carregarUsuarios();
+  verificarPendentes();
+}
+
+async function rejeitarUsuario(id) {
+  if (!confirm('Rejeitar esse usuário?')) return;
+  await apiPut(`/usuarios/${id}/rejeitar`);
+  carregarUsuarios();
+  verificarPendentes();
+}
+
+async function excluirUsuario(id) {
+  if (!confirm('Excluir esse usuário permanentemente?')) return;
+  await apiDel(`/usuarios/${id}`);
+  carregarUsuarios();
+}
+
+async function verificarPendentes() {
+  try {
+    const data = await apiGet('/usuarios/pendentes');
+    const badge = document.getElementById('badge-pendentes');
+    if (data.pendentes > 0) { badge.textContent = data.pendentes; badge.style.display = 'block'; }
+    else badge.style.display = 'none';
+  } catch(e) {}
+}
+
+// Verifica pendentes a cada 30s
+setInterval(() => { if (perfil === 'admin') verificarPendentes(); }, 30000);
+</script>
+</body>
+</html>
