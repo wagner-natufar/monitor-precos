@@ -10,6 +10,7 @@ from bson import ObjectId
 import uvicorn
 import hashlib
 import jwt
+import os
 
 app = FastAPI()
 
@@ -21,7 +22,6 @@ app.add_middleware(
 )
 
 # Conexão com MongoDB
-import os
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://127.0.0.1:27017")
 client = AsyncIOMotorClient(MONGO_URL)
 db = client["monitor_precos"]
