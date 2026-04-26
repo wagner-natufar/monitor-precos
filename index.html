@@ -370,8 +370,9 @@ async function apiReq(method, path, body) {
   };
   if (body) opts.body = JSON.stringify(body);
   const r = await fetch(API + path, opts);
-  const data = await r.json();
-  if (!r.ok) throw new Error(data.detail || 'Erro desconhecido');
+  let data = null;
+  try { data = await r.json(); } catch(e) { data = {}; }
+  if (!r.ok) throw new Error((data && data.detail) || 'Erro desconhecido');
   return data;
 }
 const apiGet  = (p)    => apiReq('GET', p);
