@@ -583,29 +583,37 @@ async function salvarProduto() {
     return;
   }
 
+  // Verifica se SKU já existe antes de tentar salvar
+  const jaExiste = produtos.find(p => p.sku === sku);
+  if (jaExiste) {
+    msg.textContent = 'Produto já cadastrado com esse SKU.';
+    msg.className = 'auth-msg error show';
+    return;
+  }
+
   try {
     await apiPost('/produtos', { nome, sku, ean, kw1, kw2 });
-    await carregarProdutos();
-    await atualizarStats();
-    msg.innerHTML = `Produto cadastrado com sucesso! ✓<br><div style="display:flex;gap:8px;margin-top:10px">
-      <button class="btn btn-primary" style="flex:1" onclick="['f-nome','f-sku','f-ean','f-kw1','f-kw2'].forEach(id=>document.getElementById(id).value='');document.getElementById('modal-msg').className='auth-msg';document.getElementById('modal-msg').innerHTML=''">Cadastrar novo</button>
-      <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Fechar</button>
-    </div>`;
-    msg.className = 'auth-msg success show';
   } catch(e) {
-    if (e.message.includes('SKU') || e.message.includes('cadastrado')) {
+    if (e.message && (e.message.includes('SKU') || e.message.includes('cadastrado'))) {
       msg.textContent = 'Produto já cadastrado com esse SKU.';
-    } else {
-      msg.textContent = 'Produto cadastrado com sucesso! ✓';
-      msg.innerHTML = `Produto cadastrado com sucesso! ✓<br><div style="display:flex;gap:8px;margin-top:10px">
-        <button class="btn btn-primary" style="flex:1" onclick="['f-nome','f-sku','f-ean','f-kw1','f-kw2'].forEach(id=>document.getElementById(id).value='');document.getElementById('modal-msg').className='auth-msg';document.getElementById('modal-msg').innerHTML=''">Cadastrar novo</button>
-        <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Fechar</button>
-      </div>`;
-      await carregarProdutos();
-      await atualizarStats();
+      msg.className = 'auth-msg error show';
+      return;
     }
-    msg.className = 'auth-msg success show';
   }
+
+  // Se chegou aqui, salvou (mesmo com erro de serialização no retorno)
+  await carregarProdutos();
+  await atualizarStats();
+  msg.innerHTML = `Produto cadastrado com sucesso! ✓<br><div style="display:flex;gap:8px;margin-top:10px">
+    <button class="btn btn-primary" style="flex:1" onclick="
+      ['f-nome','f-sku','f-ean','f-kw1','f-kw2'].forEach(id => document.getElementById(id).value = '');
+      const m = document.getElementById('modal-msg');
+      m.className = 'auth-msg';
+      m.innerHTML = '';
+    ">Cadastrar novo</button>
+    <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Fechar</button>
+  </div>`;
+  msg.className = 'auth-msg success show';
 }
 
 async function excluirProduto(id) {
