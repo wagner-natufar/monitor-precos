@@ -64,6 +64,7 @@ def usuario_aprovado(payload = Depends(verificar_token)):
     return payload
 
 def serial(doc):
+    doc = dict(doc)
     doc["id"] = str(doc["_id"])
     del doc["_id"]
     return doc
