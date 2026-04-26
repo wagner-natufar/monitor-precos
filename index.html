@@ -253,7 +253,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Produto</th><th>EAN</th><th>Palavras-chave</th><th>Menor preço</th><th></th></tr></thead>
+            <thead><tr><th>Produto</th><th>SKU</th><th>EAN</th><th>Palavras-chave</th><th>Menor preço</th><th></th></tr></thead>
             <tbody id="tabela-body"></tbody>
           </table>
         </div>
@@ -295,9 +295,14 @@
 <div class="modal-bg" id="modal-bg" onclick="closeModalBg(event)">
   <div class="modal">
     <h2>Cadastrar produto</h2>
+    <div class="auth-msg" id="modal-msg"></div>
     <div class="form-group">
       <label class="form-label">Nome do produto</label>
       <input class="input" style="width:100%" type="text" id="f-nome" placeholder="Ex: Ferrix Ferro Infantil">
+    </div>
+    <div class="form-group">
+      <label class="form-label">SKU interno</label>
+      <input class="input" style="width:100%" type="text" id="f-sku" placeholder="Ex: FERRIX-UVA-001">
     </div>
     <div class="form-group">
       <label class="form-label">EAN</label>
@@ -313,6 +318,37 @@
     <div class="modal-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
       <button class="btn btn-primary" onclick="salvarProduto()">Salvar produto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR -->
+<div class="modal-bg" id="modal-edit-bg" onclick="closeEditModalBg(event)">
+  <div class="modal">
+    <h2>Editar produto</h2>
+    <div class="auth-msg" id="modal-edit-msg"></div>
+    <div class="form-group">
+      <label class="form-label">Nome do produto</label>
+      <input class="input" style="width:100%" type="text" id="e-nome" placeholder="Ex: Ferrix Ferro Infantil">
+    </div>
+    <div class="form-group">
+      <label class="form-label">SKU interno</label>
+      <input class="input" style="width:100%" type="text" id="e-sku" placeholder="Ex: FERRIX-UVA-001">
+    </div>
+    <div class="form-group">
+      <label class="form-label">EAN</label>
+      <input class="input" style="width:100%" type="text" id="e-ean" placeholder="Ex: 7908041914238">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Palavras-chave (OU — pelo menos uma no título)</label>
+      <div class="form-row">
+        <input class="input" type="text" id="e-kw1" placeholder="Palavra-chave 1">
+        <input class="input" type="text" id="e-kw2" placeholder="Palavra-chave 2 (opcional)">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeEditModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicao()">Salvar alterações</button>
     </div>
   </div>
 </div>
@@ -447,9 +483,63 @@ function showPage(page, el) {
 function openModal() { document.getElementById('modal-bg').classList.add('open'); document.getElementById('f-nome').focus(); }
 function closeModal() {
   document.getElementById('modal-bg').classList.remove('open');
-  ['f-nome','f-ean','f-kw1','f-kw2'].forEach(id => document.getElementById(id).value = '');
+  ['f-nome','f-sku','f-ean','f-kw1','f-kw2'].forEach(id => document.getElementById(id).value = '');
+  const msg = document.getElementById('modal-msg');
+  msg.className = 'auth-msg';
+  msg.textContent = '';
 }
 function closeModalBg(e) { if (e.target === document.getElementById('modal-bg')) closeModal(); }
+
+// ── MODAL EDITAR ──────────────────────────────────────────────
+function openEditModal(id) {
+  const p = produtos.find(p => p.id === id);
+  if (!p) return;
+  produtoEditandoId = id;
+  document.getElementById('e-nome').value = p.nome;
+  document.getElementById('e-sku').value = p.sku || '';
+  document.getElementById('e-ean').value = p.ean;
+  document.getElementById('e-kw1').value = p.kw1;
+  document.getElementById('e-kw2').value = p.kw2 || '';
+  const msg = document.getElementById('modal-edit-msg');
+  msg.className = 'auth-msg';
+  msg.textContent = '';
+  document.getElementById('modal-edit-bg').classList.add('open');
+}
+
+function closeEditModal() {
+  document.getElementById('modal-edit-bg').classList.remove('open');
+  produtoEditandoId = null;
+}
+
+function closeEditModalBg(e) {
+  if (e.target === document.getElementById('modal-edit-bg')) closeEditModal();
+}
+
+async function salvarEdicao() {
+  const nome = document.getElementById('e-nome').value.trim();
+  const sku  = document.getElementById('e-sku').value.trim().toUpperCase();
+  const ean  = document.getElementById('e-ean').value.trim();
+  const kw1  = document.getElementById('e-kw1').value.trim().toLowerCase();
+  const kw2  = document.getElementById('e-kw2').value.trim().toLowerCase();
+  const msg  = document.getElementById('modal-edit-msg');
+
+  if (!nome || !sku || !ean || !kw1) {
+    msg.textContent = 'Preencha todos os campos obrigatórios.';
+    msg.className = 'auth-msg error show';
+    return;
+  }
+
+  try {
+    await apiPut(`/produtos/${produtoEditandoId}`, { nome, sku, ean, kw1, kw2 });
+    msg.textContent = 'Produto atualizado com sucesso!';
+    msg.className = 'auth-msg success show';
+    await carregarProdutos();
+    setTimeout(() => closeEditModal(), 1500);
+  } catch(e) {
+    msg.textContent = e.message;
+    msg.className = 'auth-msg error show';
+  }
+}
 
 // ── PRODUTOS ──────────────────────────────────────────────
 async function carregarProdutos() {
@@ -468,23 +558,45 @@ function renderTabela() {
   tbody.innerHTML = filtrados.map(p => `
     <tr>
       <td><strong>${p.nome}</strong></td>
+      <td><span class="ean-code">${p.sku || '—'}</span></td>
       <td><span class="ean-code">${p.ean}</span></td>
       <td><span class="tag">${p.kw1}</span>${p.kw2 ? `<span class="tag">${p.kw2}</span>` : ''}</td>
       <td style="font-family:'DM Mono',monospace;color:var(--accent);font-weight:500">${p.menor_preco ? 'R$ '+parseFloat(p.menor_preco).toFixed(2) : '—'}</td>
-      <td>${perfil==='admin' ? `<button class="btn btn-danger" onclick="excluirProduto('${p.id}')">Excluir</button>` : ''}</td>
+      <td style="display:flex;gap:6px">${perfil==='admin' ? `
+        <button class="btn btn-ghost" style="font-size:12px;padding:6px 12px" onclick="openEditModal('${p.id}')">Editar</button>
+        <button class="btn btn-danger" onclick="excluirProduto('${p.id}')">Excluir</button>` : ''}
+      </td>
     </tr>`).join('');
 }
 
 async function salvarProduto() {
   const nome = document.getElementById('f-nome').value.trim();
+  const sku  = document.getElementById('f-sku').value.trim().toUpperCase();
   const ean  = document.getElementById('f-ean').value.trim();
   const kw1  = document.getElementById('f-kw1').value.trim().toLowerCase();
   const kw2  = document.getElementById('f-kw2').value.trim().toLowerCase();
-  if (!nome || !ean || !kw1) return alert('Preencha nome, EAN e pelo menos uma palavra-chave.');
-  await apiPost('/produtos', { nome, ean, kw1, kw2 });
-  closeModal();
-  await carregarProdutos();
-  await atualizarStats();
+  const msg  = document.getElementById('modal-msg');
+
+  if (!nome || !sku || !ean || !kw1) {
+    msg.textContent = 'Preencha todos os campos obrigatórios.';
+    msg.className = 'auth-msg error show';
+    return;
+  }
+
+  try {
+    await apiPost('/produtos', { nome, sku, ean, kw1, kw2 });
+    msg.textContent = 'Produto cadastrado com sucesso!';
+    msg.className = 'auth-msg success show';
+    await carregarProdutos();
+    await atualizarStats();
+    msg.innerHTML = `Produto cadastrado com sucesso!<br><div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-primary" style="flex:1" onclick="['f-nome','f-sku','f-ean','f-kw1','f-kw2'].forEach(id=>document.getElementById(id).value='');document.getElementById('modal-msg').className='auth-msg'">Cadastrar novo</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Fechar</button>
+    </div>`;
+  } catch(e) {
+    msg.textContent = e.message.includes('SKU') ? 'Produto já cadastrado com esse SKU.' : e.message;
+    msg.className = 'auth-msg error show';
+  }
 }
 
 async function excluirProduto(id) {
