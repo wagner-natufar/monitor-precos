@@ -6,7 +6,6 @@
 <title>Monitor de Preços</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  /* ================ THEME VARIABLES ================ */
   :root {
     --bg: #f7faf7;
     --surface: #ffffff;
@@ -32,7 +31,6 @@
     --input-border: #d1d5db;
     --input-focus: #16a34a;
     --row-hover: #f0fdf4;
-    --row-detail: #f7faf7;
     --thead-bg: #f0fdf4;
     --shadow: 0 1px 3px rgba(0,0,0,0.06);
     --shadow-lg: 0 25px 60px rgba(0,0,0,0.25);
@@ -51,70 +49,6 @@
     --variation-down: #dc2626;
     --auth-gradient: linear-gradient(135deg, #14532d 0%, #16a34a 100%);
   }
-
-  /* === PÁGINA DE DETALHE === */
-  .page-detalhe { display: none; flex: 1; overflow: hidden; flex-direction: column; }
-  .page-detalhe.active { display: flex; }
-  .detalhe-header {
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--border);
-    background: var(--topbar-bg);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .btn-voltar {
-    display: flex; align-items: center; gap: 6px;
-    background: var(--secondary-bg); color: var(--secondary-text);
-    border: 1px solid var(--border); border-radius: 8px;
-    padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
-    transition: all .15s;
-  }
-  .btn-voltar:hover { background: var(--secondary-hover); }
-  .detalhe-titulo { font-size: 18px; font-weight: 700; color: var(--text); }
-  .detalhe-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
-  .detalhe-body { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
-
-  /* Filtro de canal */
-  .canal-filter { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .canal-filter-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
-  .canal-btn {
-    padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
-    border: 1px solid var(--border); background: var(--surface);
-    color: var(--text-muted); cursor: pointer; transition: all .15s;
-  }
-  .canal-btn.active, .canal-btn:hover {
-    background: var(--primary); color: var(--primary-text-on); border-color: var(--primary);
-  }
-  .canal-btn.todos.active { background: var(--primary-soft); color: var(--primary); border-color: var(--primary); }
-
-  /* Tabela de canais (linha) */
-  .canal-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
-  .canal-table thead th {
-    padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 600;
-    color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em;
-    background: var(--thead-bg); border-bottom: 1px solid var(--border);
-  }
-  .canal-table tbody td {
-    padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border-light);
-  }
-  .canal-table tbody tr:last-child td { border-bottom: none; }
-  .canal-table tbody tr:hover td { background: var(--row-hover); }
-  .canal-nome { font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
-  .canal-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .price-val { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
-  .price-val.meu { color: var(--primary); }
-  .price-val.sem-dado { color: var(--text-soft); font-weight: 400; }
-  .var-badge {
-    display: inline-flex; align-items: center; gap: 3px;
-    padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;
-  }
-  .var-badge.up { background: rgba(22,163,74,.12); color: var(--variation-up); }
-  .var-badge.down { background: rgba(220,38,38,.12); color: var(--variation-down); }
-  .var-badge.neutro { background: var(--secondary-bg); color: var(--text-muted); }
-  .chart-wrap-detalhe { background: var(--surface); border-radius: 10px; padding: 16px 20px; box-shadow: var(--shadow); }
-  .chart-wrap-detalhe h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
-  .chart-wrap-detalhe canvas { max-height: 260px; }
 
   [data-theme="dark"] {
     --bg: #0a0f0c;
@@ -141,7 +75,6 @@
     --input-border: #1f3a2b;
     --input-focus: #22c55e;
     --row-hover: #1a2e22;
-    --row-detail: #0f1a14;
     --thead-bg: #0f1a14;
     --shadow: 0 1px 3px rgba(0,0,0,0.4);
     --shadow-lg: 0 25px 60px rgba(0,0,0,0.6);
@@ -162,101 +95,73 @@
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); transition: background 0.2s, color 0.2s; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); }
   button { cursor: pointer; border: none; background: none; font-size: inherit; color: inherit; }
   input, select { font-size: inherit; font-family: inherit; }
 
-  /* ================= AUTH ================= */
-  .auth-bg { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-             background: var(--auth-gradient); }
-  .auth-card { background: var(--surface); padding: 40px; border-radius: 16px; width: 100%; max-width: 420px;
-               box-shadow: var(--shadow-lg); }
+  .auth-bg { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--auth-gradient); }
+  .auth-card { background: var(--surface); padding: 40px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: var(--shadow-lg); }
   .auth-card h1 { text-align: center; margin-bottom: 8px; color: var(--primary); font-size: 28px; }
   .auth-card .sub { text-align: center; color: var(--text-muted); margin-bottom: 28px; font-size: 14px; }
   .auth-card label { display: block; margin: 14px 0 6px; font-size: 13px; color: var(--text); font-weight: 500; }
-  .auth-card input { width: 100%; padding: 12px; border: 1px solid var(--input-border); border-radius: 8px;
-                     font-size: 15px; background: var(--input-bg); color: var(--text); }
+  .auth-card input { width: 100%; padding: 12px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--text); }
   .auth-card input:focus { outline: none; border-color: var(--input-focus); }
-  .auth-card .btn-primary { width: 100%; margin-top: 22px; background: var(--primary); color: var(--primary-text-on);
-                            padding: 12px; border-radius: 8px; font-weight: 600; font-size: 15px; }
-  .auth-card .btn-primary:hover { background: var(--primary-hover); }
+  .auth-card .btn-primary { width: 100%; margin-top: 22px; padding: 12px; }
   .auth-card .switch { text-align: center; margin-top: 18px; color: var(--text-muted); font-size: 14px; }
   .auth-card .switch a { color: var(--primary); font-weight: 600; cursor: pointer; }
-  .auth-card .msg { padding: 12px; border-radius: 8px; margin-top: 14px; font-size: 14px; text-align: center; }
-  .auth-card .msg.error { background: var(--error-bg); color: var(--error-text); }
-  .auth-card .msg.success { background: var(--success-bg); color: var(--success-text); }
+  .msg { padding: 12px; border-radius: 8px; margin-top: 14px; font-size: 14px; text-align: center; }
+  .msg.error, .alert.error { background: var(--error-bg); color: var(--error-text); }
+  .msg.success, .alert.success { background: var(--success-bg); color: var(--success-text); }
 
-  /* ================= APP LAYOUT ================= */
   .app { display: flex; height: 100vh; overflow: hidden; }
-
-  /* Sidebar fixa */
-  .sidebar { background: var(--sidebar-bg); color: var(--sidebar-text); width: 240px; flex-shrink: 0;
-             display: flex; flex-direction: column; height: 100vh;
-             transition: width 0.25s ease; overflow: hidden; }
+  .sidebar { background: var(--sidebar-bg); color: var(--sidebar-text); width: 240px; flex-shrink: 0; display: flex; flex-direction: column; height: 100vh; transition: width 0.25s ease; overflow: hidden; }
   .sidebar.collapsed { width: 64px; }
-  .sidebar .logo { padding: 18px 20px; display: flex; align-items: center; gap: 10px;
-                   font-size: 18px; font-weight: 700; border-bottom: 1px solid var(--sidebar-border);
-                   white-space: nowrap; }
-  .sidebar .logo .icon { font-size: 22px; }
-  .sidebar .toggle { padding: 12px 20px; color: var(--sidebar-text-muted);
-                     display: flex; align-items: center; gap: 10px; font-size: 14px; }
+  .sidebar .logo { padding: 18px 20px; display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; border-bottom: 1px solid var(--sidebar-border); white-space: nowrap; }
+  .sidebar .toggle { padding: 12px 20px; color: var(--sidebar-text-muted); display: flex; align-items: center; gap: 10px; font-size: 14px; }
   .sidebar .toggle:hover { color: var(--sidebar-text); }
   .sidebar nav { flex: 1; padding: 12px 0; overflow-y: auto; }
-  .sidebar nav button { display: flex; align-items: center; gap: 12px; width: 100%;
-                        padding: 12px 20px; color: var(--sidebar-text); text-align: left; white-space: nowrap;
-                        position: relative; opacity: 0.85; }
+  .sidebar nav button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 20px; color: var(--sidebar-text); text-align: left; white-space: nowrap; position: relative; opacity: 0.88; }
   .sidebar nav button:hover { background: var(--sidebar-hover); opacity: 1; }
   .sidebar nav button.active { background: var(--sidebar-active); opacity: 1; }
-  .sidebar nav button .icon { font-size: 18px; min-width: 22px; text-align: center; }
-  .sidebar nav button .badge { background: #ef4444; color: #fff; font-size: 11px;
-                               border-radius: 10px; padding: 2px 7px; margin-left: auto; }
-  .sidebar.collapsed .label,
-  .sidebar.collapsed .logo span:not(.icon),
-  .sidebar.collapsed .toggle span:not(.toggle-icon),
-  .sidebar.collapsed .badge { display: none; }
+  .sidebar nav button .icon { min-width: 22px; text-align: center; }
+  .sidebar nav button .badge { background: #ef4444; color: #fff; font-size: 11px; border-radius: 10px; padding: 2px 7px; margin-left: auto; }
+  .sidebar.collapsed .label, .sidebar.collapsed .logo span:not(.icon), .sidebar.collapsed .toggle span:not(.toggle-icon), .sidebar.collapsed .badge { display: none; }
   .sidebar .user-block { padding: 14px 20px; border-top: 1px solid var(--sidebar-border); font-size: 13px; }
   .sidebar .user-block .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .sidebar .user-block .role { color: var(--sidebar-text-muted); font-size: 11px; text-transform: uppercase; margin-top: 2px; }
   .sidebar .user-block .logout { margin-top: 10px; color: #fca5a5; font-size: 13px; }
-  .sidebar.collapsed .user-block .name,
-  .sidebar.collapsed .user-block .role { display: none; }
+  .sidebar.collapsed .user-block .name, .sidebar.collapsed .user-block .role { display: none; }
 
-  /* Theme toggle */
-  .theme-toggle { padding: 10px 20px; display: flex; align-items: center; gap: 10px; color: var(--sidebar-text-muted);
-                  font-size: 13px; border-top: 1px solid var(--sidebar-border); }
+  .theme-toggle { padding: 10px 20px; display: flex; align-items: center; gap: 10px; color: var(--sidebar-text-muted); font-size: 13px; border-top: 1px solid var(--sidebar-border); }
   .theme-toggle:hover { color: var(--sidebar-text); background: var(--sidebar-hover); }
-  .theme-toggle .icon { font-size: 16px; min-width: 22px; text-align: center; }
+  .theme-toggle .icon { min-width: 22px; text-align: center; }
   .sidebar.collapsed .theme-toggle .label { display: none; }
 
-  /* Main content area com scroll independente */
   .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-  .topbar { background: var(--topbar-bg); padding: 18px 30px; border-bottom: 1px solid var(--topbar-border);
-            display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .topbar { background: var(--topbar-bg); padding: 18px 30px; border-bottom: 1px solid var(--topbar-border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
   .topbar h2 { font-size: 22px; color: var(--text); }
   .topbar .search { position: relative; }
-  .topbar .search input { padding: 10px 14px 10px 38px; border: 1px solid var(--input-border);
-                          border-radius: 8px; width: 320px; font-size: 14px;
-                          background: var(--input-bg); color: var(--text); }
+  .topbar .search input { padding: 10px 14px; border: 1px solid var(--input-border); border-radius: 8px; width: 320px; background: var(--input-bg); color: var(--text); }
   .topbar .search input:focus { outline: none; border-color: var(--input-focus); }
-  .topbar .search .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-soft); }
-
   .content { flex: 1; overflow-y: auto; padding: 24px 30px; }
 
-  /* Stats cards */
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-  .stat-card { background: var(--surface); border-radius: 12px; padding: 20px;
-               box-shadow: var(--shadow); border: 1px solid var(--border-light); }
+  .stat-card { background: var(--surface); border-radius: 8px; padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-light); }
   .stat-card .label { color: var(--text-muted); font-size: 13px; margin-bottom: 6px; }
   .stat-card .value { font-size: 26px; font-weight: 700; color: var(--primary); }
   .stat-card .sub { color: var(--text-soft); font-size: 12px; margin-top: 4px; }
 
-  /* Table card */
-  .table-card { background: var(--surface); border-radius: 12px; box-shadow: var(--shadow);
-                border: 1px solid var(--border-light);
-                display: flex; flex-direction: column; overflow: hidden; max-height: calc(100vh - 290px); }
-  .table-header { padding: 18px 20px; border-bottom: 1px solid var(--border);
-                  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+  .table-card { background: var(--surface); border-radius: 8px; box-shadow: var(--shadow); border: 1px solid var(--border-light); display: flex; flex-direction: column; overflow: hidden; max-height: calc(100vh - 290px); }
+  .table-card.full { max-height: none; }
+  .table-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 12px; }
   .table-header h3 { font-size: 16px; color: var(--text); }
+  .table-scroll { flex: 1; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { position: sticky; top: 0; background: var(--thead-bg); padding: 12px 20px; text-align: left; font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; border-bottom: 1px solid var(--border); z-index: 1; }
+  tbody td { padding: 14px 20px; border-bottom: 1px solid var(--border-light); font-size: 14px; color: var(--text); }
+  tbody tr.row-main { cursor: pointer; transition: background 0.1s; }
+  tbody tr.row-main:hover { background: var(--row-hover); }
+
   .btn-primary { background: var(--primary); color: var(--primary-text-on); padding: 9px 18px; border-radius: 8px; font-weight: 600; font-size: 14px; }
   .btn-primary:hover { background: var(--primary-hover); }
   .btn-secondary { background: var(--secondary-bg); color: var(--secondary-text); padding: 9px 16px; border-radius: 8px; font-size: 14px; }
@@ -266,85 +171,48 @@
   .btn-edit { background: var(--primary-soft); color: var(--primary); padding: 6px 12px; border-radius: 6px; font-size: 12px; margin-right: 6px; }
   .btn-edit:hover { background: var(--primary); color: var(--primary-text-on); }
 
-  /* SCROLL INDEPENDENTE da tabela */
-  .table-scroll { flex: 1; overflow-y: auto; }
-  table { width: 100%; border-collapse: collapse; }
-  thead th { position: sticky; top: 0; background: var(--thead-bg); padding: 12px 20px;
-             text-align: left; font-size: 12px; color: var(--text-muted); text-transform: uppercase;
-             font-weight: 600; border-bottom: 1px solid var(--border); z-index: 1; }
-  tbody td { padding: 14px 20px; border-bottom: 1px solid var(--border-light); font-size: 14px; color: var(--text); }
-  tbody tr.row-main { cursor: pointer; transition: background 0.1s; }
-  tbody tr.row-main:hover { background: var(--row-hover); }
-  tbody tr.row-main.expanded { background: var(--row-detail); }
-  tbody tr.row-detail { background: var(--row-detail); }
-  tbody tr.row-detail td { padding: 0; }
-  .expand-arrow { display: inline-block; width: 18px; transition: transform 0.2s; color: var(--primary); }
-  .expand-arrow.open { transform: rotate(90deg); }
-
-  /* Detail expansion */
-  .detail-content { padding: 20px 30px; }
-  .channels-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 22px; }
-  .channel-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
-  .channel-card .channel-name { font-size: 13px; font-weight: 600; color: var(--primary);
-                                text-transform: uppercase; margin-bottom: 10px; }
-  .channel-card .price-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
-  .channel-card .price-row .label { color: var(--text-muted); }
-  .channel-card .price-row .value { font-weight: 600; color: var(--text); }
+  .product-detail-page { display: flex; flex-direction: column; gap: 18px; }
+  .detail-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .detail-title { background: var(--surface); border: 1px solid var(--border-light); border-radius: 8px; box-shadow: var(--shadow); padding: 18px 20px; display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; }
+  .detail-title h3 { font-size: 22px; color: var(--text); margin-bottom: 4px; }
+  .detail-title p { color: var(--text-muted); font-size: 13px; line-height: 1.6; }
+  .channel-filter { display: flex; gap: 8px; flex-wrap: wrap; }
+  .channel-filter button { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font-size: 13px; }
+  .channel-filter button:hover { background: var(--row-hover); }
+  .channel-filter button.active { background: var(--primary); border-color: var(--primary); color: var(--primary-text-on); }
+  .channels-table-wrap { background: var(--surface); border: 1px solid var(--border-light); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; }
+  .channels-table-wrap table td, .channels-table-wrap table th { white-space: nowrap; }
+  .chart-wrap { background: var(--surface); border: 1px solid var(--border-light); border-radius: 8px; box-shadow: var(--shadow); padding: 16px; height: 360px; }
   .variation-up { color: var(--variation-up); font-weight: 600; }
   .variation-down { color: var(--variation-down); font-weight: 600; }
   .variation-zero { color: var(--text-soft); font-weight: 600; }
-  .chart-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
-                padding: 16px; height: 320px; }
 
-  /* Modal */
-  .modal-bg { position: fixed; inset: 0; background: var(--modal-overlay); display: none;
-              align-items: center; justify-content: center; z-index: 100; }
+  .hist-filtros { background: var(--surface); border-radius: 8px; padding: 18px; box-shadow: var(--shadow); border: 1px solid var(--border-light); margin-bottom: 18px; display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 14px; align-items: end; }
+  .hist-filtros .field { display: flex; flex-direction: column; gap: 6px; }
+  .hist-filtros label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+  .hist-filtros input, .hist-filtros select { padding: 10px 12px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--text); }
+  .periodo-grupo { display: flex; gap: 6px; }
+  .periodo-btn { padding: 9px 14px; border: 1px solid var(--input-border); background: var(--surface); border-radius: 8px; font-size: 13px; color: var(--text); }
+  .periodo-btn.active { background: var(--primary); color: var(--primary-text-on); border-color: var(--primary); }
+  .hist-chart-wrap { background: var(--surface); border-radius: 8px; padding: 18px; box-shadow: var(--shadow); border: 1px solid var(--border-light); margin-bottom: 18px; height: 380px; }
+
+  .modal-bg { position: fixed; inset: 0; background: var(--modal-overlay); display: none; align-items: center; justify-content: center; z-index: 100; }
   .modal-bg.show { display: flex; }
-  .modal { background: var(--surface); border-radius: 14px; width: 100%; max-width: 560px;
-           max-height: 90vh; overflow-y: auto; color: var(--text); }
-  .modal-head { padding: 20px 24px; border-bottom: 1px solid var(--border);
-                display: flex; justify-content: space-between; align-items: center; }
+  .modal { background: var(--surface); border-radius: 12px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; color: var(--text); }
+  .modal-head { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
   .modal-head h3 { font-size: 18px; }
   .modal-head .close { color: var(--text-soft); font-size: 22px; }
   .modal-body { padding: 24px; }
   .modal-body label { display: block; margin: 12px 0 6px; font-size: 13px; color: var(--text); font-weight: 500; }
-  .modal-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--input-border); border-radius: 8px;
-                      font-size: 14px; background: var(--input-bg); color: var(--text); }
+  .modal-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--text); }
   .modal-body input:focus { outline: none; border-color: var(--input-focus); }
   .modal-body .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .modal-body .section-title { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border);
-                               font-size: 13px; font-weight: 600; color: var(--primary); text-transform: uppercase; }
-  .modal-foot { padding: 16px 24px; border-top: 1px solid var(--border);
-                display: flex; justify-content: flex-end; gap: 10px; }
-  .modal .alert { padding: 12px; border-radius: 8px; margin-bottom: 14px; font-size: 14px; }
-  .modal .alert.error { background: var(--error-bg); color: var(--error-text); }
-  .modal .alert.success { background: var(--success-bg); color: var(--success-text); }
+  .modal-body .section-title { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--primary); text-transform: uppercase; }
+  .modal-foot { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+  .alert { padding: 12px; border-radius: 8px; margin-bottom: 14px; font-size: 14px; }
 
-  /* Empty state */
   .empty { padding: 60px 20px; text-align: center; color: var(--text-soft); }
-
-  /* Histórico */
-  .hist-filtros { background: var(--surface); border-radius: 12px; padding: 18px;
-                  box-shadow: var(--shadow); border: 1px solid var(--border-light); margin-bottom: 18px;
-                  display: grid; grid-template-columns: 1fr 1fr auto; gap: 14px; align-items: end; }
-  .hist-filtros .field { display: flex; flex-direction: column; gap: 6px; }
-  .hist-filtros label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-  .hist-filtros input, .hist-filtros select { padding: 10px 12px; border: 1px solid var(--input-border);
-                                              border-radius: 8px; font-size: 14px;
-                                              background: var(--input-bg); color: var(--text); }
-  .hist-filtros input:focus, .hist-filtros select:focus { outline: none; border-color: var(--input-focus); }
-  .periodo-grupo { display: flex; gap: 6px; }
-  .periodo-btn { padding: 9px 14px; border: 1px solid var(--input-border); background: var(--surface);
-                 border-radius: 8px; font-size: 13px; color: var(--text); }
-  .periodo-btn:hover { background: var(--row-hover); }
-  .periodo-btn.active { background: var(--primary); color: var(--primary-text-on); border-color: var(--primary); }
-  .hist-chart-wrap { background: var(--surface); border-radius: 12px; padding: 18px;
-                     box-shadow: var(--shadow); border: 1px solid var(--border-light);
-                     margin-bottom: 18px; height: 380px; }
-
-  /* Users panel */
-  .user-row { display: flex; justify-content: space-between; align-items: center;
-              padding: 14px 20px; border-bottom: 1px solid var(--border-light); }
+  .user-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border-light); gap: 12px; }
   .user-row .info .name { font-weight: 600; color: var(--text); }
   .user-row .info .email { color: var(--text-muted); font-size: 13px; }
   .badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
@@ -353,11 +221,20 @@
   .badge.pending { background: #fef3c7; color: #92400e; }
   .badge.rejected { background: var(--error-bg); color: var(--error-text); }
   .badge.approved { background: var(--success-bg); color: var(--success-text); }
+
+  @media (max-width: 900px) {
+    .sidebar { width: 72px; }
+    .sidebar .label, .sidebar .logo span:not(.icon), .sidebar .toggle span:not(.toggle-icon), .sidebar .badge, .theme-toggle .label, .user-block .name, .user-block .role { display: none; }
+    .topbar { padding: 14px 16px; }
+    .topbar .search input { width: 190px; }
+    .content { padding: 16px; }
+    .hist-filtros { grid-template-columns: 1fr; }
+    .detail-title { flex-direction: column; }
+  }
 </style>
 </head>
 <body>
 
-<!-- ============ TELA DE LOGIN ============ -->
 <div id="screen-login" class="auth-bg">
   <div class="auth-card">
     <h1>Monitor de Preços</h1>
@@ -374,7 +251,6 @@
   </div>
 </div>
 
-<!-- ============ TELA DE CADASTRO ============ -->
 <div id="screen-register" class="auth-bg" style="display:none;">
   <div class="auth-card">
     <h1>Solicitar acesso</h1>
@@ -393,13 +269,10 @@
   </div>
 </div>
 
-<!-- ============ APP ============ -->
 <div id="screen-app" class="app" style="display:none;">
-
-  <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="logo">
-      <span class="icon">📊</span>
+      <span class="icon">M</span>
       <span>Monitor</span>
     </div>
     <button class="toggle" onclick="toggleSidebar()">
@@ -408,42 +281,38 @@
     </button>
     <nav>
       <button id="nav-produtos" class="active" onclick="setTab('produtos')">
-        <span class="icon">📦</span><span class="label">Produtos</span>
+        <span class="icon">P</span><span class="label">Produtos</span>
       </button>
       <button id="nav-historico" onclick="setTab('historico')">
-        <span class="icon">📈</span><span class="label">Histórico</span>
+        <span class="icon">H</span><span class="label">Histórico</span>
       </button>
       <button id="nav-usuarios" style="display:none;" onclick="setTab('usuarios')">
-        <span class="icon">👥</span><span class="label">Usuários</span>
+        <span class="icon">U</span><span class="label">Usuários</span>
         <span class="badge" id="badge-pendentes" style="display:none;">0</span>
       </button>
     </nav>
     <button class="theme-toggle" onclick="toggleTheme()">
-      <span class="icon" id="theme-icon">🌙</span>
+      <span class="icon" id="theme-icon">◐</span>
       <span class="label" id="theme-label">Modo escuro</span>
     </button>
     <div class="user-block">
-      <div class="name" id="user-name">—</div>
-      <div class="role" id="user-role">—</div>
+      <div class="name" id="user-name">Usuário</div>
+      <div class="role" id="user-role">visualizador</div>
       <button class="logout" onclick="logout()">Sair</button>
     </div>
   </aside>
 
-  <!-- Main -->
   <main class="main">
     <div class="topbar">
       <h2 id="page-title">Produtos</h2>
-      <div class="search" id="search-box">
-        <span class="icon">🔍</span>
-        <input type="text" id="busca" placeholder="Buscar por nome, EAN ou SKU..." />
+      <div class="search" id="top-search">
+        <input type="text" id="busca-produtos" placeholder="Buscar por nome, SKU ou EAN..." />
       </div>
     </div>
-
     <div class="content" id="content"></div>
   </main>
 </div>
 
-<!-- ============ MODAL PRODUTO ============ -->
 <div class="modal-bg" id="modal-produto">
   <div class="modal">
     <div class="modal-head">
@@ -452,22 +321,25 @@
     </div>
     <div class="modal-body">
       <div id="modal-alert"></div>
+
       <div id="modal-form">
-        <label>Nome do produto *</label>
+        <label>Nome</label>
         <input type="text" id="p-nome" />
+
         <div class="row-2">
           <div>
-            <label>SKU interno *</label>
+            <label>SKU</label>
             <input type="text" id="p-sku" />
           </div>
           <div>
-            <label>EAN *</label>
+            <label>EAN</label>
             <input type="text" id="p-ean" />
           </div>
         </div>
+
         <div class="row-2">
           <div>
-            <label>Palavra-chave 1 *</label>
+            <label>Palavra-chave 1</label>
             <input type="text" id="p-pc1" />
           </div>
           <div>
@@ -476,37 +348,39 @@
           </div>
         </div>
 
-        <div class="section-title">Preço praticado pela empresa por canal</div>
+        <div class="section-title">Meus preços praticados</div>
+
         <div class="row-2">
           <div>
-            <label>Mercado Livre (R$)</label>
+            <label>Mercado Livre</label>
             <input type="number" step="0.01" id="p-pp-ml" />
           </div>
           <div>
-            <label>Amazon (R$)</label>
+            <label>Amazon</label>
             <input type="number" step="0.01" id="p-pp-am" />
           </div>
         </div>
+
         <div class="row-2">
           <div>
-            <label>Shopee (R$)</label>
+            <label>Shopee</label>
             <input type="number" step="0.01" id="p-pp-sh" />
           </div>
           <div>
-            <label>Droga Raia (R$)</label>
+            <label>Droga Raia</label>
             <input type="number" step="0.01" id="p-pp-dr" />
           </div>
         </div>
       </div>
 
-      <div id="modal-success" style="display:none;">
-        <div class="alert success">Operação realizada com sucesso!</div>
-      </div>
+      <div id="modal-success" style="display:none;"></div>
     </div>
+
     <div class="modal-foot" id="modal-actions">
       <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
-      <button class="btn-primary" id="btn-salvar" onclick="salvarProduto()">Salvar</button>
+      <button class="btn-primary" onclick="salvarProduto()">Salvar</button>
     </div>
+
     <div class="modal-foot" id="modal-success-actions" style="display:none;">
       <button class="btn-secondary" onclick="fecharModal()">Fechar</button>
       <button class="btn-primary" onclick="abrirModalProduto()">Cadastrar novo</button>
@@ -515,15 +389,6 @@
 </div>
 
 <script>
-/* ================== ESTADO GLOBAL ================== */
-const API = window.location.origin;
-let token = localStorage.getItem("mp_token");
-let usuario = JSON.parse(localStorage.getItem("mp_user") || "null");
-let produtos = [];
-let produtoExpandidoId = null;
-let produtoEditandoId = null;
-let chartCanal = null;
-let buscaAtual = "";
 const CANAIS = [
   { key: "mercado_livre", label: "Mercado Livre" },
   { key: "amazon", label: "Amazon" },
@@ -531,207 +396,245 @@ const CANAIS = [
   { key: "droga_raia", label: "Droga Raia" },
 ];
 
-/* ================== INIT ================== */
-window.addEventListener("DOMContentLoaded", () => {
-  aplicarTema(localStorage.getItem("mp_tema") || "claro");
+const CANAL_LABEL = {
+  mercado_livre: "Mercado Livre",
+  amazon: "Amazon",
+  shopee: "Shopee",
+  droga_raia: "Droga Raia",
+};
 
-  if (token && usuario) {
-    abrirApp();
-  } else {
-    showScreen("login");
-  }
+const CORES = {
+  mercado_livre: "#facc15",
+  amazon: "#fb923c",
+  shopee: "#f43f5e",
+  droga_raia: "#3b82f6",
+};
 
-  document.getElementById("form-login").addEventListener("submit", fazerLogin);
-  document.getElementById("form-register").addEventListener("submit", fazerCadastro);
-  document.getElementById("busca").addEventListener("input", (e) => {
-    buscaAtual = e.target.value.trim();
-    if (buscaAtual.length === 0 || buscaAtual.length >= 2) carregarProdutos();
-  });
-});
+let token = localStorage.getItem("token") || "";
+let usuario = {
+  nome: localStorage.getItem("nome") || "Usuário",
+  perfil: localStorage.getItem("perfil") || "visualizador",
+};
 
-/* ================== TEMA ================== */
-function aplicarTema(tema) {
-  if (tema === "escuro") {
-    document.documentElement.setAttribute("data-theme", "dark");
-  } else {
-    document.documentElement.removeAttribute("data-theme");
-  }
-  const icon = document.getElementById("theme-icon");
-  const label = document.getElementById("theme-label");
-  if (icon && label) {
-    if (tema === "escuro") {
-      icon.textContent = "☀️";
-      label.textContent = "Modo claro";
-    } else {
-      icon.textContent = "🌙";
-      label.textContent = "Modo escuro";
-    }
-  }
-  localStorage.setItem("mp_tema", tema);
+let produtos = [];
+let produtoEditandoId = null;
+let produtoDetalheId = null;
+let produtoDetalheCanal = "todos";
+let detailChart = null;
+
+let histProdutoId = null;
+let histDias = 30;
+let histCanal = "todos";
+let histTodos = [];
+let histChart = null;
+
+aplicarTemaSalvo();
+
+if (token) {
+  iniciarApp();
+} else {
+  showScreen("login");
 }
 
-function toggleTheme() {
-  const atual = localStorage.getItem("mp_tema") || "claro";
-  aplicarTema(atual === "claro" ? "escuro" : "claro");
-}
-
-function showScreen(s) {
-  document.getElementById("screen-login").style.display = s === "login" ? "flex" : "none";
-  document.getElementById("screen-register").style.display = s === "register" ? "flex" : "none";
-  document.getElementById("screen-app").style.display = s === "app" ? "flex" : "none";
-}
-
-/* ================== AUTH ================== */
-async function fazerLogin(e) {
+document.getElementById("form-login").addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const msg = document.getElementById("login-msg");
   msg.innerHTML = "";
+
   try {
-    const res = await fetch(`${API}/auth/login`, {
+    const res = await fetch("/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: document.getElementById("login-email").value,
+        email: document.getElementById("login-email").value.trim(),
         senha: document.getElementById("login-senha").value,
       }),
     });
+
     const data = await res.json().catch(() => ({}));
+
     if (!res.ok) {
-      msg.innerHTML = `<div class="msg error">${data.detail || "Erro no login"}</div>`;
+      msg.innerHTML = `<div class="msg error">${data.detail || "Erro ao entrar"}</div>`;
       return;
     }
-    token = data.token;
-    usuario = { nome: data.nome, perfil: data.perfil };
-    localStorage.setItem("mp_token", token);
-    localStorage.setItem("mp_user", JSON.stringify(usuario));
-    abrirApp();
-  } catch (err) {
-    msg.innerHTML = `<div class="msg error">Erro de conexão</div>`;
-  }
-}
 
-async function fazerCadastro(e) {
+    token = data.token;
+    usuario = { nome: data.nome || "Usuário", perfil: data.perfil || "visualizador" };
+
+    localStorage.setItem("token", token);
+    localStorage.setItem("nome", usuario.nome);
+    localStorage.setItem("perfil", usuario.perfil);
+
+    iniciarApp();
+  } catch (err) {
+    msg.innerHTML = '<div class="msg error">Erro de conexão</div>';
+  }
+});
+
+document.getElementById("form-register").addEventListener("submit", async (e) => {
   e.preventDefault();
+
   const msg = document.getElementById("register-msg");
   msg.innerHTML = "";
+
   try {
-    const res = await fetch(`${API}/auth/registrar`, {
+    const res = await fetch("/auth/registrar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        nome: document.getElementById("reg-nome").value,
-        email: document.getElementById("reg-email").value,
+        nome: document.getElementById("reg-nome").value.trim(),
+        email: document.getElementById("reg-email").value.trim(),
         senha: document.getElementById("reg-senha").value,
       }),
     });
+
     const data = await res.json().catch(() => ({}));
+
     if (!res.ok) {
-      msg.innerHTML = `<div class="msg error">${data.detail || "Erro no cadastro"}</div>`;
+      msg.innerHTML = `<div class="msg error">${data.detail || "Erro ao cadastrar"}</div>`;
       return;
     }
-    if (data.primeiro_admin) {
+
+    if (data.token) {
       token = data.token;
-      usuario = { nome: data.nome, perfil: "admin" };
-      localStorage.setItem("mp_token", token);
-      localStorage.setItem("mp_user", JSON.stringify(usuario));
-      abrirApp();
-    } else {
-      msg.innerHTML = `<div class="msg success">${data.mensagem}</div>`;
-      document.getElementById("form-register").reset();
+      usuario = { nome: data.nome || "Usuário", perfil: data.perfil || "admin" };
+
+      localStorage.setItem("token", token);
+      localStorage.setItem("nome", usuario.nome);
+      localStorage.setItem("perfil", usuario.perfil);
+
+      iniciarApp();
+      return;
     }
+
+    msg.innerHTML = `<div class="msg success">${data.mensagem || "Solicitação enviada."}</div>`;
   } catch (err) {
-    msg.innerHTML = `<div class="msg error">Erro de conexão</div>`;
+    msg.innerHTML = '<div class="msg error">Erro de conexão</div>';
+  }
+});
+
+document.getElementById("busca-produtos").addEventListener("input", debounce(() => {
+  carregarProdutos();
+}, 250));
+
+function showScreen(screen) {
+  document.getElementById("screen-login").style.display = screen === "login" ? "flex" : "none";
+  document.getElementById("screen-register").style.display = screen === "register" ? "flex" : "none";
+  document.getElementById("screen-app").style.display = screen === "app" ? "flex" : "none";
+}
+
+async function iniciarApp() {
+  showScreen("app");
+
+  document.getElementById("user-name").textContent = usuario.nome;
+  document.getElementById("user-role").textContent = usuario.perfil;
+  document.getElementById("nav-usuarios").style.display = usuario.perfil === "admin" ? "flex" : "none";
+
+  setTab("produtos");
+
+  if (usuario.perfil === "admin") {
+    carregarPendentes();
   }
 }
 
 function logout() {
-  localStorage.clear();
-  token = null;
-  usuario = null;
+  token = "";
+  localStorage.removeItem("token");
+  localStorage.removeItem("nome");
+  localStorage.removeItem("perfil");
   showScreen("login");
 }
 
-/* ================== APP ================== */
-function abrirApp() {
-  document.getElementById("user-name").textContent = usuario.nome;
-  document.getElementById("user-role").textContent = usuario.perfil;
-  if (usuario.perfil === "admin") {
-    document.getElementById("nav-usuarios").style.display = "flex";
-    carregarPendentes();
+async function api(path, opts = {}) {
+  const headers = {
+    ...(opts.headers || {}),
+    "Authorization": `Bearer ${token}`,
+  };
+
+  if (opts.body && !headers["Content-Type"]) {
+    headers["Content-Type"] = "application/json";
   }
-  showScreen("app");
-  setTab("produtos");
+
+  const res = await fetch(path, { ...opts, headers });
+
+  if (res.status === 401) {
+    logout();
+    throw new Error("Não autenticado");
+  }
+
+  return res;
+}
+
+function setTab(tab) {
+  document.querySelectorAll(".sidebar nav button").forEach(b => b.classList.remove("active"));
+  const nav = document.getElementById(`nav-${tab}`);
+  if (nav) nav.classList.add("active");
+
+  const title = document.getElementById("page-title");
+  const search = document.getElementById("top-search");
+
+  if (detailChart) { detailChart.destroy(); detailChart = null; }
+  if (histChart) { histChart.destroy(); histChart = null; }
+
+  if (tab === "produtos") {
+    title.textContent = "Produtos";
+    search.style.display = "block";
+    renderTelaProdutos();
+  }
+
+  if (tab === "historico") {
+    title.textContent = "Histórico";
+    search.style.display = "none";
+    renderTelaHistorico();
+  }
+
+  if (tab === "usuarios") {
+    title.textContent = "Usuários";
+    search.style.display = "none";
+    renderTelaUsuarios();
+  }
 }
 
 function toggleSidebar() {
   document.getElementById("sidebar").classList.toggle("collapsed");
 }
 
-function setTab(tab) {
-  document.getElementById("nav-produtos").classList.toggle("active", tab === "produtos");
-  document.getElementById("nav-historico").classList.toggle("active", tab === "historico");
-  document.getElementById("nav-usuarios").classList.toggle("active", tab === "usuarios");
-
-  const titulos = { produtos: "Produtos", historico: "Histórico de preços", usuarios: "Usuários" };
-  document.getElementById("page-title").textContent = titulos[tab] || "";
-  document.getElementById("search-box").style.display = tab === "produtos" ? "block" : "none";
-
-  if (tab === "produtos") renderTelaProdutos();
-  else if (tab === "historico") renderTelaHistorico();
-  else renderTelaUsuarios();
+function toggleTheme() {
+  const atual = document.documentElement.dataset.theme === "dark" ? "light" : "dark";
+  aplicarTema(atual);
+  localStorage.setItem("theme", atual);
 }
 
-/* ================== PRODUTOS ================== */
-async function api(path, opts = {}) {
-  const res = await fetch(`${API}${path}`, {
-    ...opts,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...(opts.headers || {}),
-    },
-  });
-  if (res.status === 401) {
-    logout();
-    throw new Error("Sessão expirada");
-  }
-  return res;
+function aplicarTemaSalvo() {
+  aplicarTema(localStorage.getItem("theme") || "light");
+}
+
+function aplicarTema(theme) {
+  document.documentElement.dataset.theme = theme;
+  document.getElementById("theme-icon").textContent = theme === "dark" ? "☀" : "◐";
+  document.getElementById("theme-label").textContent = theme === "dark" ? "Modo claro" : "Modo escuro";
 }
 
 async function renderTelaProdutos() {
   const c = document.getElementById("content");
   c.innerHTML = `
-    <div class="stats">
-      <div class="stat-card">
-        <div class="label">Total de produtos</div>
-        <div class="value" id="stat-total">—</div>
-        <div class="sub" id="stat-total-sub">cadastrados</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Registros de preço</div>
-        <div class="value" id="stat-registros">—</div>
-        <div class="sub">no banco</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Última coleta</div>
-        <div class="value" id="stat-ultima">—</div>
-        <div class="sub">do n8n</div>
-      </div>
+    <div class="stats" id="stats">
+      <div class="stat-card"><div class="label">Produtos</div><div class="value">...</div></div>
+      <div class="stat-card"><div class="label">Registros</div><div class="value">...</div></div>
+      <div class="stat-card"><div class="label">Última coleta</div><div class="value">...</div></div>
     </div>
 
     <div class="table-card">
       <div class="table-header">
-        <h3 id="tabela-titulo">Produtos cadastrados</h3>
-        ${usuario.perfil === "admin"
-          ? '<button class="btn-primary" onclick="abrirModalProduto()">+ Novo produto</button>'
-          : ""}
+        <h3>Produtos cadastrados</h3>
+        ${usuario.perfil === "admin" ? '<button class="btn-primary" onclick="abrirModalProduto()">Novo produto</button>' : ""}
       </div>
       <div class="table-scroll">
         <table>
           <thead>
             <tr>
-              <th style="width:40px;"></th>
-              <th>Nome</th>
+              <th>Produto</th>
               <th>SKU</th>
               <th>EAN</th>
               <th>Palavras-chave</th>
@@ -739,65 +642,78 @@ async function renderTelaProdutos() {
             </tr>
           </thead>
           <tbody id="tbody-produtos">
-            <tr><td colspan="6" class="empty">Carregando…</td></tr>
+            <tr><td colspan="5" class="empty">Carregando...</td></tr>
           </tbody>
         </table>
       </div>
     </div>
   `;
+
   await carregarProdutos();
 }
 
 async function carregarProdutos() {
-  if (document.getElementById("nav-produtos").classList.contains("active") === false) return;
-  const url = buscaAtual ? `/produtos?busca=${encodeURIComponent(buscaAtual)}` : `/produtos`;
+  const busca = document.getElementById("busca-produtos")?.value.trim() || "";
+
   try {
-    const res = await api(url);
+    const res = await api(`/produtos${busca ? `?busca=${encodeURIComponent(busca)}` : ""}`);
     produtos = await res.json();
-  } catch (e) {
+  } catch (err) {
     produtos = [];
   }
-  renderTabela();
-  carregarEstatisticas();
+
+  await carregarEstatisticas();
+  renderTabelaProdutos();
 }
 
 async function carregarEstatisticas() {
+  const stats = document.getElementById("stats");
+  if (!stats) return;
+
   let url = "/estatisticas";
-  if (buscaAtual && produtos.length === 1) url += `?produto_id=${produtos[0].id}`;
+  if (produtos.length === 1) {
+    url += `?produto_id=${produtos[0].id}`;
+  }
+
   try {
     const res = await api(url);
-    const d = await res.json();
-    document.getElementById("stat-total").textContent = d.total_produtos ?? "—";
-    document.getElementById("stat-registros").textContent = d.total_registros ?? "—";
-    if (d.ultima_coleta) {
-      const dt = new Date(d.ultima_coleta);
-      document.getElementById("stat-ultima").textContent =
-        dt.toLocaleDateString("pt-BR") + " " + dt.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
-    } else {
-      document.getElementById("stat-ultima").textContent = "—";
-    }
-    if (buscaAtual && produtos.length === 1) {
-      document.getElementById("stat-total-sub").textContent = `do produto "${produtos[0].nome}"`;
-    } else {
-      document.getElementById("stat-total-sub").textContent = "cadastrados";
-    }
-  } catch (e) {}
+    const data = await res.json();
+
+    stats.innerHTML = `
+      <div class="stat-card">
+        <div class="label">Produtos</div>
+        <div class="value">${data.total_produtos ?? 0}</div>
+        <div class="sub">${produtos.length === 1 ? "Produto selecionado" : "Total cadastrado"}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Registros</div>
+        <div class="value">${data.total_registros ?? 0}</div>
+        <div class="sub">Coletas no histórico</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Última coleta</div>
+        <div class="value" style="font-size:18px;">${data.ultima_coleta ? formatData(data.ultima_coleta) : "—"}</div>
+        <div class="sub">Último preço salvo</div>
+      </div>
+    `;
+  } catch (err) {}
 }
 
-function renderTabela() {
+function renderTabelaProdutos() {
   const tbody = document.getElementById("tbody-produtos");
   if (!tbody) return;
+
   if (produtos.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="empty">Nenhum produto encontrado</td></tr>`;
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum produto encontrado</td></tr>';
     return;
   }
+
   tbody.innerHTML = produtos.map(p => `
-    <tr class="row-main" onclick="toggleProduto('${p.id}')" title="Clique para ver detalhes">
-      <td><span class="expand-arrow">▶</span></td>
+    <tr class="row-main" onclick="abrirDetalheProduto('${p.id}')">
       <td><strong>${escapeHtml(p.nome)}</strong></td>
       <td>${escapeHtml(p.sku || "—")}</td>
       <td>${escapeHtml(p.ean || "—")}</td>
-      <td>${[p.palavra_chave_1, p.palavra_chave_2].filter(x => x).map(escapeHtml).join(", ")}</td>
+      <td>${[p.palavra_chave_1, p.palavra_chave_2].filter(Boolean).map(escapeHtml).join(", ") || "—"}</td>
       <td style="text-align:right;" onclick="event.stopPropagation();">
         ${usuario.perfil === "admin" ? `
           <button class="btn-edit" onclick="abrirModalProduto('${p.id}')">Editar</button>
@@ -805,101 +721,102 @@ function renderTabela() {
         ` : ""}
       </td>
     </tr>
-    <tr class="row-detail" id="detail-${p.id}" style="display:${produtoExpandidoId === p.id ? "table-row" : "none"};">
-      <td colspan="6">
-        <div class="detail-content" id="detail-content-${p.id}">
-          <div class="empty">Carregando…</div>
-        </div>
-      </td>
-    </tr>
   `).join("");
-  if (produtoExpandidoId) carregarDetalhe(produtoExpandidoId);
 }
 
-let canalAtivo = 'todos';
+async function abrirDetalheProduto(id) {
+  produtoDetalheId = id;
+  produtoDetalheCanal = "todos";
+  document.getElementById("page-title").textContent = "Detalhe do produto";
+  document.getElementById("top-search").style.display = "none";
+  await renderDetalheProduto();
+}
 
-async function toggleProduto(id) {
-  // Abre página de detalhe
-  const produto = produtos.find(p => p.id === id);
+async function renderDetalheProduto() {
+  const produto = produtos.find(p => p.id === produtoDetalheId);
   if (!produto) return;
 
-  // Esconde todas as tabs e mostra detalhe
-  document.querySelectorAll('.tab-panel, .page-detalhe').forEach(el => el.classList.remove('active'));
-  document.getElementById('page-detalhe').classList.add('active');
+  const c = document.getElementById("content");
+  c.innerHTML = `
+    <div class="product-detail-page">
+      <div class="detail-toolbar">
+        <button class="btn-secondary" onclick="voltarParaProdutos()">← Voltar</button>
+        <div class="channel-filter">
+          <button class="${produtoDetalheCanal === "todos" ? "active" : ""}" onclick="filtrarDetalheCanal('todos')">Todos</button>
+          ${CANAIS.map(canal => `
+            <button class="${produtoDetalheCanal === canal.key ? "active" : ""}" onclick="filtrarDetalheCanal('${canal.key}')">
+              ${canal.label}
+            </button>
+          `).join("")}
+        </div>
+      </div>
 
-  document.getElementById('detalhe-titulo').textContent = produto.nome;
-  document.getElementById('detalhe-sub').textContent = `SKU: ${produto.sku || '—'} · EAN: ${produto.ean}`;
-  document.getElementById('detalhe-content').innerHTML = '<p style="color:var(--text-muted)">Carregando...</p>';
-  canalAtivo = 'todos';
-  // Reset botões de canal
-  document.querySelectorAll('.canal-btn').forEach(b => b.classList.remove('active'));
-  document.querySelector('.canal-btn.todos')?.classList.add('active');
+      <div class="detail-title">
+        <div>
+          <h3>${escapeHtml(produto.nome)}</h3>
+          <p>SKU ${escapeHtml(produto.sku || "—")} · EAN ${escapeHtml(produto.ean || "—")}</p>
+          <p>Palavras-chave: ${[produto.palavra_chave_1, produto.palavra_chave_2].filter(Boolean).map(escapeHtml).join(", ") || "—"}</p>
+        </div>
+        ${usuario.perfil === "admin" ? `
+          <div>
+            <button class="btn-edit" onclick="abrirModalProduto('${produto.id}')">Editar</button>
+            <button class="btn-danger" onclick="excluirProduto('${produto.id}')">Excluir</button>
+          </div>
+        ` : ""}
+      </div>
 
-  await carregarDetalhe(id);
+      <div id="produto-detalhe-body">
+        <div class="empty">Carregando...</div>
+      </div>
+    </div>
+  `;
+
+  await carregarDadosDetalheProduto();
 }
 
 function voltarParaProdutos() {
-  document.querySelectorAll('.tab-panel, .page-detalhe').forEach(el => el.classList.remove('active'));
-  document.getElementById('page-produtos').classList.add('active');
-  if (chartCanal) { chartCanal.destroy(); chartCanal = null; }
+  document.getElementById("page-title").textContent = "Produtos";
+  document.getElementById("top-search").style.display = "block";
+  renderTelaProdutos();
 }
 
-function filtrarCanal(canal, btn) {
-  canalAtivo = canal;
-  document.querySelectorAll('.canal-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  // Re-renderiza tabela e gráfico com filtro
-  const id = document.getElementById('page-detalhe').dataset.produtoId;
-  if (id) renderDetalheComFiltro(id);
+function filtrarDetalheCanal(canal) {
+  produtoDetalheCanal = canal;
+  renderDetalheProduto();
 }
 
-let detalheDados = { canais: {}, historico: [], produto: null };
+async function carregarDadosDetalheProduto() {
+  const produto = produtos.find(p => p.id === produtoDetalheId);
+  const body = document.getElementById("produto-detalhe-body");
+  if (!produto || !body) return;
 
-async function carregarDetalhe(id) {
-  const produto = produtos.find(p => p.id === id);
-  if (!produto) return;
-
-  document.getElementById('page-detalhe').dataset.produtoId = id;
+  const canalHistorico = produtoDetalheCanal !== "todos" ? `&canal=${produtoDetalheCanal}` : "";
+  const canalCanais = produtoDetalheCanal !== "todos" ? `?canal=${produtoDetalheCanal}` : "";
 
   let canais = {};
   let historico = [];
+
   try {
     const [r1, r2] = await Promise.all([
-      api(`/produtos/${id}/canais`),
-      api(`/produtos/${id}/historico?dias=30`),
+      api(`/produtos/${produto.id}/canais${canalCanais}`),
+      api(`/produtos/${produto.id}/historico?dias=30${canalHistorico}`),
     ]);
+
     canais = await r1.json();
     historico = await r2.json();
-  } catch (e) {}
-
-  detalheDados = { canais, historico, produto };
-  renderDetalheComFiltro(id);
-}
-
-const CANAL_CORES = {
-  mercado_livre: '#facc15',
-  amazon: '#fb923c',
-  shopee: '#f43f5e',
-  droga_raia: '#3b82f6',
-};
-
-function renderDetalheComFiltro(id) {
-  const { canais, historico, produto } = detalheDados;
-  if (!produto) return;
+  } catch (err) {}
 
   const pp = produto.precos_praticados || {};
-  const cont = document.getElementById('detalhe-content');
+  const canaisVisiveis = produtoDetalheCanal === "todos"
+    ? CANAIS
+    : CANAIS.filter(c => c.key === produtoDetalheCanal);
 
-  // Filtra canais
-  const canaisFiltrados = canalAtivo === 'todos' ? CANAIS : CANAIS.filter(c => c.key === canalAtivo);
-  const historicoFiltrado = canalAtivo === 'todos' ? historico : historico.filter(h => h.canal === canalAtivo);
-
-  cont.innerHTML = `
-    <div style="overflow-x:auto">
-      <table class="canal-table">
+  body.innerHTML = `
+    <div class="channels-table-wrap">
+      <table>
         <thead>
           <tr>
-            <th>Canal</th>
+            <th>E-commerce</th>
             <th>Meu preço</th>
             <th>Menor preço no e-commerce</th>
             <th>Variação média 7d</th>
@@ -907,79 +824,69 @@ function renderDetalheComFiltro(id) {
           </tr>
         </thead>
         <tbody>
-          ${canaisFiltrados.map(c => {
+          ${canaisVisiveis.map(c => {
             const dados = canais[c.key] || {};
-            const meuPreco = pp[c.key];
-            const menor = dados.menor_preco_atual;
-            const variacao = dados.variacao_media_7d;
-            return `<tr>
-              <td><div class="canal-nome"><span class="canal-dot" style="background:${CANAL_CORES[c.key]}"></span>${c.label}</div></td>
-              <td><span class="price-val meu">${meuPreco != null ? formatBRL(meuPreco) : '<span class="price-val sem-dado">—</span>'}</span></td>
-              <td><span class="price-val">${menor != null ? formatBRL(menor) : '<span class="price-val sem-dado">—</span>'}</span></td>
-              <td>${formatVariacaoBadge(variacao)}</td>
-              <td style="color:var(--text-muted)">${dados.registros || 0}</td>
-            </tr>`;
-          }).join('')}
+            return `
+              <tr>
+                <td><strong>${c.label}</strong></td>
+                <td>${pp[c.key] != null ? formatBRL(pp[c.key]) : "—"}</td>
+                <td>${dados.menor_preco_atual != null ? formatBRL(dados.menor_preco_atual) : "—"}</td>
+                <td>${formatVariacao(dados.variacao_media_7d)}</td>
+                <td>${dados.registros || 0}</td>
+              </tr>
+            `;
+          }).join("")}
         </tbody>
       </table>
     </div>
-    <div class="chart-wrap-detalhe">
-      <h3>Histórico de preços ${canalAtivo === 'todos' ? '— todos os canais' : '— ' + (CANAIS.find(c=>c.key===canalAtivo)?.label || '')}</h3>
-      <canvas id="chart-detalhe-${id}"></canvas>
+
+    <div class="chart-wrap" id="detail-chart-wrap">
+      <canvas id="detail-chart"></canvas>
     </div>
   `;
 
-  desenharGrafico('detalhe-' + id, historicoFiltrado, canaisFiltrados);
+  desenharGraficoDetalhe(historico);
 }
 
-function formatVariacaoBadge(variacao) {
-  if (variacao == null) return '<span class="var-badge neutro">— sem dados</span>';
-  const cls = variacao >= 0 ? 'up' : 'down';
-  const icon = variacao >= 0 ? '▲' : '▼';
-  const label = variacao >= 0 ? 'subiu' : 'caiu';
-  return `<span class="var-badge ${cls}">${icon} ${Math.abs(variacao).toFixed(1)}% ${label}</span>`;
-}
-
-function desenharGrafico(id, historico, canaisFiltrados) {
-  const ctx = document.getElementById(`chart-${id}`);
+function desenharGraficoDetalhe(historico) {
+  const ctx = document.getElementById("detail-chart");
   if (!ctx) return;
-  if (chartCanal) { chartCanal.destroy(); chartCanal = null; }
 
-  const canaisParaUsar = canaisFiltrados || CANAIS;
+  if (detailChart) {
+    detailChart.destroy();
+    detailChart = null;
+  }
 
-  // Conjunto único de timestamps (rótulos do eixo X)
-  const labelSet = new Set();
-  historico.forEach(h => labelSet.add(h.data));
-  const labels = Array.from(labelSet).sort();
-  const labelsFormat = labels.map(l => {
-    const d = new Date(l);
-    return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
-  });
+  const labels = Array.from(new Set(historico.map(h => h.data))).sort();
+  const labelsFormat = labels.map(formatData);
 
-  // Agrupa preços por canal alinhados aos labels
-  const porCanal = {};
-  canaisParaUsar.forEach(c => porCanal[c.key] = labels.map(() => null));
-  historico.forEach(h => {
-    if (!porCanal[h.canal]) return;
-    const idx = labels.indexOf(h.data);
-    if (idx >= 0) porCanal[h.canal][idx] = h.preco;
-  });
+  const canaisGrafico = produtoDetalheCanal === "todos"
+    ? CANAIS
+    : CANAIS.filter(c => c.key === produtoDetalheCanal);
 
-  const datasets = canaisParaUsar.map(c => ({
-    label: c.label,
-    data: porCanal[c.key],
-    borderColor: CANAL_CORES[c.key],
-    backgroundColor: CANAL_CORES[c.key] + "30",
-    tension: 0.3,
-    spanGaps: true,
-  })).filter(ds => ds.data.some(v => v != null));
+  const datasets = canaisGrafico.map(c => {
+    const data = labels.map(label => {
+      const item = historico.find(h => h.data === label && h.canal === c.key);
+      return item ? item.preco : null;
+    });
+
+    return {
+      label: c.label,
+      data,
+      borderColor: CORES[c.key],
+      backgroundColor: CORES[c.key] + "30",
+      tension: 0.3,
+      spanGaps: true,
+    };
+  }).filter(ds => ds.data.some(v => v != null));
 
   if (datasets.length === 0) {
-    ctx.parentElement.innerHTML = '<div class="empty">Sem histórico ainda — aguarde a primeira coleta do n8n.</div>';
+    document.getElementById("detail-chart-wrap").innerHTML =
+      '<div class="empty">Sem histórico para este filtro.</div>';
     return;
   }
 
-  chartCanal = new Chart(ctx, {
+  detailChart = new Chart(ctx, {
     type: "line",
     data: { labels: labelsFormat, datasets },
     options: {
@@ -988,13 +895,12 @@ function desenharGrafico(id, historico, canaisFiltrados) {
       plugins: { legend: { position: "bottom" } },
       scales: {
         x: { ticks: { maxTicksLimit: 8 } },
-        y: { ticks: { callback: v => "R$ " + v.toFixed(2) } },
+        y: { ticks: { callback: v => "R$ " + Number(v).toFixed(2) } },
       },
     },
   });
 }
 
-/* ================== MODAL PRODUTO ================== */
 function abrirModalProduto(id = null) {
   produtoEditandoId = id;
   document.getElementById("modal-title").textContent = id ? "Editar produto" : "Novo produto";
@@ -1012,6 +918,7 @@ function abrirModalProduto(id = null) {
       document.getElementById("p-ean").value = p.ean || "";
       document.getElementById("p-pc1").value = p.palavra_chave_1 || "";
       document.getElementById("p-pc2").value = p.palavra_chave_2 || "";
+
       const pp = p.precos_praticados || {};
       document.getElementById("p-pp-ml").value = pp.mercado_livre ?? "";
       document.getElementById("p-pp-am").value = pp.amazon ?? "";
@@ -1022,6 +929,7 @@ function abrirModalProduto(id = null) {
     ["p-nome","p-sku","p-ean","p-pc1","p-pc2","p-pp-ml","p-pp-am","p-pp-sh","p-pp-dr"]
       .forEach(i => document.getElementById(i).value = "");
   }
+
   document.getElementById("modal-produto").classList.add("show");
 }
 
@@ -1045,18 +953,18 @@ async function salvarProduto() {
     return;
   }
 
-  const pp = {
-    mercado_livre: parseNum(document.getElementById("p-pp-ml").value),
-    amazon: parseNum(document.getElementById("p-pp-am").value),
-    shopee: parseNum(document.getElementById("p-pp-sh").value),
-    droga_raia: parseNum(document.getElementById("p-pp-dr").value),
-  };
-
   const payload = {
-    nome, sku, ean,
+    nome,
+    sku,
+    ean,
     palavra_chave_1: pc1,
     palavra_chave_2: pc2,
-    precos_praticados: pp,
+    precos_praticados: {
+      mercado_livre: parseNum(document.getElementById("p-pp-ml").value),
+      amazon: parseNum(document.getElementById("p-pp-am").value),
+      shopee: parseNum(document.getElementById("p-pp-sh").value),
+      droga_raia: parseNum(document.getElementById("p-pp-dr").value),
+    },
   };
 
   const url = produtoEditandoId ? `/produtos/${produtoEditandoId}` : "/produtos";
@@ -1064,8 +972,8 @@ async function salvarProduto() {
 
   try {
     const res = await api(url, { method, body: JSON.stringify(payload) });
-    let data = {};
-    try { data = await res.json(); } catch (e) {}
+    const data = await res.json().catch(() => ({}));
+
     if (!res.ok) {
       alert.innerHTML = `<div class="alert error">${data.detail || "Erro ao salvar"}</div>`;
       return;
@@ -1074,41 +982,47 @@ async function salvarProduto() {
     document.getElementById("modal-form").style.display = "none";
     document.getElementById("modal-actions").style.display = "none";
     document.getElementById("modal-success").style.display = "block";
-    document.getElementById("modal-success").innerHTML = `<div class="alert success">${data.mensagem || (produtoEditandoId ? "Produto atualizado!" : "Produto cadastrado com sucesso!")}</div>`;
+    document.getElementById("modal-success").innerHTML =
+      `<div class="alert success">${data.mensagem || "Produto salvo com sucesso!"}</div>`;
     document.getElementById("modal-success-actions").style.display = "flex";
+
     await carregarProdutos();
-  } catch (e) {
+
+    if (produtoDetalheId) {
+      const atualizado = produtos.find(p => p.id === produtoDetalheId);
+      if (atualizado) await renderDetalheProduto();
+    }
+  } catch (err) {
     alert.innerHTML = '<div class="alert error">Erro de conexão</div>';
   }
 }
 
 async function excluirProduto(id) {
   if (!confirm("Tem certeza que deseja excluir este produto e todo o histórico?")) return;
+
   try {
     const res = await api(`/produtos/${id}`, { method: "DELETE" });
+
     if (!res.ok) {
       const d = await res.json().catch(() => ({}));
       alert(d.detail || "Erro ao excluir");
       return;
     }
-    await carregarProdutos();
-  } catch (e) {
+
+    produtoDetalheId = null;
+    await renderTelaProdutos();
+  } catch (err) {
     alert("Erro de conexão");
   }
 }
 
-/* ================== HISTÓRICO ================== */
-let histProdutoId = null;
-let histDias = 30;
-let histTodos = [];           // produtos disponíveis (cache)
-let histChart = null;
-
 async function renderTelaHistorico() {
-  // Busca produtos pra alimentar o seletor
   try {
     const res = await api("/produtos");
     histTodos = await res.json();
-  } catch (e) { histTodos = []; }
+  } catch (err) {
+    histTodos = [];
+  }
 
   const c = document.getElementById("content");
   c.innerHTML = `
@@ -1117,10 +1031,20 @@ async function renderTelaHistorico() {
         <label>Buscar produto</label>
         <input type="text" id="hist-busca" placeholder="Nome, SKU ou EAN..." />
       </div>
+
       <div class="field">
         <label>Produto</label>
         <select id="hist-produto"></select>
       </div>
+
+      <div class="field">
+        <label>Canal</label>
+        <select id="hist-canal">
+          <option value="todos">Todos</option>
+          ${CANAIS.map(c => `<option value="${c.key}">${c.label}</option>`).join("")}
+        </select>
+      </div>
+
       <div class="field">
         <label>Período</label>
         <div class="periodo-grupo" id="hist-periodos">
@@ -1133,11 +1057,11 @@ async function renderTelaHistorico() {
       </div>
     </div>
 
-    <div class="hist-chart-wrap">
+    <div class="hist-chart-wrap" id="hist-chart-wrap">
       <canvas id="hist-chart"></canvas>
     </div>
 
-    <div class="table-card">
+    <div class="table-card full">
       <div class="table-header"><h3>Coletas</h3></div>
       <div class="table-scroll" style="max-height:300px;">
         <table>
@@ -1162,22 +1086,31 @@ async function renderTelaHistorico() {
   document.getElementById("hist-busca").addEventListener("input", (e) => {
     preencherSelectHistorico(e.target.value.trim());
   });
+
   document.getElementById("hist-produto").addEventListener("change", (e) => {
     histProdutoId = e.target.value || null;
     carregarHistorico();
   });
-  document.getElementById("hist-periodos").addEventListener("click", (e) => {
-    const b = e.target.closest("button.periodo-btn");
-    if (!b) return;
-    document.querySelectorAll("#hist-periodos .periodo-btn").forEach(x => x.classList.remove("active"));
-    b.classList.add("active");
-    histDias = parseInt(b.dataset.dias);
+
+  document.getElementById("hist-canal").addEventListener("change", (e) => {
+    histCanal = e.target.value || "todos";
     carregarHistorico();
   });
 
-  // Se já tinha um produto selecionado anteriormente, carrega
+  document.getElementById("hist-periodos").addEventListener("click", (e) => {
+    const b = e.target.closest("button.periodo-btn");
+    if (!b) return;
+
+    document.querySelectorAll("#hist-periodos .periodo-btn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+
+    histDias = parseInt(b.dataset.dias, 10);
+    carregarHistorico();
+  });
+
   if (histProdutoId) {
     document.getElementById("hist-produto").value = histProdutoId;
+    document.getElementById("hist-canal").value = histCanal;
     carregarHistorico();
   }
 }
@@ -1185,12 +1118,15 @@ async function renderTelaHistorico() {
 function preencherSelectHistorico(busca) {
   const sel = document.getElementById("hist-produto");
   if (!sel) return;
+
   const termo = (busca || "").toLowerCase();
+
   const filtrados = histTodos.filter(p => {
     if (!termo) return true;
+
     return (p.nome || "").toLowerCase().includes(termo)
-        || (p.sku || "").toLowerCase().includes(termo)
-        || (p.ean || "").toLowerCase().includes(termo);
+      || (p.sku || "").toLowerCase().includes(termo)
+      || (p.ean || "").toLowerCase().includes(termo);
   });
 
   sel.innerHTML = `<option value="">— escolha um produto —</option>` +
@@ -1204,90 +1140,79 @@ function preencherSelectHistorico(busca) {
 }
 
 async function carregarHistorico() {
+  const tb = document.getElementById("hist-tabela");
+  const wrap = document.getElementById("hist-chart-wrap");
+
   if (!histProdutoId) {
-    document.getElementById("hist-tabela").innerHTML =
-      `<tr><td colspan="4" class="empty">Selecione um produto</td></tr>`;
+    if (tb) tb.innerHTML = `<tr><td colspan="4" class="empty">Selecione um produto</td></tr>`;
+    if (wrap) wrap.innerHTML = '<canvas id="hist-chart"></canvas>';
     if (histChart) { histChart.destroy(); histChart = null; }
-    const ctx = document.getElementById("hist-chart");
-    if (ctx) ctx.getContext("2d").clearRect(0, 0, ctx.width, ctx.height);
     return;
   }
 
   let historico = [];
-  try {
-    const res = await api(`/produtos/${histProdutoId}/historico?dias=${histDias}`);
-    historico = await res.json();
-  } catch (e) { historico = []; }
 
-  // Tabela
-  const tb = document.getElementById("hist-tabela");
+  try {
+    const canalQuery = histCanal !== "todos" ? `&canal=${histCanal}` : "";
+    const res = await api(`/produtos/${histProdutoId}/historico?dias=${histDias}${canalQuery}`);
+    historico = await res.json();
+  } catch (err) {
+    historico = [];
+  }
+
   if (historico.length === 0) {
-    tb.innerHTML = `<tr><td colspan="4" class="empty">Sem coletas no período de ${histDias} dias</td></tr>`;
+    tb.innerHTML = `<tr><td colspan="4" class="empty">Sem coletas no período selecionado</td></tr>`;
   } else {
-    const labelCanal = { mercado_livre: "Mercado Livre", amazon: "Amazon", shopee: "Shopee", droga_raia: "Droga Raia" };
-    tb.innerHTML = historico.slice().reverse().map(h => {
-      const d = new Date(h.data);
-      return `
-        <tr>
-          <td>${d.toLocaleDateString("pt-BR")} ${d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</td>
-          <td>${escapeHtml(labelCanal[h.canal] || h.canal || "—")}</td>
-          <td>${formatBRL(h.preco)}</td>
-          <td>${escapeHtml(h.vendedor || "—")}</td>
-        </tr>
-      `;
-    }).join("");
+    tb.innerHTML = historico.slice().reverse().map(h => `
+      <tr>
+        <td>${formatData(h.data)}</td>
+        <td>${escapeHtml(CANAL_LABEL[h.canal] || h.canal || "—")}</td>
+        <td>${formatBRL(h.preco)}</td>
+        <td>${escapeHtml(h.vendedor || "—")}</td>
+      </tr>
+    `).join("");
   }
 
   desenharGraficoHistorico(historico);
 }
 
 function desenharGraficoHistorico(historico) {
+  const wrap = document.getElementById("hist-chart-wrap");
+  if (!wrap) return;
+
+  wrap.innerHTML = '<canvas id="hist-chart"></canvas>';
   const ctx = document.getElementById("hist-chart");
-  if (!ctx) return;
-  if (histChart) { histChart.destroy(); histChart = null; }
 
-  const labelSet = new Set();
-  historico.forEach(h => labelSet.add(h.data));
-  const labels = Array.from(labelSet).sort();
-  const labelsFormat = labels.map(l => {
-    const d = new Date(l);
-    return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
-  });
+  if (histChart) {
+    histChart.destroy();
+    histChart = null;
+  }
 
-  const porCanal = {};
-  CANAIS.forEach(c => porCanal[c.key] = labels.map(() => null));
-  historico.forEach(h => {
-    if (!porCanal[h.canal]) return;
-    const idx = labels.indexOf(h.data);
-    if (idx >= 0) porCanal[h.canal][idx] = h.preco;
-  });
+  const labels = Array.from(new Set(historico.map(h => h.data))).sort();
+  const labelsFormat = labels.map(formatData);
 
-  const cores = {
-    mercado_livre: "#facc15",
-    amazon: "#fb923c",
-    shopee: "#f43f5e",
-    droga_raia: "#3b82f6",
-  };
+  const canaisGrafico = histCanal === "todos"
+    ? CANAIS
+    : CANAIS.filter(c => c.key === histCanal);
 
-  const datasets = CANAIS.map(c => ({
-    label: c.label,
-    data: porCanal[c.key],
-    borderColor: cores[c.key],
-    backgroundColor: cores[c.key] + "30",
-    tension: 0.3,
-    spanGaps: true,
-  })).filter(ds => ds.data.some(v => v != null));
+  const datasets = canaisGrafico.map(c => {
+    const data = labels.map(label => {
+      const item = historico.find(h => h.data === label && h.canal === c.key);
+      return item ? item.preco : null;
+    });
+
+    return {
+      label: c.label,
+      data,
+      borderColor: CORES[c.key],
+      backgroundColor: CORES[c.key] + "30",
+      tension: 0.3,
+      spanGaps: true,
+    };
+  }).filter(ds => ds.data.some(v => v != null));
 
   if (datasets.length === 0) {
-    if (histChart) { histChart.destroy(); histChart = null; }
-    ctx.parentElement.innerHTML = '<div class="empty">Sem coletas no período selecionado.</div>';
-    // restaura o canvas pra próxima renderização
-    setTimeout(() => {
-      const wrap = document.querySelector(".hist-chart-wrap");
-      if (wrap && !document.getElementById("hist-chart")) {
-        wrap.innerHTML = '<canvas id="hist-chart"></canvas>';
-      }
-    }, 0);
+    wrap.innerHTML = '<div class="empty">Sem coletas no período selecionado.</div>';
     return;
   }
 
@@ -1300,26 +1225,29 @@ function desenharGraficoHistorico(historico) {
       plugins: { legend: { position: "bottom" } },
       scales: {
         x: { ticks: { maxTicksLimit: 10 } },
-        y: { ticks: { callback: v => "R$ " + v.toFixed(2) } },
+        y: { ticks: { callback: v => "R$ " + Number(v).toFixed(2) } },
       },
     },
   });
 }
 
-/* ================== USUÁRIOS ================== */
 async function renderTelaUsuarios() {
   const c = document.getElementById("content");
+
   c.innerHTML = `
-    <div class="table-card">
+    <div class="table-card full">
       <div class="table-header"><h3>Solicitações pendentes</h3></div>
-      <div class="table-scroll" id="tbody-pendentes">Carregando…</div>
+      <div class="table-scroll" id="tbody-pendentes">Carregando...</div>
     </div>
+
     <div style="height:18px;"></div>
-    <div class="table-card">
+
+    <div class="table-card full">
       <div class="table-header"><h3>Usuários cadastrados</h3></div>
-      <div class="table-scroll" id="tbody-usuarios">Carregando…</div>
+      <div class="table-scroll" id="tbody-usuarios">Carregando...</div>
     </div>
   `;
+
   await carregarPendentes();
   await carregarUsuarios();
 }
@@ -1328,41 +1256,55 @@ async function carregarPendentes() {
   try {
     const res = await api("/pendentes");
     const lista = await res.json();
+
     const badge = document.getElementById("badge-pendentes");
-    if (lista.length > 0) {
-      badge.textContent = lista.length;
-      badge.style.display = "inline-block";
-    } else {
-      badge.style.display = "none";
+
+    if (badge) {
+      if (lista.length > 0) {
+        badge.textContent = lista.length;
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
     }
+
     const cont = document.getElementById("tbody-pendentes");
     if (!cont) return;
+
     if (lista.length === 0) {
       cont.innerHTML = '<div class="empty">Nenhuma solicitação pendente</div>';
       return;
     }
+
     cont.innerHTML = lista.map(u => `
       <div class="user-row">
         <div class="info">
           <div class="name">${escapeHtml(u.nome)}</div>
           <div class="email">${escapeHtml(u.email)}</div>
         </div>
-        <div style="display:flex; gap:6px; align-items:center;">
-          <button class="btn-edit" onclick="aprovarUsuario('${u.id}','admin')">Aprovar como Admin</button>
+        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+          <button class="btn-edit" onclick="aprovarUsuario('${u.id}','admin')">Aprovar Admin</button>
           <button class="btn-edit" onclick="aprovarUsuario('${u.id}','visualizador')">Aprovar Visualizador</button>
           <button class="btn-danger" onclick="rejeitarUsuario('${u.id}')">Rejeitar</button>
         </div>
       </div>
     `).join("");
-  } catch (e) {}
+  } catch (err) {}
 }
 
 async function carregarUsuarios() {
   try {
     const res = await api("/usuarios");
     const lista = await res.json();
+
     const cont = document.getElementById("tbody-usuarios");
     if (!cont) return;
+
+    if (lista.length === 0) {
+      cont.innerHTML = '<div class="empty">Nenhum usuário cadastrado</div>';
+      return;
+    }
+
     cont.innerHTML = lista.map(u => `
       <div class="user-row">
         <div class="info">
@@ -1370,50 +1312,79 @@ async function carregarUsuarios() {
           <div class="email">${escapeHtml(u.email)}</div>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
-          <span class="badge ${u.perfil === 'admin' ? 'admin' : 'viewer'}">${u.perfil}</span>
-          <span class="badge ${u.status === 'aprovado' ? 'approved' : u.status === 'pendente' ? 'pending' : 'rejected'}">${u.status}</span>
+          <span class="badge ${u.perfil === "admin" ? "admin" : "viewer"}">${escapeHtml(u.perfil || "visualizador")}</span>
+          <span class="badge ${u.status === "aprovado" ? "approved" : u.status === "pendente" ? "pending" : "rejected"}">${escapeHtml(u.status || "aprovado")}</span>
         </div>
       </div>
     `).join("");
-  } catch (e) {}
+  } catch (err) {}
 }
 
 async function aprovarUsuario(id, perfil) {
   await api(`/aprovar/${id}?perfil=${perfil}`, { method: "POST" });
-  carregarPendentes();
-  carregarUsuarios();
+  await carregarPendentes();
+  await carregarUsuarios();
 }
 
 async function rejeitarUsuario(id) {
   await api(`/rejeitar/${id}`, { method: "POST" });
-  carregarPendentes();
-  carregarUsuarios();
+  await carregarPendentes();
+  await carregarUsuarios();
 }
 
-/* ================== HELPERS ================== */
 function formatBRL(v) {
-  if (v == null) return "—";
-  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  if (v == null || v === "") return "—";
+  const n = Number(v);
+  if (Number.isNaN(n)) return "—";
+  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
 
 function formatVariacao(v) {
-  if (v == null) return '<span class="variation-zero">—</span>';
-  if (v > 0) return `<span class="variation-up">▲ ${v.toFixed(2)}%</span>`;
-  if (v < 0) return `<span class="variation-down">▼ ${Math.abs(v).toFixed(2)}%</span>`;
+  if (v == null || Number.isNaN(Number(v))) return '<span class="variation-zero">—</span>';
+
+  const n = Number(v);
+
+  if (n > 0) return `<span class="variation-up">▲ ${n.toFixed(2)}%</span>`;
+  if (n < 0) return `<span class="variation-down">▼ ${Math.abs(n).toFixed(2)}%</span>`;
+
   return '<span class="variation-zero">0,00%</span>';
+}
+
+function formatData(value) {
+  if (!value) return "—";
+
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "—";
+
+  return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function parseNum(v) {
   if (v === "" || v == null) return null;
-  const n = parseFloat(v);
-  return isNaN(n) ? null : n;
+  const n = parseFloat(String(v).replace(",", "."));
+  return Number.isNaN(n) ? null : n;
 }
 
 function escapeHtml(s) {
   if (s == null) return "";
+
   return String(s)
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function debounce(fn, delay) {
+  let t;
+  return (...args) => {
+    clearTimeout(t);
+    t = setTimeout(() => fn(...args), delay);
+  };
 }
 </script>
 </body>
