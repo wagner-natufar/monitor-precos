@@ -85,6 +85,7 @@ class AprovarUsuario(BaseModel):
 
 class Produto(BaseModel):
     nome: str
+    sku: str
     ean: str
     kw1: str
     kw2: Optional[str] = ""
@@ -199,11 +200,25 @@ async def listar_produtos(payload = Depends(usuario_aprovado)):
 
 @app.post("/produtos")
 async def cadastrar_produto(produto: Produto, payload = Depends(exigir_admin)):
+    existente = await col_produtos.find_one({"sku": produto.sku})
+    if existente:
+        raise HTTPException(status_code=400, detail="Produto já cadastrado com esse SKU")
     doc = produto.dict()
     doc["criadoEm"] = datetime.now().isoformat()
     result = await col_produtos.insert_one(doc)
     doc["id"] = str(result.inserted_id)
     return doc
+
+@app.put("/produtos/{produto_id}")
+async def editar_produto(produto_id: str, produto: Produto, payload = Depends(exigir_admin)):
+    existente = await col_produtos.find_one({"sku": produto.sku, "_id": {"$ne": ObjectId(produto_id)}})
+    if existente:
+        raise HTTPException(status_code=400, detail="Já existe outro produto com esse SKU")
+    await col_produtos.update_one(
+        {"_id": ObjectId(produto_id)},
+        {"$set": produto.dict()}
+    )
+    return {"ok": True}
 
 @app.delete("/produtos/{produto_id}")
 async def excluir_produto(produto_id: str, payload = Depends(exigir_admin)):
