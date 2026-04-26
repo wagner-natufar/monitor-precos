@@ -206,8 +206,7 @@ async def cadastrar_produto(produto: Produto, payload = Depends(exigir_admin)):
     doc = produto.dict()
     doc["criadoEm"] = datetime.now().isoformat()
     result = await col_produtos.insert_one(doc)
-    doc["id"] = str(result.inserted_id)
-    return doc
+    return {"id": str(result.inserted_id), "mensagem": "Produto cadastrado com sucesso"}
 
 @app.put("/produtos/{produto_id}")
 async def editar_produto(produto_id: str, produto: Produto, payload = Depends(exigir_admin)):
