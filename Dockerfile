@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY server.py .
 COPY index.html .
 
-ARG CACHEBUST=1
+ARG CACHEBUST=2
 
 EXPOSE 8080
 
