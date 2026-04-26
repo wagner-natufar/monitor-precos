@@ -36,6 +36,7 @@ app.add_middleware(
 )
 
 CANAIS = ["mercado_livre", "amazon", "shopee", "droga_raia"]
+PERFIS = ["master", "admin", "visualizador"]
 
 
 # === Helpers ===
@@ -81,6 +82,13 @@ def criar_token(user_id: str, perfil: str) -> str:
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALG)
 
 
+def object_id_or_400(value: str):
+    try:
+        return ObjectId(value)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID inválido")
+
+
 def normalizar_canal(canal: Optional[str] = None) -> Optional[str]:
     if not canal or canal == "todos":
         return None
@@ -91,13 +99,6 @@ def normalizar_canal(canal: Optional[str] = None) -> Optional[str]:
     return canal
 
 
-def object_id_or_400(value: str):
-    try:
-        return ObjectId(value)
-    except Exception:
-        raise HTTPException(status_code=400, detail="ID inválido")
-
-
 async def get_user(authorization: Optional[str] = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Não autenticado")
@@ -106,15 +107,54 @@ async def get_user(authorization: Optional[str] = Header(None)):
 
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALG])
-        return payload
-    except jwt.PyJWTError:
+        user_id = payload.get("user_id")
+        oid = ObjectId(user_id)
+    except Exception:
         raise HTTPException(status_code=401, detail="Token inválido")
 
+    user_db = await usuarios_col.find_one({"_id": oid})
 
-async def admin_required(user=Depends(get_user)):
-    if user.get("perfil") != "admin":
-        raise HTTPException(status_code=403, detail="Acesso restrito ao admin")
+    if not user_db:
+        raise HTTPException(status_code=401, detail="Usuário não encontrado")
+
+    if user_db.get("status", "aprovado") != "aprovado":
+        raise HTTPException(status_code=403, detail="Usuário sem acesso aprovado")
+
+    return {
+        "user_id": str(user_db["_id"]),
+        "perfil": user_db.get("perfil", "visualizador"),
+        "nome": user_db.get("nome", user_db.get("email", "")),
+        "email": user_db.get("email", ""),
+    }
+
+
+async def master_required(user=Depends(get_user)):
+    if user.get("perfil") != "master":
+        raise HTTPException(status_code=403, detail="Acesso restrito ao master")
     return user
+
+
+async def product_manager_required(user=Depends(get_user)):
+    if user.get("perfil") not in ["master", "admin"]:
+        raise HTTPException(status_code=403, detail="Acesso restrito ao master ou admin")
+    return user
+
+
+async def ultimo_master(oid: ObjectId) -> bool:
+    user = await usuarios_col.find_one({"_id": oid})
+
+    if not user:
+        return False
+
+    if user.get("perfil") != "master" or user.get("status", "aprovado") != "aprovado":
+        return False
+
+    total_masters = await usuarios_col.count_documents({
+        "perfil": "master",
+        "status": "aprovado",
+    })
+
+    return total_masters <= 1
 
 
 # === Models ===
@@ -164,33 +204,35 @@ async def registrar(data: CadastroInput):
         raise HTTPException(status_code=400, detail="E-mail já cadastrado")
 
     total = await usuarios_col.count_documents({})
-    primeiro_admin = total == 0
+    primeiro_master = total == 0
 
     novo = {
         "nome": data.nome,
         "email": data.email,
         "senha_hash": hash_senha(data.senha),
-        "perfil": "admin" if primeiro_admin else "visualizador",
-        "status": "aprovado" if primeiro_admin else "pendente",
+        "perfil": "master" if primeiro_master else "visualizador",
+        "status": "aprovado" if primeiro_master else "pendente",
         "criado_em": datetime.utcnow(),
     }
 
     res = await usuarios_col.insert_one(novo)
     user_id = str(res.inserted_id)
 
-    if primeiro_admin:
-        token = criar_token(user_id, "admin")
+    if primeiro_master:
+        token = criar_token(user_id, "master")
 
         return {
             "token": token,
-            "perfil": "admin",
+            "perfil": "master",
             "nome": data.nome,
             "primeiro_admin": True,
+            "primeiro_master": True,
         }
 
     return {
         "mensagem": "Solicitação enviada! Aguarde aprovação do administrador.",
         "primeiro_admin": False,
+        "primeiro_master": False,
     }
 
 
@@ -219,8 +261,21 @@ async def login(data: LoginInput):
     if status == "rejeitado":
         raise HTTPException(status_code=403, detail="Acesso negado")
 
-    user_id = str(user["_id"])
     perfil = user.get("perfil", "visualizador")
+
+    masters = await usuarios_col.count_documents({
+        "perfil": "master",
+        "status": "aprovado",
+    })
+
+    if masters == 0 and status == "aprovado":
+        perfil = "master"
+        await usuarios_col.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"perfil": "master"}},
+        )
+
+    user_id = str(user["_id"])
     nome = user.get("nome", user.get("email", ""))
 
     token = criar_token(user_id, perfil)
@@ -237,13 +292,15 @@ async def me(user=Depends(get_user)):
     return {
         "perfil": user["perfil"],
         "user_id": user["user_id"],
+        "nome": user["nome"],
+        "email": user["email"],
     }
 
 
 # === Usuários ===
 
 @app.get("/pendentes")
-async def listar_pendentes(user=Depends(admin_required)):
+async def listar_pendentes(user=Depends(master_required)):
     docs = await usuarios_col.find({"status": "pendente"}).to_list(1000)
 
     return [
@@ -253,7 +310,7 @@ async def listar_pendentes(user=Depends(admin_required)):
 
 
 @app.get("/usuarios")
-async def listar_usuarios(user=Depends(admin_required)):
+async def listar_usuarios(user=Depends(master_required)):
     docs = await usuarios_col.find().to_list(1000)
 
     return [
@@ -266,9 +323,9 @@ async def listar_usuarios(user=Depends(admin_required)):
 async def aprovar(
     user_id: str,
     perfil: str = "visualizador",
-    user=Depends(admin_required),
+    user=Depends(master_required),
 ):
-    if perfil not in ["admin", "visualizador"]:
+    if perfil not in PERFIS:
         raise HTTPException(status_code=400, detail="Perfil inválido")
 
     oid = object_id_or_400(user_id)
@@ -285,8 +342,14 @@ async def aprovar(
 
 
 @app.post("/rejeitar/{user_id}")
-async def rejeitar(user_id: str, user=Depends(admin_required)):
+async def rejeitar(user_id: str, user=Depends(master_required)):
     oid = object_id_or_400(user_id)
+
+    if await ultimo_master(oid):
+        raise HTTPException(
+            status_code=400,
+            detail="Não é possível rejeitar o último master",
+        )
 
     res = await usuarios_col.update_one(
         {"_id": oid},
@@ -297,6 +360,34 @@ async def rejeitar(user_id: str, user=Depends(admin_required)):
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
     return {"mensagem": "Usuário rejeitado"}
+
+
+@app.put("/usuarios/{user_id}/perfil")
+async def alterar_perfil_usuario(
+    user_id: str,
+    perfil: str,
+    user=Depends(master_required),
+):
+    if perfil not in PERFIS:
+        raise HTTPException(status_code=400, detail="Perfil inválido")
+
+    oid = object_id_or_400(user_id)
+
+    if perfil != "master" and await ultimo_master(oid):
+        raise HTTPException(
+            status_code=400,
+            detail="Não é possível remover o último master",
+        )
+
+    res = await usuarios_col.update_one(
+        {"_id": oid},
+        {"$set": {"perfil": perfil}},
+    )
+
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    return {"mensagem": "Função atualizada"}
 
 
 # === Produtos ===
@@ -320,7 +411,7 @@ async def listar_produtos(busca: Optional[str] = None, user=Depends(get_user)):
 
 
 @app.post("/produtos")
-async def cadastrar_produto(produto: Produto, user=Depends(admin_required)):
+async def cadastrar_produto(produto: Produto, user=Depends(product_manager_required)):
     if await produtos_col.find_one({"sku": produto.sku}):
         raise HTTPException(
             status_code=400,
@@ -348,7 +439,7 @@ async def cadastrar_produto(produto: Produto, user=Depends(admin_required)):
 async def editar_produto(
     produto_id: str,
     produto: Produto,
-    user=Depends(admin_required),
+    user=Depends(product_manager_required),
 ):
     oid = object_id_or_400(produto_id)
 
@@ -376,7 +467,7 @@ async def editar_produto(
 
 
 @app.delete("/produtos/{produto_id}")
-async def excluir_produto(produto_id: str, user=Depends(admin_required)):
+async def excluir_produto(produto_id: str, user=Depends(product_manager_required)):
     oid = object_id_or_400(produto_id)
 
     res = await produtos_col.delete_one({"_id": oid})
@@ -467,7 +558,7 @@ async def canais_produto(
 
 
 @app.post("/historico")
-async def registrar_preco(data: HistoricoInput, user=Depends(admin_required)):
+async def registrar_preco(data: HistoricoInput, user=Depends(product_manager_required)):
     if data.canal not in CANAIS:
         raise HTTPException(
             status_code=400,
