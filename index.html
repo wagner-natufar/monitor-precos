@@ -33,7 +33,7 @@
     --row-hover: #f0fdf4;
     --thead-bg: #f0fdf4;
     --shadow: 0 1px 3px rgba(0,0,0,0.06);
-    --shadow-lg: 0 25px 60px rgba(0,0,0,0.25);
+    --shadow-lg: 0 18px 45px rgba(0,0,0,0.18);
     --modal-overlay: rgba(0,0,0,0.5);
     --success-bg: #dcfce7;
     --success-text: #065f46;
@@ -77,7 +77,7 @@
     --row-hover: #1a2e22;
     --thead-bg: #0f1a14;
     --shadow: 0 1px 3px rgba(0,0,0,0.4);
-    --shadow-lg: 0 25px 60px rgba(0,0,0,0.6);
+    --shadow-lg: 0 18px 45px rgba(0,0,0,0.55);
     --modal-overlay: rgba(0,0,0,0.7);
     --success-bg: rgba(34,197,94,0.18);
     --success-text: #4ade80;
@@ -94,142 +94,913 @@
     --auth-gradient: linear-gradient(135deg, #050a07 0%, #14532d 100%);
   }
 
-  * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--text); }
-  button { cursor: pointer; border: none; background: none; font-size: inherit; color: inherit; }
-  input, select { font-size: inherit; font-family: inherit; }
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
 
-  .auth-bg { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--auth-gradient); }
-  .auth-card { background: var(--surface); padding: 40px; border-radius: 12px; width: 100%; max-width: 420px; box-shadow: var(--shadow-lg); }
-  .auth-card h1 { text-align: center; margin-bottom: 8px; color: var(--primary); font-size: 28px; }
-  .auth-card .sub { text-align: center; color: var(--text-muted); margin-bottom: 28px; font-size: 14px; }
-  .auth-card label { display: block; margin: 14px 0 6px; font-size: 13px; color: var(--text); font-weight: 500; }
-  .auth-card input { width: 100%; padding: 12px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--text); }
-  .auth-card input:focus { outline: none; border-color: var(--input-focus); }
-  .auth-card .btn-primary { width: 100%; margin-top: 22px; padding: 12px; }
-  .auth-card .switch { text-align: center; margin-top: 18px; color: var(--text-muted); font-size: 14px; }
-  .auth-card .switch a { color: var(--primary); font-weight: 600; cursor: pointer; }
-  .msg { padding: 12px; border-radius: 8px; margin-top: 14px; font-size: 14px; text-align: center; }
-  .msg.error, .alert.error { background: var(--error-bg); color: var(--error-text); }
-  .msg.success, .alert.success { background: var(--success-bg); color: var(--success-text); }
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+  }
 
-  .app { display: flex; height: 100vh; overflow: hidden; }
-  .sidebar { background: var(--sidebar-bg); color: var(--sidebar-text); width: 240px; flex-shrink: 0; display: flex; flex-direction: column; height: 100vh; transition: width 0.25s ease; overflow: hidden; }
-  .sidebar.collapsed { width: 64px; }
-  .sidebar .logo { padding: 18px 20px; display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 700; border-bottom: 1px solid var(--sidebar-border); white-space: nowrap; }
-  .sidebar .toggle { padding: 12px 20px; color: var(--sidebar-text-muted); display: flex; align-items: center; gap: 10px; font-size: 14px; }
-  .sidebar .toggle:hover { color: var(--sidebar-text); }
-  .sidebar nav { flex: 1; padding: 12px 0; overflow-y: auto; }
-  .sidebar nav button { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 20px; color: var(--sidebar-text); text-align: left; white-space: nowrap; position: relative; opacity: 0.88; }
-  .sidebar nav button:hover { background: var(--sidebar-hover); opacity: 1; }
-  .sidebar nav button.active { background: var(--sidebar-active); opacity: 1; }
-  .sidebar nav button .icon { min-width: 22px; text-align: center; }
-  .sidebar nav button .badge { background: #ef4444; color: #fff; font-size: 11px; border-radius: 10px; padding: 2px 7px; margin-left: auto; }
-  .sidebar.collapsed .label, .sidebar.collapsed .logo span:not(.icon), .sidebar.collapsed .toggle span:not(.toggle-icon), .sidebar.collapsed .badge { display: none; }
-  .sidebar .user-block { padding: 14px 20px; border-top: 1px solid var(--sidebar-border); font-size: 13px; }
-  .sidebar .user-block .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sidebar .user-block .role { color: var(--sidebar-text-muted); font-size: 11px; text-transform: uppercase; margin-top: 2px; }
-  .sidebar .user-block .logout { margin-top: 10px; color: #fca5a5; font-size: 13px; }
-  .sidebar.collapsed .user-block .name, .sidebar.collapsed .user-block .role { display: none; }
+  button {
+    cursor: pointer;
+    border: none;
+    background: none;
+    font-size: inherit;
+    color: inherit;
+  }
 
-  .theme-toggle { padding: 10px 20px; display: flex; align-items: center; gap: 10px; color: var(--sidebar-text-muted); font-size: 13px; border-top: 1px solid var(--sidebar-border); }
-  .theme-toggle:hover { color: var(--sidebar-text); background: var(--sidebar-hover); }
-  .theme-toggle .icon { min-width: 22px; text-align: center; }
-  .sidebar.collapsed .theme-toggle .label { display: none; }
+  input,
+  select {
+    font-size: inherit;
+    font-family: inherit;
+  }
 
-  .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-  .topbar { background: var(--topbar-bg); padding: 18px 30px; border-bottom: 1px solid var(--topbar-border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-  .topbar h2 { font-size: 22px; color: var(--text); }
-  .topbar .search { position: relative; }
-  .topbar .search input { padding: 10px 14px; border: 1px solid var(--input-border); border-radius: 8px; width: 320px; background: var(--input-bg); color: var(--text); }
-  .topbar .search input:focus { outline: none; border-color: var(--input-focus); }
-  .content { flex: 1; overflow-y: auto; padding: 24px 30px; }
+  .auth-bg {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--auth-gradient);
+  }
 
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-  .stat-card { background: var(--surface); border-radius: 8px; padding: 20px; box-shadow: var(--shadow); border: 1px solid var(--border-light); }
-  .stat-card .label { color: var(--text-muted); font-size: 13px; margin-bottom: 6px; }
-  .stat-card .value { font-size: 26px; font-weight: 700; color: var(--primary); }
-  .stat-card .sub { color: var(--text-soft); font-size: 12px; margin-top: 4px; }
+  .auth-card {
+    background: var(--surface);
+    padding: 40px;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 420px;
+    box-shadow: var(--shadow-lg);
+  }
 
-  .table-card { background: var(--surface); border-radius: 8px; box-shadow: var(--shadow); border: 1px solid var(--border-light); display: flex; flex-direction: column; overflow: hidden; max-height: calc(100vh - 290px); }
-  .table-card.full { max-height: none; }
-  .table-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 12px; }
-  .table-header h3 { font-size: 16px; color: var(--text); }
-  .table-scroll { flex: 1; overflow-y: auto; }
-  table { width: 100%; border-collapse: collapse; }
-  thead th { position: sticky; top: 0; background: var(--thead-bg); padding: 12px 20px; text-align: left; font-size: 12px; color: var(--text-muted); text-transform: uppercase; font-weight: 600; border-bottom: 1px solid var(--border); z-index: 1; }
-  tbody td { padding: 14px 20px; border-bottom: 1px solid var(--border-light); font-size: 14px; color: var(--text); }
-  tbody tr.row-main { cursor: pointer; transition: background 0.1s; }
-  tbody tr.row-main:hover { background: var(--row-hover); }
+  .auth-card h1 {
+    text-align: center;
+    margin-bottom: 8px;
+    color: var(--primary);
+    font-size: 28px;
+  }
 
-  .btn-primary { background: var(--primary); color: var(--primary-text-on); padding: 9px 18px; border-radius: 8px; font-weight: 600; font-size: 14px; }
-  .btn-primary:hover { background: var(--primary-hover); }
-  .btn-secondary { background: var(--secondary-bg); color: var(--secondary-text); padding: 9px 16px; border-radius: 8px; font-size: 14px; }
-  .btn-secondary:hover { background: var(--secondary-hover); }
-  .btn-danger { background: var(--danger-bg); color: var(--danger-text); padding: 6px 12px; border-radius: 6px; font-size: 12px; }
-  .btn-danger:hover { background: var(--danger-hover); }
-  .btn-edit { background: var(--primary-soft); color: var(--primary); padding: 6px 12px; border-radius: 6px; font-size: 12px; margin-right: 6px; }
-  .btn-edit:hover { background: var(--primary); color: var(--primary-text-on); }
+  .auth-card .sub {
+    text-align: center;
+    color: var(--text-muted);
+    margin-bottom: 28px;
+    font-size: 14px;
+  }
 
-  .product-detail-page { display: flex; flex-direction: column; gap: 18px; }
-  .detail-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-  .detail-title { background: var(--surface); border: 1px solid var(--border-light); border-radius: 8px; box-shadow: var(--shadow); padding: 18px 20px; display: flex; justify-content: space-between; gap: 14px; align-items: flex-start; }
-  .detail-title h3 { font-size: 22px; color: var(--text); margin-bottom: 4px; }
-  .detail-title p { color: var(--text-muted); font-size: 13px; line-height: 1.6; }
-  .channel-filter { display: flex; gap: 8px; flex-wrap: wrap; }
-  .channel-filter button { padding: 8px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--text); font-size: 13px; }
-  .channel-filter button:hover { background: var(--row-hover); }
-  .channel-filter button.active { background: var(--primary); border-color: var(--primary); color: var(--primary-text-on); }
-  .channels-table-wrap { background: var(--surface); border: 1px solid var(--border-light); border-radius: 8px; box-shadow: var(--shadow); overflow: hidden; }
-  .channels-table-wrap table td, .channels-table-wrap table th { white-space: nowrap; }
-  .chart-wrap { background: var(--surface); border: 1px solid var(--border-light); border-radius: 8px; box-shadow: var(--shadow); padding: 16px; height: 360px; }
-  .variation-up { color: var(--variation-up); font-weight: 600; }
-  .variation-down { color: var(--variation-down); font-weight: 600; }
-  .variation-zero { color: var(--text-soft); font-weight: 600; }
+  .auth-card label {
+    display: block;
+    margin: 14px 0 6px;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+  }
 
-  .hist-filtros { background: var(--surface); border-radius: 8px; padding: 18px; box-shadow: var(--shadow); border: 1px solid var(--border-light); margin-bottom: 18px; display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 14px; align-items: end; }
-  .hist-filtros .field { display: flex; flex-direction: column; gap: 6px; }
-  .hist-filtros label { font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
-  .hist-filtros input, .hist-filtros select { padding: 10px 12px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--text); }
-  .periodo-grupo { display: flex; gap: 6px; }
-  .periodo-btn { padding: 9px 14px; border: 1px solid var(--input-border); background: var(--surface); border-radius: 8px; font-size: 13px; color: var(--text); }
-  .periodo-btn.active { background: var(--primary); color: var(--primary-text-on); border-color: var(--primary); }
-  .hist-chart-wrap { background: var(--surface); border-radius: 8px; padding: 18px; box-shadow: var(--shadow); border: 1px solid var(--border-light); margin-bottom: 18px; height: 380px; }
+  .auth-card input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text);
+  }
 
-  .modal-bg { position: fixed; inset: 0; background: var(--modal-overlay); display: none; align-items: center; justify-content: center; z-index: 100; }
-  .modal-bg.show { display: flex; }
-  .modal { background: var(--surface); border-radius: 12px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; color: var(--text); }
-  .modal-head { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-  .modal-head h3 { font-size: 18px; }
-  .modal-head .close { color: var(--text-soft); font-size: 22px; }
-  .modal-body { padding: 24px; }
-  .modal-body label { display: block; margin: 12px 0 6px; font-size: 13px; color: var(--text); font-weight: 500; }
-  .modal-body input { width: 100%; padding: 10px 12px; border: 1px solid var(--input-border); border-radius: 8px; background: var(--input-bg); color: var(--text); }
-  .modal-body input:focus { outline: none; border-color: var(--input-focus); }
-  .modal-body .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .modal-body .section-title { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--border); font-size: 13px; font-weight: 600; color: var(--primary); text-transform: uppercase; }
-  .modal-foot { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
-  .alert { padding: 12px; border-radius: 8px; margin-bottom: 14px; font-size: 14px; }
+  .auth-card input:focus {
+    outline: none;
+    border-color: var(--input-focus);
+  }
 
-  .empty { padding: 60px 20px; text-align: center; color: var(--text-soft); }
-  .user-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-bottom: 1px solid var(--border-light); gap: 12px; }
-  .user-row .info .name { font-weight: 600; color: var(--text); }
-  .user-row .info .email { color: var(--text-muted); font-size: 13px; }
-  .badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-  .badge.admin { background: var(--primary-soft); color: var(--primary); }
-  .badge.viewer { background: var(--secondary-bg); color: var(--secondary-text); }
-  .badge.pending { background: #fef3c7; color: #92400e; }
-  .badge.rejected { background: var(--error-bg); color: var(--error-text); }
-  .badge.approved { background: var(--success-bg); color: var(--success-text); }
+  .auth-card .btn-primary {
+    width: 100%;
+    margin-top: 22px;
+    padding: 12px;
+  }
+
+  .auth-card .switch {
+    text-align: center;
+    margin-top: 18px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  .auth-card .switch a {
+    color: var(--primary);
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .msg {
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 14px;
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .msg.error,
+  .alert.error {
+    background: var(--error-bg);
+    color: var(--error-text);
+  }
+
+  .msg.success,
+  .alert.success {
+    background: var(--success-bg);
+    color: var(--success-text);
+  }
+
+  .app {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .sidebar {
+    background: var(--sidebar-bg);
+    color: var(--sidebar-text);
+    width: 240px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    transition: width 0.25s ease;
+    overflow: hidden;
+  }
+
+  .sidebar.collapsed {
+    width: 64px;
+  }
+
+  .sidebar .logo {
+    padding: 18px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--sidebar-border);
+    white-space: nowrap;
+  }
+
+  .sidebar .toggle {
+    padding: 12px 20px;
+    color: var(--sidebar-text-muted);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+  }
+
+  .sidebar .toggle:hover {
+    color: var(--sidebar-text);
+  }
+
+  .sidebar nav {
+    flex: 1;
+    padding: 12px 0;
+    overflow-y: auto;
+  }
+
+  .sidebar nav button {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 12px 20px;
+    color: var(--sidebar-text);
+    text-align: left;
+    white-space: nowrap;
+    position: relative;
+    opacity: 0.88;
+  }
+
+  .sidebar nav button:hover {
+    background: var(--sidebar-hover);
+    opacity: 1;
+  }
+
+  .sidebar nav button.active {
+    background: var(--sidebar-active);
+    opacity: 1;
+  }
+
+  .sidebar nav button .icon {
+    min-width: 22px;
+    text-align: center;
+  }
+
+  .sidebar nav button .badge {
+    background: #ef4444;
+    color: #fff;
+    font-size: 11px;
+    border-radius: 10px;
+    padding: 2px 7px;
+    margin-left: auto;
+  }
+
+  .sidebar.collapsed .label,
+  .sidebar.collapsed .logo span:not(.icon),
+  .sidebar.collapsed .toggle span:not(.toggle-icon),
+  .sidebar.collapsed .badge {
+    display: none;
+  }
+
+  .sidebar .user-block {
+    padding: 14px 20px;
+    border-top: 1px solid var(--sidebar-border);
+    font-size: 13px;
+  }
+
+  .sidebar .user-block .name {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .sidebar .user-block .role {
+    color: var(--sidebar-text-muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .sidebar .user-block .logout {
+    margin-top: 10px;
+    color: #fca5a5;
+    font-size: 13px;
+  }
+
+  .sidebar.collapsed .user-block .name,
+  .sidebar.collapsed .user-block .role {
+    display: none;
+  }
+
+  .theme-toggle {
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--sidebar-text-muted);
+    font-size: 13px;
+    border-top: 1px solid var(--sidebar-border);
+  }
+
+  .theme-toggle:hover {
+    color: var(--sidebar-text);
+    background: var(--sidebar-hover);
+  }
+
+  .theme-toggle .icon {
+    min-width: 22px;
+    text-align: center;
+  }
+
+  .sidebar.collapsed .theme-toggle .label {
+    display: none;
+  }
+
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  .topbar {
+    background: var(--topbar-bg);
+    padding: 18px 30px;
+    border-bottom: 1px solid var(--topbar-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .topbar h2 {
+    font-size: 22px;
+    color: var(--text);
+  }
+
+  .topbar .search input {
+    padding: 10px 14px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    width: 320px;
+    background: var(--input-bg);
+    color: var(--text);
+  }
+
+  .topbar .search input:focus {
+    outline: none;
+    border-color: var(--input-focus);
+  }
+
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 30px;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-light);
+  }
+
+  .stat-card .label {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  .stat-card .value {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  .stat-card .sub {
+    color: var(--text-soft);
+    font-size: 12px;
+    margin-top: 4px;
+  }
+
+  .table-card {
+    background: var(--surface);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-light);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    max-height: calc(100vh - 290px);
+  }
+
+  .table-card.full {
+    max-height: none;
+  }
+
+  .table-header {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-shrink: 0;
+    gap: 12px;
+  }
+
+  .table-header h3 {
+    font-size: 16px;
+    color: var(--text);
+  }
+
+  .table-scroll {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background: var(--thead-bg);
+    padding: 12px 20px;
+    text-align: left;
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border);
+    z-index: 1;
+  }
+
+  tbody td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-light);
+    font-size: 14px;
+    color: var(--text);
+  }
+
+  tbody tr.row-main {
+    cursor: pointer;
+    transition: background 0.1s;
+  }
+
+  tbody tr.row-main:hover {
+    background: var(--row-hover);
+  }
+
+  .btn-primary {
+    background: var(--primary);
+    color: var(--primary-text-on);
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .btn-primary:hover {
+    background: var(--primary-hover);
+  }
+
+  .btn-secondary {
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+
+  .btn-secondary:hover {
+    background: var(--secondary-hover);
+  }
+
+  .btn-danger {
+    background: var(--danger-bg);
+    color: var(--danger-text);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+  }
+
+  .btn-danger:hover {
+    background: var(--danger-hover);
+  }
+
+  .btn-edit {
+    background: var(--primary-soft);
+    color: var(--primary);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    margin-right: 6px;
+  }
+
+  .btn-edit:hover {
+    background: var(--primary);
+    color: var(--primary-text-on);
+  }
+
+  .detail-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary);
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .detail-open .circle {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .actions-cell {
+    position: relative;
+    text-align: right;
+  }
+
+  .kebab-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
+    font-size: 20px;
+    line-height: 1;
+  }
+
+  .kebab-btn:hover {
+    background: var(--secondary-hover);
+  }
+
+  .action-menu {
+    display: none;
+    position: absolute;
+    right: 20px;
+    top: 42px;
+    min-width: 140px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    z-index: 20;
+    overflow: hidden;
+  }
+
+  .action-menu.show {
+    display: block;
+  }
+
+  .action-menu button {
+    width: 100%;
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .action-menu button:hover {
+    background: var(--row-hover);
+  }
+
+  .action-menu button.danger {
+    color: var(--danger-text);
+  }
+
+  .product-detail-page {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .detail-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .detail-title {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .detail-title h3 {
+    font-size: 22px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+
+  .detail-title p {
+    color: var(--text-muted);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .channel-filter {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .channel-filter button {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+  }
+
+  .channel-filter button:hover {
+    background: var(--row-hover);
+  }
+
+  .channel-filter button.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: var(--primary-text-on);
+  }
+
+  .channels-table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+
+  .channels-table-wrap table td,
+  .channels-table-wrap table th {
+    white-space: nowrap;
+  }
+
+  .chart-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    padding: 16px;
+    height: 360px;
+  }
+
+  .variation-up {
+    color: var(--variation-up);
+    font-weight: 600;
+  }
+
+  .variation-down {
+    color: var(--variation-down);
+    font-weight: 600;
+  }
+
+  .variation-zero {
+    color: var(--text-soft);
+    font-weight: 600;
+  }
+
+  .hist-filtros {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-light);
+    margin-bottom: 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr auto auto;
+    gap: 14px;
+    align-items: end;
+  }
+
+  .hist-filtros .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .hist-filtros label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .hist-filtros input,
+  .hist-filtros select,
+  .user-row select {
+    padding: 10px 12px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text);
+  }
+
+  .periodo-grupo {
+    display: flex;
+    gap: 6px;
+  }
+
+  .periodo-btn {
+    padding: 9px 14px;
+    border: 1px solid var(--input-border);
+    background: var(--surface);
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .periodo-btn.active {
+    background: var(--primary);
+    color: var(--primary-text-on);
+    border-color: var(--primary);
+  }
+
+  .hist-chart-wrap {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-light);
+    margin-bottom: 18px;
+    height: 380px;
+  }
+
+  .modal-bg {
+    position: fixed;
+    inset: 0;
+    background: var(--modal-overlay);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+
+  .modal-bg.show {
+    display: flex;
+  }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 12px;
+    width: 100%;
+    max-width: 560px;
+    max-height: 90vh;
+    overflow-y: auto;
+    color: var(--text);
+  }
+
+  .modal-head {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-head h3 {
+    font-size: 18px;
+  }
+
+  .modal-head .close {
+    color: var(--text-soft);
+    font-size: 22px;
+  }
+
+  .modal-body {
+    padding: 24px;
+  }
+
+  .modal-body label {
+    display: block;
+    margin: 12px 0 6px;
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .modal-body input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text);
+  }
+
+  .modal-body input:focus {
+    outline: none;
+    border-color: var(--input-focus);
+  }
+
+  .modal-body .row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+
+  .modal-body .section-title {
+    margin-top: 22px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+    text-transform: uppercase;
+  }
+
+  .modal-foot {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .alert {
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 14px;
+    font-size: 14px;
+  }
+
+  .empty {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-soft);
+  }
+
+  .user-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-light);
+    gap: 12px;
+  }
+
+  .user-row .info .name {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .user-row .info .email {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .badge {
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .badge.master {
+    background: var(--primary);
+    color: var(--primary-text-on);
+  }
+
+  .badge.admin {
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+
+  .badge.viewer {
+    background: var(--secondary-bg);
+    color: var(--secondary-text);
+  }
+
+  .badge.pending {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .badge.rejected {
+    background: var(--error-bg);
+    color: var(--error-text);
+  }
+
+  .badge.approved {
+    background: var(--success-bg);
+    color: var(--success-text);
+  }
 
   @media (max-width: 900px) {
-    .sidebar { width: 72px; }
-    .sidebar .label, .sidebar .logo span:not(.icon), .sidebar .toggle span:not(.toggle-icon), .sidebar .badge, .theme-toggle .label, .user-block .name, .user-block .role { display: none; }
-    .topbar { padding: 14px 16px; }
-    .topbar .search input { width: 190px; }
-    .content { padding: 16px; }
-    .hist-filtros { grid-template-columns: 1fr; }
-    .detail-title { flex-direction: column; }
+    .sidebar {
+      width: 72px;
+    }
+
+    .sidebar .label,
+    .sidebar .logo span:not(.icon),
+    .sidebar .toggle span:not(.toggle-icon),
+    .sidebar .badge,
+    .theme-toggle .label,
+    .user-block .name,
+    .user-block .role {
+      display: none;
+    }
+
+    .topbar {
+      padding: 14px 16px;
+    }
+
+    .topbar .search input {
+      width: 190px;
+    }
+
+    .content {
+      padding: 16px;
+    }
+
+    .hist-filtros {
+      grid-template-columns: 1fr;
+    }
+
+    .detail-title {
+      flex-direction: column;
+    }
   }
 </style>
 </head>
@@ -239,14 +1010,19 @@
   <div class="auth-card">
     <h1>Monitor de Preços</h1>
     <p class="sub">Faça login para acessar</p>
+
     <form id="form-login">
       <label>E-mail</label>
       <input type="email" id="login-email" required />
+
       <label>Senha</label>
       <input type="password" id="login-senha" required />
+
       <button type="submit" class="btn-primary">Entrar</button>
     </form>
+
     <div id="login-msg"></div>
+
     <p class="switch">Não tem acesso? <a onclick="showScreen('register')">Solicitar acesso</a></p>
   </div>
 </div>
@@ -255,16 +1031,22 @@
   <div class="auth-card">
     <h1>Solicitar acesso</h1>
     <p class="sub">Cadastre-se e aguarde aprovação</p>
+
     <form id="form-register">
       <label>Nome</label>
       <input type="text" id="reg-nome" required />
+
       <label>E-mail</label>
       <input type="email" id="reg-email" required />
+
       <label>Senha</label>
       <input type="password" id="reg-senha" required />
+
       <button type="submit" class="btn-primary">Solicitar acesso</button>
     </form>
+
     <div id="register-msg"></div>
+
     <p class="switch">Já tem acesso? <a onclick="showScreen('login')">Voltar ao login</a></p>
   </div>
 </div>
@@ -275,26 +1057,35 @@
       <span class="icon">M</span>
       <span>Monitor</span>
     </div>
+
     <button class="toggle" onclick="toggleSidebar()">
       <span class="toggle-icon">≡</span>
       <span>Recolher menu</span>
     </button>
+
     <nav>
       <button id="nav-produtos" class="active" onclick="setTab('produtos')">
-        <span class="icon">P</span><span class="label">Produtos</span>
+        <span class="icon">P</span>
+        <span class="label">Produtos</span>
       </button>
+
       <button id="nav-historico" onclick="setTab('historico')">
-        <span class="icon">H</span><span class="label">Histórico</span>
+        <span class="icon">H</span>
+        <span class="label">Histórico</span>
       </button>
+
       <button id="nav-usuarios" style="display:none;" onclick="setTab('usuarios')">
-        <span class="icon">U</span><span class="label">Usuários</span>
+        <span class="icon">U</span>
+        <span class="label">Usuários</span>
         <span class="badge" id="badge-pendentes" style="display:none;">0</span>
       </button>
     </nav>
+
     <button class="theme-toggle" onclick="toggleTheme()">
       <span class="icon" id="theme-icon">◐</span>
       <span class="label" id="theme-label">Modo escuro</span>
     </button>
+
     <div class="user-block">
       <div class="name" id="user-name">Usuário</div>
       <div class="role" id="user-role">visualizador</div>
@@ -305,10 +1096,12 @@
   <main class="main">
     <div class="topbar">
       <h2 id="page-title">Produtos</h2>
+
       <div class="search" id="top-search">
         <input type="text" id="busca-produtos" placeholder="Buscar por nome, SKU ou EAN..." />
       </div>
     </div>
+
     <div class="content" id="content"></div>
   </main>
 </div>
@@ -319,6 +1112,7 @@
       <h3 id="modal-title">Novo produto</h3>
       <button class="close" onclick="fecharModal()">×</button>
     </div>
+
     <div class="modal-body">
       <div id="modal-alert"></div>
 
@@ -331,6 +1125,7 @@
             <label>SKU</label>
             <input type="text" id="p-sku" />
           </div>
+
           <div>
             <label>EAN</label>
             <input type="text" id="p-ean" />
@@ -342,6 +1137,7 @@
             <label>Palavra-chave 1</label>
             <input type="text" id="p-pc1" />
           </div>
+
           <div>
             <label>Palavra-chave 2</label>
             <input type="text" id="p-pc2" />
@@ -355,6 +1151,7 @@
             <label>Mercado Livre</label>
             <input type="number" step="0.01" id="p-pp-ml" />
           </div>
+
           <div>
             <label>Amazon</label>
             <input type="number" step="0.01" id="p-pp-am" />
@@ -366,6 +1163,7 @@
             <label>Shopee</label>
             <input type="number" step="0.01" id="p-pp-sh" />
           </div>
+
           <div>
             <label>Droga Raia</label>
             <input type="number" step="0.01" id="p-pp-dr" />
@@ -411,6 +1209,7 @@ const CORES = {
 };
 
 let token = localStorage.getItem("token") || "";
+
 let usuario = {
   nome: localStorage.getItem("nome") || "Usuário",
   perfil: localStorage.getItem("perfil") || "visualizador",
@@ -420,6 +1219,7 @@ let produtos = [];
 let produtoEditandoId = null;
 let produtoDetalheId = null;
 let produtoDetalheCanal = "todos";
+let menuProdutoAbertoId = null;
 let detailChart = null;
 
 let histProdutoId = null;
@@ -460,7 +1260,11 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
     }
 
     token = data.token;
-    usuario = { nome: data.nome || "Usuário", perfil: data.perfil || "visualizador" };
+
+    usuario = {
+      nome: data.nome || "Usuário",
+      perfil: data.perfil || "visualizador",
+    };
 
     localStorage.setItem("token", token);
     localStorage.setItem("nome", usuario.nome);
@@ -498,7 +1302,11 @@ document.getElementById("form-register").addEventListener("submit", async (e) =>
 
     if (data.token) {
       token = data.token;
-      usuario = { nome: data.nome || "Usuário", perfil: data.perfil || "admin" };
+
+      usuario = {
+        nome: data.nome || "Usuário",
+        perfil: data.perfil || "master",
+      };
 
       localStorage.setItem("token", token);
       localStorage.setItem("nome", usuario.nome);
@@ -518,6 +1326,20 @@ document.getElementById("busca-produtos").addEventListener("input", debounce(() 
   carregarProdutos();
 }, 250));
 
+document.addEventListener("click", () => {
+  if (menuProdutoAbertoId) {
+    fecharMenusProduto();
+  }
+});
+
+function podeGerenciarProdutos() {
+  return usuario.perfil === "master" || usuario.perfil === "admin";
+}
+
+function podeGerenciarUsuarios() {
+  return usuario.perfil === "master";
+}
+
 function showScreen(screen) {
   document.getElementById("screen-login").style.display = screen === "login" ? "flex" : "none";
   document.getElementById("screen-register").style.display = screen === "register" ? "flex" : "none";
@@ -527,13 +1349,24 @@ function showScreen(screen) {
 async function iniciarApp() {
   showScreen("app");
 
+  try {
+    const res = await api("/auth/me");
+    const me = await res.json();
+
+    usuario.nome = me.nome || usuario.nome;
+    usuario.perfil = me.perfil || usuario.perfil;
+
+    localStorage.setItem("nome", usuario.nome);
+    localStorage.setItem("perfil", usuario.perfil);
+  } catch (e) {}
+
   document.getElementById("user-name").textContent = usuario.nome;
   document.getElementById("user-role").textContent = usuario.perfil;
-  document.getElementById("nav-usuarios").style.display = usuario.perfil === "admin" ? "flex" : "none";
+  document.getElementById("nav-usuarios").style.display = podeGerenciarUsuarios() ? "flex" : "none";
 
   setTab("produtos");
 
-  if (usuario.perfil === "admin") {
+  if (podeGerenciarUsuarios()) {
     carregarPendentes();
   }
 }
@@ -567,15 +1400,33 @@ async function api(path, opts = {}) {
 }
 
 function setTab(tab) {
+  if (tab === "usuarios" && !podeGerenciarUsuarios()) {
+    tab = "produtos";
+  }
+
   document.querySelectorAll(".sidebar nav button").forEach(b => b.classList.remove("active"));
+
   const nav = document.getElementById(`nav-${tab}`);
-  if (nav) nav.classList.add("active");
+
+  if (nav) {
+    nav.classList.add("active");
+  }
 
   const title = document.getElementById("page-title");
   const search = document.getElementById("top-search");
 
-  if (detailChart) { detailChart.destroy(); detailChart = null; }
-  if (histChart) { histChart.destroy(); histChart = null; }
+  if (detailChart) {
+    detailChart.destroy();
+    detailChart = null;
+  }
+
+  if (histChart) {
+    histChart.destroy();
+    histChart = null;
+  }
+
+  menuProdutoAbertoId = null;
+  produtoDetalheId = null;
 
   if (tab === "produtos") {
     title.textContent = "Produtos";
@@ -618,22 +1469,34 @@ function aplicarTema(theme) {
 
 async function renderTelaProdutos() {
   const c = document.getElementById("content");
+
   c.innerHTML = `
     <div class="stats" id="stats">
-      <div class="stat-card"><div class="label">Produtos</div><div class="value">...</div></div>
-      <div class="stat-card"><div class="label">Registros</div><div class="value">...</div></div>
-      <div class="stat-card"><div class="label">Última coleta</div><div class="value">...</div></div>
+      <div class="stat-card">
+        <div class="label">Produtos</div>
+        <div class="value">...</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Registros</div>
+        <div class="value">...</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Última coleta</div>
+        <div class="value">...</div>
+      </div>
     </div>
 
     <div class="table-card">
       <div class="table-header">
         <h3>Produtos cadastrados</h3>
-        ${usuario.perfil === "admin" ? '<button class="btn-primary" onclick="abrirModalProduto()">Novo produto</button>' : ""}
+        ${podeGerenciarProdutos() ? '<button class="btn-primary" onclick="abrirModalProduto()">Novo produto</button>' : ""}
       </div>
+
       <div class="table-scroll">
         <table>
           <thead>
             <tr>
+              <th>Detalhe</th>
               <th>Produto</th>
               <th>SKU</th>
               <th>EAN</th>
@@ -642,7 +1505,9 @@ async function renderTelaProdutos() {
             </tr>
           </thead>
           <tbody id="tbody-produtos">
-            <tr><td colspan="5" class="empty">Carregando...</td></tr>
+            <tr>
+              <td colspan="6" class="empty">Carregando...</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -668,9 +1533,13 @@ async function carregarProdutos() {
 
 async function carregarEstatisticas() {
   const stats = document.getElementById("stats");
-  if (!stats) return;
+
+  if (!stats) {
+    return;
+  }
 
   let url = "/estatisticas";
+
   if (produtos.length === 1) {
     url += `?produto_id=${produtos[0].id}`;
   }
@@ -685,11 +1554,13 @@ async function carregarEstatisticas() {
         <div class="value">${data.total_produtos ?? 0}</div>
         <div class="sub">${produtos.length === 1 ? "Produto selecionado" : "Total cadastrado"}</div>
       </div>
+
       <div class="stat-card">
         <div class="label">Registros</div>
         <div class="value">${data.total_registros ?? 0}</div>
         <div class="sub">Coletas no histórico</div>
       </div>
+
       <div class="stat-card">
         <div class="label">Última coleta</div>
         <div class="value" style="font-size:18px;">${data.ultima_coleta ? formatData(data.ultima_coleta) : "—"}</div>
@@ -701,48 +1572,93 @@ async function carregarEstatisticas() {
 
 function renderTabelaProdutos() {
   const tbody = document.getElementById("tbody-produtos");
-  if (!tbody) return;
+
+  if (!tbody) {
+    return;
+  }
 
   if (produtos.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum produto encontrado</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum produto encontrado</td></tr>';
     return;
   }
 
   tbody.innerHTML = produtos.map(p => `
     <tr class="row-main" onclick="abrirDetalheProduto('${p.id}')">
+      <td>
+        <span class="detail-open">
+          <span class="circle">›</span>
+          Ver detalhes
+        </span>
+      </td>
+
       <td><strong>${escapeHtml(p.nome)}</strong></td>
       <td>${escapeHtml(p.sku || "—")}</td>
       <td>${escapeHtml(p.ean || "—")}</td>
       <td>${[p.palavra_chave_1, p.palavra_chave_2].filter(Boolean).map(escapeHtml).join(", ") || "—"}</td>
-      <td style="text-align:right;" onclick="event.stopPropagation();">
-        ${usuario.perfil === "admin" ? `
-          <button class="btn-edit" onclick="abrirModalProduto('${p.id}')">Editar</button>
-          <button class="btn-danger" onclick="excluirProduto('${p.id}')">Excluir</button>
+
+      <td class="actions-cell" onclick="event.stopPropagation();">
+        ${podeGerenciarProdutos() ? `
+          <button class="kebab-btn" onclick="toggleMenuProduto(event, '${p.id}')">⋯</button>
+
+          <div class="action-menu ${menuProdutoAbertoId === p.id ? "show" : ""}">
+            <button onclick="abrirModalProduto('${p.id}')">Editar</button>
+            <button class="danger" onclick="excluirProduto('${p.id}')">Excluir</button>
+          </div>
         ` : ""}
       </td>
     </tr>
   `).join("");
 }
 
+function toggleMenuProduto(event, id) {
+  event.stopPropagation();
+  menuProdutoAbertoId = menuProdutoAbertoId === id ? null : id;
+
+  if (produtoDetalheId === id) {
+    renderDetalheProduto();
+  } else {
+    renderTabelaProdutos();
+  }
+}
+
+function fecharMenusProduto() {
+  menuProdutoAbertoId = null;
+
+  if (produtoDetalheId) {
+    renderDetalheProduto();
+  } else {
+    renderTabelaProdutos();
+  }
+}
+
 async function abrirDetalheProduto(id) {
   produtoDetalheId = id;
   produtoDetalheCanal = "todos";
+  menuProdutoAbertoId = null;
+
   document.getElementById("page-title").textContent = "Detalhe do produto";
   document.getElementById("top-search").style.display = "none";
+
   await renderDetalheProduto();
 }
 
 async function renderDetalheProduto() {
   const produto = produtos.find(p => p.id === produtoDetalheId);
-  if (!produto) return;
+
+  if (!produto) {
+    return;
+  }
 
   const c = document.getElementById("content");
+
   c.innerHTML = `
     <div class="product-detail-page">
       <div class="detail-toolbar">
         <button class="btn-secondary" onclick="voltarParaProdutos()">← Voltar</button>
+
         <div class="channel-filter">
           <button class="${produtoDetalheCanal === "todos" ? "active" : ""}" onclick="filtrarDetalheCanal('todos')">Todos</button>
+
           ${CANAIS.map(canal => `
             <button class="${produtoDetalheCanal === canal.key ? "active" : ""}" onclick="filtrarDetalheCanal('${canal.key}')">
               ${canal.label}
@@ -757,10 +1673,15 @@ async function renderDetalheProduto() {
           <p>SKU ${escapeHtml(produto.sku || "—")} · EAN ${escapeHtml(produto.ean || "—")}</p>
           <p>Palavras-chave: ${[produto.palavra_chave_1, produto.palavra_chave_2].filter(Boolean).map(escapeHtml).join(", ") || "—"}</p>
         </div>
-        ${usuario.perfil === "admin" ? `
-          <div>
-            <button class="btn-edit" onclick="abrirModalProduto('${produto.id}')">Editar</button>
-            <button class="btn-danger" onclick="excluirProduto('${produto.id}')">Excluir</button>
+
+        ${podeGerenciarProdutos() ? `
+          <div class="actions-cell" onclick="event.stopPropagation();">
+            <button class="kebab-btn" onclick="toggleMenuProduto(event, '${produto.id}')">⋯</button>
+
+            <div class="action-menu ${menuProdutoAbertoId === produto.id ? "show" : ""}">
+              <button onclick="abrirModalProduto('${produto.id}')">Editar</button>
+              <button class="danger" onclick="excluirProduto('${produto.id}')">Excluir</button>
+            </div>
           </div>
         ` : ""}
       </div>
@@ -775,6 +1696,8 @@ async function renderDetalheProduto() {
 }
 
 function voltarParaProdutos() {
+  produtoDetalheId = null;
+  menuProdutoAbertoId = null;
   document.getElementById("page-title").textContent = "Produtos";
   document.getElementById("top-search").style.display = "block";
   renderTelaProdutos();
@@ -782,13 +1705,17 @@ function voltarParaProdutos() {
 
 function filtrarDetalheCanal(canal) {
   produtoDetalheCanal = canal;
+  menuProdutoAbertoId = null;
   renderDetalheProduto();
 }
 
 async function carregarDadosDetalheProduto() {
   const produto = produtos.find(p => p.id === produtoDetalheId);
   const body = document.getElementById("produto-detalhe-body");
-  if (!produto || !body) return;
+
+  if (!produto || !body) {
+    return;
+  }
 
   const canalHistorico = produtoDetalheCanal !== "todos" ? `&canal=${produtoDetalheCanal}` : "";
   const canalCanais = produtoDetalheCanal !== "todos" ? `?canal=${produtoDetalheCanal}` : "";
@@ -807,6 +1734,7 @@ async function carregarDadosDetalheProduto() {
   } catch (err) {}
 
   const pp = produto.precos_praticados || {};
+
   const canaisVisiveis = produtoDetalheCanal === "todos"
     ? CANAIS
     : CANAIS.filter(c => c.key === produtoDetalheCanal);
@@ -823,9 +1751,11 @@ async function carregarDadosDetalheProduto() {
             <th>Coletas 7d</th>
           </tr>
         </thead>
+
         <tbody>
           ${canaisVisiveis.map(c => {
             const dados = canais[c.key] || {};
+
             return `
               <tr>
                 <td><strong>${c.label}</strong></td>
@@ -850,7 +1780,10 @@ async function carregarDadosDetalheProduto() {
 
 function desenharGraficoDetalhe(historico) {
   const ctx = document.getElementById("detail-chart");
-  if (!ctx) return;
+
+  if (!ctx) {
+    return;
+  }
 
   if (detailChart) {
     detailChart.destroy();
@@ -902,7 +1835,9 @@ function desenharGraficoDetalhe(historico) {
 }
 
 function abrirModalProduto(id = null) {
+  menuProdutoAbertoId = null;
   produtoEditandoId = id;
+
   document.getElementById("modal-title").textContent = id ? "Editar produto" : "Novo produto";
   document.getElementById("modal-alert").innerHTML = "";
   document.getElementById("modal-form").style.display = "block";
@@ -912,6 +1847,7 @@ function abrirModalProduto(id = null) {
 
   if (id) {
     const p = produtos.find(x => x.id === id);
+
     if (p) {
       document.getElementById("p-nome").value = p.nome || "";
       document.getElementById("p-sku").value = p.sku || "";
@@ -920,14 +1856,24 @@ function abrirModalProduto(id = null) {
       document.getElementById("p-pc2").value = p.palavra_chave_2 || "";
 
       const pp = p.precos_praticados || {};
+
       document.getElementById("p-pp-ml").value = pp.mercado_livre ?? "";
       document.getElementById("p-pp-am").value = pp.amazon ?? "";
       document.getElementById("p-pp-sh").value = pp.shopee ?? "";
       document.getElementById("p-pp-dr").value = pp.droga_raia ?? "";
     }
   } else {
-    ["p-nome","p-sku","p-ean","p-pc1","p-pc2","p-pp-ml","p-pp-am","p-pp-sh","p-pp-dr"]
-      .forEach(i => document.getElementById(i).value = "");
+    [
+      "p-nome",
+      "p-sku",
+      "p-ean",
+      "p-pc1",
+      "p-pc2",
+      "p-pp-ml",
+      "p-pp-am",
+      "p-pp-sh",
+      "p-pp-dr",
+    ].forEach(i => document.getElementById(i).value = "");
   }
 
   document.getElementById("modal-produto").classList.add("show");
@@ -971,7 +1917,11 @@ async function salvarProduto() {
   const method = produtoEditandoId ? "PUT" : "POST";
 
   try {
-    const res = await api(url, { method, body: JSON.stringify(payload) });
+    const res = await api(url, {
+      method,
+      body: JSON.stringify(payload),
+    });
+
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
@@ -990,7 +1940,10 @@ async function salvarProduto() {
 
     if (produtoDetalheId) {
       const atualizado = produtos.find(p => p.id === produtoDetalheId);
-      if (atualizado) await renderDetalheProduto();
+
+      if (atualizado) {
+        await renderDetalheProduto();
+      }
     }
   } catch (err) {
     alert.innerHTML = '<div class="alert error">Erro de conexão</div>';
@@ -998,7 +1951,11 @@ async function salvarProduto() {
 }
 
 async function excluirProduto(id) {
-  if (!confirm("Tem certeza que deseja excluir este produto e todo o histórico?")) return;
+  menuProdutoAbertoId = null;
+
+  if (!confirm("Tem certeza que deseja excluir este produto e todo o histórico?")) {
+    return;
+  }
 
   try {
     const res = await api(`/produtos/${id}`, { method: "DELETE" });
@@ -1025,6 +1982,7 @@ async function renderTelaHistorico() {
   }
 
   const c = document.getElementById("content");
+
   c.innerHTML = `
     <div class="hist-filtros">
       <div class="field">
@@ -1062,7 +2020,10 @@ async function renderTelaHistorico() {
     </div>
 
     <div class="table-card full">
-      <div class="table-header"><h3>Coletas</h3></div>
+      <div class="table-header">
+        <h3>Coletas</h3>
+      </div>
+
       <div class="table-scroll" style="max-height:300px;">
         <table>
           <thead>
@@ -1073,8 +2034,11 @@ async function renderTelaHistorico() {
               <th>Vendedor</th>
             </tr>
           </thead>
+
           <tbody id="hist-tabela">
-            <tr><td colspan="4" class="empty">Selecione um produto</td></tr>
+            <tr>
+              <td colspan="4" class="empty">Selecione um produto</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -1099,7 +2063,10 @@ async function renderTelaHistorico() {
 
   document.getElementById("hist-periodos").addEventListener("click", (e) => {
     const b = e.target.closest("button.periodo-btn");
-    if (!b) return;
+
+    if (!b) {
+      return;
+    }
 
     document.querySelectorAll("#hist-periodos .periodo-btn").forEach(x => x.classList.remove("active"));
     b.classList.add("active");
@@ -1117,12 +2084,17 @@ async function renderTelaHistorico() {
 
 function preencherSelectHistorico(busca) {
   const sel = document.getElementById("hist-produto");
-  if (!sel) return;
+
+  if (!sel) {
+    return;
+  }
 
   const termo = (busca || "").toLowerCase();
 
   const filtrados = histTodos.filter(p => {
-    if (!termo) return true;
+    if (!termo) {
+      return true;
+    }
 
     return (p.nome || "").toLowerCase().includes(termo)
       || (p.sku || "").toLowerCase().includes(termo)
@@ -1144,9 +2116,19 @@ async function carregarHistorico() {
   const wrap = document.getElementById("hist-chart-wrap");
 
   if (!histProdutoId) {
-    if (tb) tb.innerHTML = `<tr><td colspan="4" class="empty">Selecione um produto</td></tr>`;
-    if (wrap) wrap.innerHTML = '<canvas id="hist-chart"></canvas>';
-    if (histChart) { histChart.destroy(); histChart = null; }
+    if (tb) {
+      tb.innerHTML = `<tr><td colspan="4" class="empty">Selecione um produto</td></tr>`;
+    }
+
+    if (wrap) {
+      wrap.innerHTML = '<canvas id="hist-chart"></canvas>';
+    }
+
+    if (histChart) {
+      histChart.destroy();
+      histChart = null;
+    }
+
     return;
   }
 
@@ -1178,7 +2160,10 @@ async function carregarHistorico() {
 
 function desenharGraficoHistorico(historico) {
   const wrap = document.getElementById("hist-chart-wrap");
-  if (!wrap) return;
+
+  if (!wrap) {
+    return;
+  }
 
   wrap.innerHTML = '<canvas id="hist-chart"></canvas>';
   const ctx = document.getElementById("hist-chart");
@@ -1232,18 +2217,29 @@ function desenharGraficoHistorico(historico) {
 }
 
 async function renderTelaUsuarios() {
+  if (!podeGerenciarUsuarios()) {
+    setTab("produtos");
+    return;
+  }
+
   const c = document.getElementById("content");
 
   c.innerHTML = `
     <div class="table-card full">
-      <div class="table-header"><h3>Solicitações pendentes</h3></div>
+      <div class="table-header">
+        <h3>Solicitações pendentes</h3>
+      </div>
+
       <div class="table-scroll" id="tbody-pendentes">Carregando...</div>
     </div>
 
     <div style="height:18px;"></div>
 
     <div class="table-card full">
-      <div class="table-header"><h3>Usuários cadastrados</h3></div>
+      <div class="table-header">
+        <h3>Usuários cadastrados</h3>
+      </div>
+
       <div class="table-scroll" id="tbody-usuarios">Carregando...</div>
     </div>
   `;
@@ -1253,6 +2249,10 @@ async function renderTelaUsuarios() {
 }
 
 async function carregarPendentes() {
+  if (!podeGerenciarUsuarios()) {
+    return;
+  }
+
   try {
     const res = await api("/pendentes");
     const lista = await res.json();
@@ -1269,7 +2269,10 @@ async function carregarPendentes() {
     }
 
     const cont = document.getElementById("tbody-pendentes");
-    if (!cont) return;
+
+    if (!cont) {
+      return;
+    }
 
     if (lista.length === 0) {
       cont.innerHTML = '<div class="empty">Nenhuma solicitação pendente</div>';
@@ -1282,9 +2285,15 @@ async function carregarPendentes() {
           <div class="name">${escapeHtml(u.nome)}</div>
           <div class="email">${escapeHtml(u.email)}</div>
         </div>
-        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-          <button class="btn-edit" onclick="aprovarUsuario('${u.id}','admin')">Aprovar Admin</button>
-          <button class="btn-edit" onclick="aprovarUsuario('${u.id}','visualizador')">Aprovar Visualizador</button>
+
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <select id="perfil-pendente-${u.id}">
+            <option value="visualizador">Visualizador</option>
+            <option value="admin">Admin</option>
+            <option value="master">Master</option>
+          </select>
+
+          <button class="btn-edit" onclick="aprovarUsuarioSelecionado('${u.id}')">Aprovar</button>
           <button class="btn-danger" onclick="rejeitarUsuario('${u.id}')">Rejeitar</button>
         </div>
       </div>
@@ -1293,12 +2302,19 @@ async function carregarPendentes() {
 }
 
 async function carregarUsuarios() {
+  if (!podeGerenciarUsuarios()) {
+    return;
+  }
+
   try {
     const res = await api("/usuarios");
     const lista = await res.json();
 
     const cont = document.getElementById("tbody-usuarios");
-    if (!cont) return;
+
+    if (!cont) {
+      return;
+    }
 
     if (lista.length === 0) {
       cont.innerHTML = '<div class="empty">Nenhum usuário cadastrado</div>';
@@ -1311,50 +2327,140 @@ async function carregarUsuarios() {
           <div class="name">${escapeHtml(u.nome)}</div>
           <div class="email">${escapeHtml(u.email)}</div>
         </div>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <span class="badge ${u.perfil === "admin" ? "admin" : "viewer"}">${escapeHtml(u.perfil || "visualizador")}</span>
-          <span class="badge ${u.status === "aprovado" ? "approved" : u.status === "pendente" ? "pending" : "rejected"}">${escapeHtml(u.status || "aprovado")}</span>
+
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <select onchange="alterarPerfilUsuario('${u.id}', this.value)">
+            <option value="master" ${u.perfil === "master" ? "selected" : ""}>Master</option>
+            <option value="admin" ${u.perfil === "admin" ? "selected" : ""}>Admin</option>
+            <option value="visualizador" ${u.perfil === "visualizador" ? "selected" : ""}>Visualizador</option>
+          </select>
+
+          <span class="badge ${u.perfil === "master" ? "master" : u.perfil === "admin" ? "admin" : "viewer"}">
+            ${escapeHtml(u.perfil || "visualizador")}
+          </span>
+
+          <span class="badge ${u.status === "aprovado" ? "approved" : u.status === "pendente" ? "pending" : "rejected"}">
+            ${escapeHtml(u.status || "aprovado")}
+          </span>
         </div>
       </div>
     `).join("");
   } catch (err) {}
 }
 
-async function aprovarUsuario(id, perfil) {
-  await api(`/aprovar/${id}?perfil=${perfil}`, { method: "POST" });
-  await carregarPendentes();
-  await carregarUsuarios();
+async function aprovarUsuarioSelecionado(id) {
+  const perfil = document.getElementById(`perfil-pendente-${id}`)?.value || "visualizador";
+
+  try {
+    const res = await api(`/aprovar/${id}?perfil=${perfil}`, {
+      method: "POST",
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      alert(data.detail || "Erro ao aprovar usuário");
+      return;
+    }
+
+    await carregarPendentes();
+    await carregarUsuarios();
+  } catch (e) {
+    alert("Erro de conexão");
+  }
+}
+
+async function alterarPerfilUsuario(id, perfil) {
+  try {
+    const res = await api(`/usuarios/${id}/perfil?perfil=${perfil}`, {
+      method: "PUT",
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      alert(data.detail || "Erro ao alterar função");
+      await carregarUsuarios();
+      return;
+    }
+
+    await carregarUsuarios();
+
+    if (id === localStorage.getItem("user_id")) {
+      usuario.perfil = perfil;
+      localStorage.setItem("perfil", perfil);
+      iniciarApp();
+    }
+  } catch (e) {
+    alert("Erro de conexão");
+  }
 }
 
 async function rejeitarUsuario(id) {
-  await api(`/rejeitar/${id}`, { method: "POST" });
-  await carregarPendentes();
-  await carregarUsuarios();
+  try {
+    const res = await api(`/rejeitar/${id}`, {
+      method: "POST",
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      alert(data.detail || "Erro ao rejeitar usuário");
+      return;
+    }
+
+    await carregarPendentes();
+    await carregarUsuarios();
+  } catch (e) {
+    alert("Erro de conexão");
+  }
 }
 
 function formatBRL(v) {
-  if (v == null || v === "") return "—";
+  if (v == null || v === "") {
+    return "—";
+  }
+
   const n = Number(v);
-  if (Number.isNaN(n)) return "—";
-  return n.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
+  if (Number.isNaN(n)) {
+    return "—";
+  }
+
+  return n.toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  });
 }
 
 function formatVariacao(v) {
-  if (v == null || Number.isNaN(Number(v))) return '<span class="variation-zero">—</span>';
+  if (v == null || Number.isNaN(Number(v))) {
+    return '<span class="variation-zero">—</span>';
+  }
 
   const n = Number(v);
 
-  if (n > 0) return `<span class="variation-up">▲ ${n.toFixed(2)}%</span>`;
-  if (n < 0) return `<span class="variation-down">▼ ${Math.abs(n).toFixed(2)}%</span>`;
+  if (n > 0) {
+    return `<span class="variation-up">▲ ${n.toFixed(2)}%</span>`;
+  }
+
+  if (n < 0) {
+    return `<span class="variation-down">▼ ${Math.abs(n).toFixed(2)}%</span>`;
+  }
 
   return '<span class="variation-zero">0,00%</span>';
 }
 
 function formatData(value) {
-  if (!value) return "—";
+  if (!value) {
+    return "—";
+  }
 
   const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "—";
+
+  if (Number.isNaN(d.getTime())) {
+    return "—";
+  }
 
   return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", {
     hour: "2-digit",
@@ -1363,13 +2469,19 @@ function formatData(value) {
 }
 
 function parseNum(v) {
-  if (v === "" || v == null) return null;
+  if (v === "" || v == null) {
+    return null;
+  }
+
   const n = parseFloat(String(v).replace(",", "."));
+
   return Number.isNaN(n) ? null : n;
 }
 
 function escapeHtml(s) {
-  if (s == null) return "";
+  if (s == null) {
+    return "";
+  }
 
   return String(s)
     .replace(/&/g, "&amp;")
@@ -1381,6 +2493,7 @@ function escapeHtml(s) {
 
 function debounce(fn, delay) {
   let t;
+
   return (...args) => {
     clearTimeout(t);
     t = setTimeout(() => fn(...args), delay);
