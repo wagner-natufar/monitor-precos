@@ -1,933 +1,798 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Monitor de Preços</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-  html, body { height: 100%; overflow: hidden; background: #f3f4f6; color: #111827; }
-  button { cursor: pointer; border: none; background: none; font-size: inherit; }
-  input, select { font-size: inherit; font-family: inherit; }
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;800&display=swap');
+:root {
+  --bg:#0a0a0f;--bg2:#111118;--bg3:#1a1a24;--border:#2a2a38;
+  --accent:#00e5a0;--accent2:#7c5cff;--danger:#ff4d6d;--warn:#f59e0b;
+  --text:#e8e8f0;--muted:#6b6b80;--card:#13131e;
+  --sidebar-w: 240px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden;}
 
-  /* ================= AUTH ================= */
-  .auth-bg { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
-             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); }
-  .auth-card { background: #fff; padding: 40px; border-radius: 16px; width: 100%; max-width: 420px;
-               box-shadow: 0 25px 60px rgba(0,0,0,0.25); }
-  .auth-card h1 { text-align: center; margin-bottom: 8px; color: #4f46e5; font-size: 28px; }
-  .auth-card .sub { text-align: center; color: #6b7280; margin-bottom: 28px; font-size: 14px; }
-  .auth-card label { display: block; margin: 14px 0 6px; font-size: 13px; color: #374151; font-weight: 500; }
-  .auth-card input { width: 100%; padding: 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px; }
-  .auth-card input:focus { outline: none; border-color: #6366f1; }
-  .auth-card .btn-primary { width: 100%; margin-top: 22px; background: #4f46e5; color: #fff;
-                            padding: 12px; border-radius: 8px; font-weight: 600; font-size: 15px; }
-  .auth-card .btn-primary:hover { background: #4338ca; }
-  .auth-card .switch { text-align: center; margin-top: 18px; color: #6b7280; font-size: 14px; }
-  .auth-card .switch a { color: #4f46e5; font-weight: 600; cursor: pointer; }
-  .auth-card .msg { padding: 12px; border-radius: 8px; margin-top: 14px; font-size: 14px; text-align: center; }
-  .auth-card .msg.error { background: #fee2e2; color: #b91c1c; }
-  .auth-card .msg.success { background: #d1fae5; color: #065f46; }
+/* AUTH */
+.auth-wrap{display:flex;align-items:center;justify-content:center;height:100vh;position:relative;z-index:1;}
+.auth-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:40px;width:420px;}
+.auth-logo{font-size:11px;font-family:'DM Mono',monospace;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;margin-bottom:6px;}
+.auth-title{font-size:24px;font-weight:800;margin-bottom:28px;}
+.auth-switch{text-align:center;margin-top:20px;font-size:13px;color:var(--muted);}
+.auth-switch a{color:var(--accent);cursor:pointer;}
+.auth-msg{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;display:none;}
+.auth-msg.success{background:rgba(0,229,160,.1);color:var(--accent);border:1px solid rgba(0,229,160,.2);}
+.auth-msg.error{background:rgba(255,77,109,.1);color:var(--danger);border:1px solid rgba(255,77,109,.2);}
+.auth-msg.show{display:block;}
+.pending-box{text-align:center;padding:20px 0;}
+.pending-icon{font-size:48px;margin-bottom:12px;}
 
-  /* ================= APP LAYOUT ================= */
-  .app { display: flex; height: 100vh; overflow: hidden; }
+/* APP LAYOUT */
+.app{display:none;height:100vh;overflow:hidden;}
+.app.show{display:flex;}
 
-  /* Sidebar fixa */
-  .sidebar { background: #1f2937; color: #fff; width: 240px; flex-shrink: 0;
-             display: flex; flex-direction: column; height: 100vh;
-             transition: width 0.25s ease; overflow: hidden; }
-  .sidebar.collapsed { width: 64px; }
-  .sidebar .logo { padding: 18px 20px; display: flex; align-items: center; gap: 10px;
-                   font-size: 18px; font-weight: 700; border-bottom: 1px solid #374151;
-                   white-space: nowrap; }
-  .sidebar .logo .icon { font-size: 22px; }
-  .sidebar .toggle { padding: 12px 20px; color: #9ca3af; display: flex; align-items: center; gap: 10px; font-size: 14px; }
-  .sidebar .toggle:hover { color: #fff; }
-  .sidebar nav { flex: 1; padding: 12px 0; overflow-y: auto; }
-  .sidebar nav button { display: flex; align-items: center; gap: 12px; width: 100%;
-                        padding: 12px 20px; color: #d1d5db; text-align: left; white-space: nowrap;
-                        position: relative; }
-  .sidebar nav button:hover { background: #374151; color: #fff; }
-  .sidebar nav button.active { background: #4f46e5; color: #fff; }
-  .sidebar nav button .icon { font-size: 18px; min-width: 22px; text-align: center; }
-  .sidebar nav button .badge { background: #ef4444; color: #fff; font-size: 11px;
-                               border-radius: 10px; padding: 2px 7px; margin-left: auto; }
-  .sidebar.collapsed .label,
-  .sidebar.collapsed .logo span:not(.icon),
-  .sidebar.collapsed .toggle span:not(.toggle-icon),
-  .sidebar.collapsed .badge { display: none; }
-  .sidebar .user-block { padding: 14px 20px; border-top: 1px solid #374151; font-size: 13px; }
-  .sidebar .user-block .name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sidebar .user-block .role { color: #9ca3af; font-size: 11px; text-transform: uppercase; margin-top: 2px; }
-  .sidebar .user-block .logout { margin-top: 10px; color: #f87171; font-size: 13px; }
-  .sidebar.collapsed .user-block .name,
-  .sidebar.collapsed .user-block .role { display: none; }
+/* SIDEBAR */
+.sidebar{
+  width:var(--sidebar-w);min-width:var(--sidebar-w);
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;height:100vh;
+  transition:width .2s ease, min-width .2s ease;
+  overflow:hidden;position:relative;z-index:10;
+}
+.sidebar.collapsed{width:56px;min-width:56px;}
+.logo{padding:20px 16px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;white-space:nowrap;overflow:hidden;}
+.logo-icon{font-size:18px;color:var(--accent);flex-shrink:0;}
+.logo-text{overflow:hidden;}
+.logo-mark{font-size:10px;font-family:'DM Mono',monospace;color:var(--accent);letter-spacing:.15em;text-transform:uppercase;}
+.logo h1{font-size:16px;font-weight:800;line-height:1.1;white-space:nowrap;}
+.sidebar.collapsed .logo-text{display:none;}
+.nav{padding:12px 8px;flex:1;overflow:hidden;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;color:var(--muted);transition:all .15s;margin-bottom:2px;white-space:nowrap;overflow:hidden;}
+.nav-item:hover{background:var(--bg3);color:var(--text);}
+.nav-item.active{background:rgba(0,229,160,.1);color:var(--accent);}
+.nav-item[data-admin]{display:none;}
+.nav-icon{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
+.nav-label{overflow:hidden;white-space:nowrap;}
+.sidebar.collapsed .nav-label{display:none;}
+.badge{background:var(--danger);color:#fff;font-size:10px;font-family:'DM Mono',monospace;padding:2px 5px;border-radius:10px;margin-left:auto;flex-shrink:0;}
+.sidebar.collapsed .badge{display:none;}
+.sidebar-footer{padding:12px 8px;border-top:1px solid var(--border);}
+.toggle-btn{width:100%;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Syne',sans-serif;font-size:11px;padding:7px;border-radius:7px;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:8px;}
+.toggle-btn:hover{border-color:var(--accent);color:var(--accent);}
+.toggle-icon{transition:transform .2s;}
+.sidebar.collapsed .toggle-icon{transform:rotate(180deg);}
+.sidebar.collapsed .toggle-text{display:none;}
+.user-info{display:flex;align-items:center;gap:8px;margin-bottom:8px;overflow:hidden;}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:rgba(0,229,160,.15);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--accent);font-weight:800;flex-shrink:0;}
+.user-details{overflow:hidden;}
+.user-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-role{font-size:10px;font-family:'DM Mono',monospace;color:var(--muted);}
+.sidebar.collapsed .user-details{display:none;}
+.btn-logout{width:100%;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Syne',sans-serif;font-size:11px;padding:6px;border-radius:7px;cursor:pointer;transition:all .15s;white-space:nowrap;overflow:hidden;}
+.btn-logout:hover{border-color:var(--danger);color:var(--danger);}
+.sidebar.collapsed .btn-logout{font-size:0;padding:6px 0;}
+.status-dot{display:flex;align-items:center;gap:6px;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:6px;white-space:nowrap;overflow:hidden;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite;flex-shrink:0;}
+.sidebar.collapsed .status-text{display:none;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-  /* Main content area com scroll independente */
-  .main { flex: 1; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
-  .topbar { background: #fff; padding: 18px 30px; border-bottom: 1px solid #e5e7eb;
-            display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-  .topbar h2 { font-size: 22px; color: #111827; }
-  .topbar .search { position: relative; }
-  .topbar .search input { padding: 10px 14px 10px 38px; border: 1px solid #d1d5db;
-                          border-radius: 8px; width: 320px; font-size: 14px; }
-  .topbar .search input:focus { outline: none; border-color: #6366f1; }
-  .topbar .search .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;height:100vh;overflow:hidden;min-width:0;}
+.topbar{padding:16px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg);flex-shrink:0;}
+.page-title{font-size:20px;font-weight:800;}
+.page-title span{color:var(--accent);}
+.btn{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;padding:8px 16px;border-radius:8px;border:none;cursor:pointer;transition:all .15s;}
+.btn-primary{background:var(--accent);color:#000;}
+.btn-primary:hover{background:#00ffb3;}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border);}
+.btn-ghost:hover{border-color:var(--accent);color:var(--accent);}
+.btn-danger{background:rgba(255,77,109,.1);color:var(--danger);border:1px solid rgba(255,77,109,.2);font-size:11px;padding:5px 10px;}
+.btn-danger:hover{background:rgba(255,77,109,.2);}
+.btn-success{background:rgba(0,229,160,.1);color:var(--accent);border:1px solid rgba(0,229,160,.2);font-size:11px;padding:5px 10px;}
+.btn-warn{background:rgba(245,158,11,.1);color:var(--warn);border:1px solid rgba(245,158,11,.2);font-size:11px;padding:5px 10px;}
 
-  .content { flex: 1; overflow-y: auto; padding: 24px 30px; }
+/* CONTENT */
+.content{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.page{display:none;flex:1;overflow:hidden;flex-direction:column;}
+.page.active{display:flex;}
+.page-inner{padding:20px 24px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:16px;}
 
-  /* Stats cards */
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-  .stat-card { background: #fff; border-radius: 12px; padding: 20px;
-               box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-  .stat-card .label { color: #6b7280; font-size: 13px; margin-bottom: 6px; }
-  .stat-card .value { font-size: 26px; font-weight: 700; color: #111827; }
-  .stat-card .sub { color: #9ca3af; font-size: 12px; margin-top: 4px; }
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;flex-shrink:0;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
+.stat-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px;}
+.stat-value{font-size:28px;font-weight:800;}
+.stat-value.accent{color:var(--accent);}
 
-  /* Table card */
-  .table-card { background: #fff; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-                display: flex; flex-direction: column; overflow: hidden; max-height: calc(100vh - 290px); }
-  .table-header { padding: 18px 20px; border-bottom: 1px solid #e5e7eb;
-                  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-  .table-header h3 { font-size: 16px; }
-  .btn-primary { background: #4f46e5; color: #fff; padding: 9px 18px; border-radius: 8px; font-weight: 600; font-size: 14px; }
-  .btn-primary:hover { background: #4338ca; }
-  .btn-secondary { background: #e5e7eb; color: #374151; padding: 9px 16px; border-radius: 8px; font-size: 14px; }
-  .btn-secondary:hover { background: #d1d5db; }
-  .btn-danger { background: #fef2f2; color: #b91c1c; padding: 6px 12px; border-radius: 6px; font-size: 12px; }
-  .btn-danger:hover { background: #fee2e2; }
-  .btn-edit { background: #eff6ff; color: #1d4ed8; padding: 6px 12px; border-radius: 6px; font-size: 12px; margin-right: 6px; }
-  .btn-edit:hover { background: #dbeafe; }
+/* SEARCH */
+.search-bar{display:flex;gap:10px;flex-shrink:0;}
+.input{font-family:'DM Mono',monospace;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);outline:none;transition:border-color .15s;}
+.input:focus{border-color:var(--accent);}
+.input::placeholder{color:var(--muted);}
+.input-grow{flex:1;}
 
-  /* SCROLL INDEPENDENTE da tabela */
-  .table-scroll { flex: 1; overflow-y: auto; }
-  table { width: 100%; border-collapse: collapse; }
-  thead th { position: sticky; top: 0; background: #f9fafb; padding: 12px 20px;
-             text-align: left; font-size: 12px; color: #6b7280; text-transform: uppercase;
-             font-weight: 600; border-bottom: 1px solid #e5e7eb; z-index: 1; }
-  tbody td { padding: 14px 20px; border-bottom: 1px solid #f3f4f6; font-size: 14px; }
-  tbody tr.row-main { cursor: pointer; transition: background 0.1s; }
-  tbody tr.row-main:hover { background: #fafafa; }
-  tbody tr.row-main.expanded { background: #f9fafb; }
-  tbody tr.row-detail { background: #f9fafb; }
-  tbody tr.row-detail td { padding: 0; }
-  .expand-arrow { display: inline-block; width: 18px; transition: transform 0.2s; }
-  .expand-arrow.open { transform: rotate(90deg); }
+/* TABELA */
+.table-container{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;flex:1;display:flex;flex-direction:column;min-height:0;}
+.table-scroll{overflow-y:auto;flex:1;}
+table{width:100%;border-collapse:collapse;}
+thead{background:var(--bg3);position:sticky;top:0;z-index:2;}
+th{padding:10px 14px;text-align:left;font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;font-weight:400;white-space:nowrap;}
+td{padding:11px 14px;font-size:13px;border-top:1px solid var(--border);}
+.row-main:hover td{background:var(--bg3);cursor:pointer;}
+.row-main td{transition:background .1s;}
+.row-expand{display:none;}
+.row-expand.open{display:table-row;}
+.expand-cell{padding:0 !important;border-top:none !important;}
+.expand-inner{padding:16px 20px;background:var(--bg3);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
 
-  /* Detail expansion */
-  .detail-content { padding: 20px 30px; }
-  .channels-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-bottom: 22px; }
-  .channel-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; }
-  .channel-card .channel-name { font-size: 13px; font-weight: 600; color: #4f46e5;
-                                text-transform: uppercase; margin-bottom: 10px; }
-  .channel-card .price-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
-  .channel-card .price-row .label { color: #6b7280; }
-  .channel-card .price-row .value { font-weight: 600; }
-  .variation-up { color: #16a34a; font-weight: 600; }
-  .variation-down { color: #dc2626; font-weight: 600; }
-  .variation-zero { color: #9ca3af; font-weight: 600; }
-  .chart-wrap { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px;
-                padding: 16px; height: 320px; }
+/* CANAL GRID */
+.canal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;}
+.canal-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;}
+.canal-name{font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.canal-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.canal-label{font-size:11px;color:var(--muted);}
+.canal-price{font-family:'DM Mono',monospace;font-size:13px;font-weight:500;}
+.canal-price.meu{color:var(--accent2);}
+.canal-price.concorrente{color:var(--accent);}
+.canal-variation{font-family:'DM Mono',monospace;font-size:11px;padding:2px 6px;border-radius:4px;margin-top:4px;display:inline-block;}
+.canal-variation.up{background:rgba(255,77,109,.15);color:var(--danger);}
+.canal-variation.down{background:rgba(0,229,160,.15);color:var(--accent);}
+.canal-variation.neutral{background:rgba(107,107,128,.15);color:var(--muted);}
+.mini-chart{height:80px;margin-top:8px;}
 
-  /* Modal */
-  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none;
-              align-items: center; justify-content: center; z-index: 100; }
-  .modal-bg.show { display: flex; }
-  .modal { background: #fff; border-radius: 14px; width: 100%; max-width: 560px;
-           max-height: 90vh; overflow-y: auto; }
-  .modal-head { padding: 20px 24px; border-bottom: 1px solid #e5e7eb;
-                display: flex; justify-content: space-between; align-items: center; }
-  .modal-head h3 { font-size: 18px; }
-  .modal-head .close { color: #9ca3af; font-size: 22px; }
-  .modal-body { padding: 24px; }
-  .modal-body label { display: block; margin: 12px 0 6px; font-size: 13px; color: #374151; font-weight: 500; }
-  .modal-body input { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
-  .modal-body input:focus { outline: none; border-color: #6366f1; }
-  .modal-body .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .modal-body .section-title { margin-top: 22px; padding-top: 18px; border-top: 1px solid #e5e7eb;
-                               font-size: 13px; font-weight: 600; color: #4f46e5; text-transform: uppercase; }
-  .modal-foot { padding: 16px 24px; border-top: 1px solid #e5e7eb;
-                display: flex; justify-content: flex-end; gap: 10px; }
-  .modal .alert { padding: 12px; border-radius: 8px; margin-bottom: 14px; font-size: 14px; }
-  .modal .alert.error { background: #fee2e2; color: #b91c1c; }
-  .modal .alert.success { background: #d1fae5; color: #065f46; }
+.tag{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;padding:2px 7px;border-radius:4px;background:rgba(124,92,255,.15);color:#a78bfa;margin-right:3px;}
+.ean-code{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);}
+.empty-state{padding:48px;text-align:center;color:var(--muted);font-size:13px;}
+.empty-icon{font-size:32px;margin-bottom:10px;}
+.chevron{transition:transform .2s;display:inline-block;font-size:10px;}
+.chevron.open{transform:rotate(90deg);}
 
-  /* Empty state */
-  .empty { padding: 60px 20px; text-align: center; color: #9ca3af; }
+/* STATUS */
+.status{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;padding:2px 7px;border-radius:4px;}
+.status.pendente{background:rgba(245,158,11,.15);color:var(--warn);}
+.status.aprovado{background:rgba(0,229,160,.15);color:var(--accent);}
+.status.rejeitado{background:rgba(255,77,109,.15);color:var(--danger);}
+.perfil-badge{display:inline-block;font-family:'DM Mono',monospace;font-size:10px;padding:2px 7px;border-radius:4px;background:rgba(124,92,255,.15);color:#a78bfa;}
 
-  /* Users panel */
-  .user-row { display: flex; justify-content: space-between; align-items: center;
-              padding: 14px 20px; border-bottom: 1px solid #f3f4f6; }
-  .user-row .info .name { font-weight: 600; }
-  .user-row .info .email { color: #6b7280; font-size: 13px; }
-  .badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; }
-  .badge.admin { background: #ede9fe; color: #6d28d9; }
-  .badge.viewer { background: #dbeafe; color: #1d4ed8; }
-  .badge.pending { background: #fef3c7; color: #92400e; }
-  .badge.rejected { background: #fee2e2; color: #b91c1c; }
-  .badge.approved { background: #d1fae5; color: #065f46; }
+/* MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;align-items:center;justify-content:center;backdrop-filter:blur(4px);}
+.modal-bg.open{display:flex;}
+.modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px;width:560px;max-height:90vh;overflow-y:auto;animation:slideUp .2s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.modal h2{font-size:17px;font-weight:800;margin-bottom:20px;}
+.form-group{margin-bottom:14px;}
+.form-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px;display:block;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.form-row-4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;}
+.section-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin:16px 0 8px;font-family:'DM Mono',monospace;border-bottom:1px solid var(--border);padding-bottom:6px;}
+
+/* GRAFICO */
+.chart-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:4px;}
+.chart-header{display:flex;justify-content:space-between;margin-bottom:10px;}
+.period-btns{display:flex;gap:3px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:3px;}
+.period-btn{font-family:'DM Mono',monospace;font-size:11px;padding:4px 10px;border-radius:4px;border:none;background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;}
+.period-btn.active{background:var(--accent);color:#000;}
+canvas{max-height:200px;}
+
+/* GRAFICO PAGE */
+.select{font-family:'DM Mono',monospace;font-size:13px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);outline:none;cursor:pointer;}
+.select:focus{border-color:var(--accent);}
+.chart-controls{display:flex;gap:10px;align-items:center;flex-shrink:0;}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:20px;}
+.chart-product-name{font-size:16px;font-weight:800;}
+.chart-ean{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-top:3px;}
+.price-current{font-size:24px;font-weight:800;color:var(--accent);font-family:'DM Mono',monospace;text-align:right;}
+.price-change{font-family:'DM Mono',monospace;font-size:11px;margin-top:3px;text-align:right;}
+.price-change.up{color:var(--danger);}
+.price-change.down{color:var(--accent);}
+.no-product{text-align:center;padding:60px 0;color:var(--muted);}
+.no-product .big{font-size:40px;margin-bottom:10px;}
+.history-title{font-size:12px;font-weight:600;color:var(--muted);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;}
+
+::-webkit-scrollbar{width:5px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
 </style>
 </head>
 <body>
 
-<!-- ============ TELA DE LOGIN ============ -->
-<div id="screen-login" class="auth-bg">
-  <div class="auth-card">
-    <h1>Monitor de Preços</h1>
-    <p class="sub">Faça login para acessar</p>
-    <form id="form-login">
-      <label>E-mail</label>
-      <input type="email" id="login-email" required />
-      <label>Senha</label>
-      <input type="password" id="login-senha" required />
-      <button type="submit" class="btn-primary">Entrar</button>
-    </form>
-    <div id="login-msg"></div>
-    <p class="switch">Não tem acesso? <a onclick="showScreen('register')">Solicitar acesso</a></p>
+<!-- AUTH -->
+<div class="auth-wrap" id="auth-wrap">
+  <div class="auth-box">
+    <div class="auth-logo">● monitor de preços</div>
+    <div id="view-login">
+      <div class="auth-title">Entrar na conta</div>
+      <div class="auth-msg" id="login-msg"></div>
+      <div class="form-group"><label class="form-label">E-mail</label><input class="input" style="width:100%" type="email" id="login-email" placeholder="seu@email.com"></div>
+      <div class="form-group"><label class="form-label">Senha</label><input class="input" style="width:100%" type="password" id="login-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')fazerLogin()"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="fazerLogin()">Entrar</button>
+      <div class="auth-switch">Não tem conta? <a onclick="mostrarView('cadastro')">Solicitar acesso</a></div>
+    </div>
+    <div id="view-cadastro" style="display:none">
+      <div class="auth-title">Solicitar acesso</div>
+      <div class="auth-msg" id="cadastro-msg"></div>
+      <div class="form-group"><label class="form-label">Nome</label><input class="input" style="width:100%" type="text" id="cad-nome" placeholder="Seu nome completo"></div>
+      <div class="form-group"><label class="form-label">E-mail</label><input class="input" style="width:100%" type="email" id="cad-email" placeholder="seu@email.com"></div>
+      <div class="form-group"><label class="form-label">Senha</label><input class="input" style="width:100%" type="password" id="cad-senha" placeholder="Mínimo 6 caracteres"></div>
+      <button class="btn btn-primary" style="width:100%;margin-top:8px" onclick="solicitarAcesso()">Solicitar acesso</button>
+      <div class="auth-switch">Já tem conta? <a onclick="mostrarView('login')">Entrar</a></div>
+    </div>
+    <div id="view-pendente" style="display:none">
+      <div class="pending-box"><div class="pending-icon">⏳</div><div class="auth-title" style="margin-bottom:12px">Aguardando aprovação</div><p style="color:var(--muted);font-size:14px">Solicitação enviada ao administrador.</p></div>
+      <div class="auth-switch" style="margin-top:20px"><a onclick="mostrarView('login')">← Voltar ao login</a></div>
+    </div>
   </div>
 </div>
 
-<!-- ============ TELA DE CADASTRO ============ -->
-<div id="screen-register" class="auth-bg" style="display:none;">
-  <div class="auth-card">
-    <h1>Solicitar acesso</h1>
-    <p class="sub">Cadastre-se e aguarde aprovação</p>
-    <form id="form-register">
-      <label>Nome</label>
-      <input type="text" id="reg-nome" required />
-      <label>E-mail</label>
-      <input type="email" id="reg-email" required />
-      <label>Senha</label>
-      <input type="password" id="reg-senha" required />
-      <button type="submit" class="btn-primary">Solicitar acesso</button>
-    </form>
-    <div id="register-msg"></div>
-    <p class="switch">Já tem acesso? <a onclick="showScreen('login')">Voltar ao login</a></p>
-  </div>
-</div>
-
-<!-- ============ APP ============ -->
-<div id="screen-app" class="app" style="display:none;">
-
-  <!-- Sidebar -->
+<!-- APP -->
+<div class="app" id="app">
+  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="logo">
-      <span class="icon">📊</span>
-      <span>Monitor</span>
+      <span class="logo-icon">◈</span>
+      <div class="logo-text">
+        <div class="logo-mark">● sistema</div>
+        <h1>Monitor<br>de Preços</h1>
+      </div>
     </div>
-    <button class="toggle" onclick="toggleSidebar()">
-      <span class="toggle-icon">≡</span>
-      <span>Recolher menu</span>
-    </button>
-    <nav>
-      <button id="nav-produtos" class="active" onclick="setTab('produtos')">
-        <span class="icon">📦</span><span class="label">Produtos</span>
-      </button>
-      <button id="nav-usuarios" style="display:none;" onclick="setTab('usuarios')">
-        <span class="icon">👥</span><span class="label">Usuários</span>
-        <span class="badge" id="badge-pendentes" style="display:none;">0</span>
-      </button>
+    <nav class="nav">
+      <div class="nav-item active" onclick="showPage('produtos',this)">
+        <span class="nav-icon">◈</span><span class="nav-label">Produtos</span>
+      </div>
+      <div class="nav-item" onclick="showPage('grafico',this)">
+        <span class="nav-icon">◉</span><span class="nav-label">Histórico</span>
+      </div>
+      <div class="nav-item" data-admin onclick="showPage('usuarios',this)">
+        <span class="nav-icon">◎</span><span class="nav-label">Usuários</span>
+        <span class="badge" id="badge-pendentes" style="display:none">0</span>
+      </div>
     </nav>
-    <div class="user-block">
-      <div class="name" id="user-name">—</div>
-      <div class="role" id="user-role">—</div>
-      <button class="logout" onclick="logout()">Sair</button>
+    <div class="sidebar-footer">
+      <button class="toggle-btn" onclick="toggleSidebar()">
+        <span class="toggle-icon">◀</span><span class="toggle-text">Recolher</span>
+      </button>
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar">?</div>
+        <div class="user-details">
+          <div class="user-name" id="user-name">—</div>
+          <div class="user-role" id="user-role">—</div>
+        </div>
+      </div>
+      <button class="btn-logout" onclick="logout()">Sair</button>
+      <div class="status-dot"><div class="dot"></div><span class="status-text">MongoDB</span></div>
     </div>
   </aside>
 
-  <!-- Main -->
+  <!-- MAIN -->
   <main class="main">
     <div class="topbar">
-      <h2 id="page-title">Produtos</h2>
-      <div class="search" id="search-box">
-        <span class="icon">🔍</span>
-        <input type="text" id="busca" placeholder="Buscar por nome, EAN ou SKU..." />
+      <div class="page-title" id="topbar-title">Produtos <span>cadastrados</span></div>
+      <div>
+        <button class="btn btn-primary" id="btn-novo-produto" onclick="openModal()" style="display:none">+ Novo produto</button>
       </div>
     </div>
+    <div class="content">
 
-    <div class="content" id="content"></div>
+      <!-- PAGE PRODUTOS -->
+      <div class="page active" id="page-produtos">
+        <div class="page-inner">
+          <div class="stats-grid" id="stats-grid">
+            <div class="stat-card"><div class="stat-label">Total de produtos</div><div class="stat-value accent" id="stat-total">0</div></div>
+            <div class="stat-card"><div class="stat-label">Registros de preço</div><div class="stat-value" id="stat-registros">0</div></div>
+            <div class="stat-card"><div class="stat-label">Última coleta</div><div class="stat-value" style="font-size:16px" id="stat-ultima">—</div></div>
+          </div>
+          <div class="search-bar">
+            <input class="input input-grow" type="text" placeholder="Buscar por nome, EAN ou SKU..." id="search-input" oninput="onSearch()">
+          </div>
+          <div class="table-container">
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>Produto</th>
+                    <th>SKU</th>
+                    <th>EAN</th>
+                    <th>Palavras-chave</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="tabela-body"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE GRAFICO -->
+      <div class="page" id="page-grafico">
+        <div class="page-inner">
+          <div class="chart-controls">
+            <select class="select" id="select-produto" onchange="renderGrafico()" style="min-width:220px">
+              <option value="">Selecione um produto...</option>
+            </select>
+            <div class="period-btns">
+              <button class="period-btn active" onclick="setPeriodo(7,this)">7d</button>
+              <button class="period-btn" onclick="setPeriodo(15,this)">15d</button>
+              <button class="period-btn" onclick="setPeriodo(30,this)">30d</button>
+              <button class="period-btn" onclick="setPeriodo(90,this)">90d</button>
+            </div>
+          </div>
+          <div id="grafico-content" style="flex:1;overflow-y:auto">
+            <div class="no-product"><div class="big">◉</div><p>Selecione um produto para ver o histórico</p></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAGE USUARIOS -->
+      <div class="page" id="page-usuarios">
+        <div class="page-inner">
+          <div class="table-container">
+            <div class="table-scroll">
+              <table>
+                <thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Status</th><th>Cadastro</th><th></th></tr></thead>
+                <tbody id="tabela-usuarios"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </main>
 </div>
 
-<!-- ============ MODAL PRODUTO ============ -->
-<div class="modal-bg" id="modal-produto">
+<!-- MODAL CADASTRO -->
+<div class="modal-bg" id="modal-bg" onclick="closeModalBg(event)">
   <div class="modal">
-    <div class="modal-head">
-      <h3 id="modal-title">Novo produto</h3>
-      <button class="close" onclick="fecharModal()">×</button>
+    <h2>Cadastrar produto</h2>
+    <div class="auth-msg" id="modal-msg"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Nome do produto</label><input class="input" style="width:100%" type="text" id="f-nome" placeholder="Ex: Ferrix Ferro Infantil"></div>
+      <div class="form-group"><label class="form-label">SKU interno</label><input class="input" style="width:100%" type="text" id="f-sku" placeholder="Ex: FERRIX-001"></div>
     </div>
-    <div class="modal-body">
-      <div id="modal-alert"></div>
-      <div id="modal-form">
-        <label>Nome do produto *</label>
-        <input type="text" id="p-nome" />
-        <div class="row-2">
-          <div>
-            <label>SKU interno *</label>
-            <input type="text" id="p-sku" />
-          </div>
-          <div>
-            <label>EAN *</label>
-            <input type="text" id="p-ean" />
-          </div>
-        </div>
-        <div class="row-2">
-          <div>
-            <label>Palavra-chave 1 *</label>
-            <input type="text" id="p-pc1" />
-          </div>
-          <div>
-            <label>Palavra-chave 2</label>
-            <input type="text" id="p-pc2" />
-          </div>
-        </div>
+    <div class="form-group"><label class="form-label">EAN</label><input class="input" style="width:100%" type="text" id="f-ean" placeholder="Ex: 7908041914238"></div>
+    <div class="form-group">
+      <label class="form-label">Palavras-chave (OU — pelo menos uma no título)</label>
+      <div class="form-row"><input class="input" type="text" id="f-kw1" placeholder="Palavra-chave 1"><input class="input" type="text" id="f-kw2" placeholder="Palavra-chave 2 (opcional)"></div>
+    </div>
+    <div class="section-title">Meu preço por canal (opcional)</div>
+    <div class="form-row-4">
+      <div class="form-group"><label class="form-label">Mercado Livre</label><input class="input" style="width:100%" type="number" step="0.01" id="f-preco-ml" placeholder="0,00"></div>
+      <div class="form-group"><label class="form-label">Amazon</label><input class="input" style="width:100%" type="number" step="0.01" id="f-preco-amz" placeholder="0,00"></div>
+      <div class="form-group"><label class="form-label">Shopee</label><input class="input" style="width:100%" type="number" step="0.01" id="f-preco-shp" placeholder="0,00"></div>
+      <div class="form-group"><label class="form-label">Droga Raia</label><input class="input" style="width:100%" type="number" step="0.01" id="f-preco-dr" placeholder="0,00"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarProduto()">Salvar produto</button>
+    </div>
+  </div>
+</div>
 
-        <div class="section-title">Preço praticado pela empresa por canal</div>
-        <div class="row-2">
-          <div>
-            <label>Mercado Livre (R$)</label>
-            <input type="number" step="0.01" id="p-pp-ml" />
-          </div>
-          <div>
-            <label>Amazon (R$)</label>
-            <input type="number" step="0.01" id="p-pp-am" />
-          </div>
-        </div>
-        <div class="row-2">
-          <div>
-            <label>Shopee (R$)</label>
-            <input type="number" step="0.01" id="p-pp-sh" />
-          </div>
-          <div>
-            <label>Droga Raia (R$)</label>
-            <input type="number" step="0.01" id="p-pp-dr" />
-          </div>
-        </div>
-      </div>
-
-      <div id="modal-success" style="display:none;">
-        <div class="alert success">Operação realizada com sucesso!</div>
-      </div>
+<!-- MODAL EDITAR -->
+<div class="modal-bg" id="modal-edit-bg" onclick="closeEditModalBg(event)">
+  <div class="modal">
+    <h2>Editar produto</h2>
+    <div class="auth-msg" id="modal-edit-msg"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Nome do produto</label><input class="input" style="width:100%" type="text" id="e-nome"></div>
+      <div class="form-group"><label class="form-label">SKU interno</label><input class="input" style="width:100%" type="text" id="e-sku"></div>
     </div>
-    <div class="modal-foot" id="modal-actions">
-      <button class="btn-secondary" onclick="fecharModal()">Cancelar</button>
-      <button class="btn-primary" id="btn-salvar" onclick="salvarProduto()">Salvar</button>
+    <div class="form-group"><label class="form-label">EAN</label><input class="input" style="width:100%" type="text" id="e-ean"></div>
+    <div class="form-group">
+      <label class="form-label">Palavras-chave</label>
+      <div class="form-row"><input class="input" type="text" id="e-kw1"><input class="input" type="text" id="e-kw2"></div>
     </div>
-    <div class="modal-foot" id="modal-success-actions" style="display:none;">
-      <button class="btn-secondary" onclick="fecharModal()">Fechar</button>
-      <button class="btn-primary" onclick="abrirModalProduto()">Cadastrar novo</button>
+    <div class="section-title">Meu preço por canal</div>
+    <div class="form-row-4">
+      <div class="form-group"><label class="form-label">Mercado Livre</label><input class="input" style="width:100%" type="number" step="0.01" id="e-preco-ml" placeholder="0,00"></div>
+      <div class="form-group"><label class="form-label">Amazon</label><input class="input" style="width:100%" type="number" step="0.01" id="e-preco-amz" placeholder="0,00"></div>
+      <div class="form-group"><label class="form-label">Shopee</label><input class="input" style="width:100%" type="number" step="0.01" id="e-preco-shp" placeholder="0,00"></div>
+      <div class="form-group"><label class="form-label">Droga Raia</label><input class="input" style="width:100%" type="number" step="0.01" id="e-preco-dr" placeholder="0,00"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeEditModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="salvarEdicao()">Salvar alterações</button>
     </div>
   </div>
 </div>
 
 <script>
-/* ================== ESTADO GLOBAL ================== */
-const API = window.location.origin;
-let token = localStorage.getItem("mp_token");
-let usuario = JSON.parse(localStorage.getItem("mp_user") || "null");
+const API = `${window.location.protocol}//${window.location.hostname}:8080`;
+let token = localStorage.getItem('token') || null;
+let perfil = localStorage.getItem('perfil') || null;
+let nomeUsuario = localStorage.getItem('nomeUsuario') || null;
 let produtos = [];
-let produtoExpandidoId = null;
+let periodoAtivo = 7;
+let chartInstance = null;
 let produtoEditandoId = null;
-let chartCanal = null;
-let buscaAtual = "";
-const CANAIS = [
-  { key: "mercado_livre", label: "Mercado Livre" },
-  { key: "amazon", label: "Amazon" },
-  { key: "shopee", label: "Shopee" },
-  { key: "droga_raia", label: "Droga Raia" },
-];
+let expandedRow = null;
+let miniCharts = {};
 
-/* ================== INIT ================== */
-window.addEventListener("DOMContentLoaded", () => {
-  if (token && usuario) {
-    abrirApp();
-  } else {
-    showScreen("login");
-  }
-
-  document.getElementById("form-login").addEventListener("submit", fazerLogin);
-  document.getElementById("form-register").addEventListener("submit", fazerCadastro);
-  document.getElementById("busca").addEventListener("input", (e) => {
-    buscaAtual = e.target.value.trim();
-    if (buscaAtual.length === 0 || buscaAtual.length >= 2) carregarProdutos();
-  });
-});
-
-function showScreen(s) {
-  document.getElementById("screen-login").style.display = s === "login" ? "flex" : "none";
-  document.getElementById("screen-register").style.display = s === "register" ? "flex" : "none";
-  document.getElementById("screen-app").style.display = s === "app" ? "flex" : "none";
+async function apiReq(method, path, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json', ...(token ? {'Authorization': `Bearer ${token}`} : {}) } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  let data = null;
+  try { data = await r.json(); } catch(e) { data = {}; }
+  if (!r.ok) throw new Error((data && data.detail) || 'Erro desconhecido');
+  return data;
 }
+const apiGet  = p    => apiReq('GET', p);
+const apiPost = (p,b)=> apiReq('POST', p, b);
+const apiPut  = (p,b)=> apiReq('PUT', p, b);
+const apiDel  = p    => apiReq('DELETE', p);
 
-/* ================== AUTH ================== */
-async function fazerLogin(e) {
-  e.preventDefault();
-  const msg = document.getElementById("login-msg");
-  msg.innerHTML = "";
+// ── AUTH ──────────────────────────────────────────────
+function mostrarView(v) {
+  ['login','cadastro','pendente'].forEach(x => document.getElementById('view-'+x).style.display = x===v?'block':'none');
+}
+function showMsg(id, msg, tipo) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.className = `auth-msg ${tipo} show`;
+}
+async function fazerLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const senha = document.getElementById('login-senha').value;
+  if (!email || !senha) return showMsg('login-msg','Preencha e-mail e senha.','error');
   try {
-    const res = await fetch(`${API}/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email: document.getElementById("login-email").value,
-        senha: document.getElementById("login-senha").value,
-      }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      msg.innerHTML = `<div class="msg error">${data.detail || "Erro no login"}</div>`;
-      return;
-    }
-    token = data.token;
-    usuario = { nome: data.nome, perfil: data.perfil };
-    localStorage.setItem("mp_token", token);
-    localStorage.setItem("mp_user", JSON.stringify(usuario));
-    abrirApp();
-  } catch (err) {
-    msg.innerHTML = `<div class="msg error">Erro de conexão</div>`;
-  }
+    const d = await apiPost('/auth/login',{email,senha});
+    token=d.token; perfil=d.perfil; nomeUsuario=d.nome;
+    localStorage.setItem('token',token); localStorage.setItem('perfil',perfil); localStorage.setItem('nomeUsuario',nomeUsuario);
+    iniciarApp();
+  } catch(e) { if(e.message.includes('aprovada')) mostrarView('pendente'); else showMsg('login-msg',e.message,'error'); }
 }
-
-async function fazerCadastro(e) {
-  e.preventDefault();
-  const msg = document.getElementById("register-msg");
-  msg.innerHTML = "";
+async function solicitarAcesso() {
+  const nome=document.getElementById('cad-nome').value.trim(), email=document.getElementById('cad-email').value.trim(), senha=document.getElementById('cad-senha').value;
+  if(!nome||!email||!senha) return showMsg('cadastro-msg','Preencha todos os campos.','error');
+  if(senha.length<6) return showMsg('cadastro-msg','Senha mínima 6 caracteres.','error');
   try {
-    const res = await fetch(`${API}/auth/registrar`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        nome: document.getElementById("reg-nome").value,
-        email: document.getElementById("reg-email").value,
-        senha: document.getElementById("reg-senha").value,
-      }),
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      msg.innerHTML = `<div class="msg error">${data.detail || "Erro no cadastro"}</div>`;
-      return;
-    }
-    if (data.primeiro_admin) {
-      token = data.token;
-      usuario = { nome: data.nome, perfil: "admin" };
-      localStorage.setItem("mp_token", token);
-      localStorage.setItem("mp_user", JSON.stringify(usuario));
-      abrirApp();
-    } else {
-      msg.innerHTML = `<div class="msg success">${data.mensagem}</div>`;
-      document.getElementById("form-register").reset();
-    }
-  } catch (err) {
-    msg.innerHTML = `<div class="msg error">Erro de conexão</div>`;
-  }
+    const d = await apiPost('/auth/solicitar',{nome,email,senha});
+    if(d.token){token=d.token;perfil=d.perfil;nomeUsuario=d.nome;localStorage.setItem('token',token);localStorage.setItem('perfil',perfil);localStorage.setItem('nomeUsuario',nomeUsuario);iniciarApp();}
+    else mostrarView('pendente');
+  } catch(e) { showMsg('cadastro-msg',e.message,'error'); }
 }
-
 function logout() {
-  localStorage.clear();
-  token = null;
-  usuario = null;
-  showScreen("login");
+  token=null;perfil=null;nomeUsuario=null;
+  localStorage.removeItem('token');localStorage.removeItem('perfil');localStorage.removeItem('nomeUsuario');
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('auth-wrap').style.display='flex';
+  mostrarView('login');
 }
 
-/* ================== APP ================== */
-function abrirApp() {
-  document.getElementById("user-name").textContent = usuario.nome;
-  document.getElementById("user-role").textContent = usuario.perfil;
-  if (usuario.perfil === "admin") {
-    document.getElementById("nav-usuarios").style.display = "flex";
-    carregarPendentes();
-  }
-  showScreen("app");
-  setTab("produtos");
-}
-
+// ── SIDEBAR ──────────────────────────────────────────────
 function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("collapsed");
+  document.getElementById('sidebar').classList.toggle('collapsed');
 }
 
-function setTab(tab) {
-  document.getElementById("nav-produtos").classList.toggle("active", tab === "produtos");
-  document.getElementById("nav-usuarios").classList.toggle("active", tab === "usuarios");
-  document.getElementById("page-title").textContent = tab === "produtos" ? "Produtos" : "Usuários";
-  document.getElementById("search-box").style.display = tab === "produtos" ? "block" : "none";
-
-  if (tab === "produtos") renderTelaProdutos();
-  else renderTelaUsuarios();
-}
-
-/* ================== PRODUTOS ================== */
-async function api(path, opts = {}) {
-  const res = await fetch(`${API}${path}`, {
-    ...opts,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...(opts.headers || {}),
-    },
-  });
-  if (res.status === 401) {
-    logout();
-    throw new Error("Sessão expirada");
+// ── INIT ──────────────────────────────────────────────
+function iniciarApp() {
+  document.getElementById('auth-wrap').style.display='none';
+  document.getElementById('app').classList.add('show');
+  document.getElementById('user-name').textContent = nomeUsuario;
+  document.getElementById('user-role').textContent = perfil==='admin'?'Administrador':'Visualizador';
+  document.getElementById('user-avatar').textContent = nomeUsuario?nomeUsuario[0].toUpperCase():'?';
+  if(perfil==='admin') {
+    document.querySelectorAll('[data-admin]').forEach(el=>el.style.display='flex');
+    document.getElementById('btn-novo-produto').style.display='';
+    verificarPendentes();
+    setInterval(verificarPendentes, 30000);
   }
-  return res;
+  carregarProdutos();
+  atualizarStats();
+}
+if(token) iniciarApp();
+
+// ── PÁGINAS ──────────────────────────────────────────────
+function showPage(page, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  el.classList.add('active');
+  const titles = {produtos:'Produtos <span>cadastrados</span>',grafico:'Histórico <span>de preços</span>',usuarios:'Gerenciar <span>usuários</span>'};
+  document.getElementById('topbar-title').innerHTML = titles[page];
+  document.getElementById('btn-novo-produto').style.display = (page==='produtos'&&perfil==='admin')?'':'none';
+  if(page==='grafico'){atualizarSelectProduto();renderGrafico();}
+  if(page==='usuarios') carregarUsuarios();
 }
 
-async function renderTelaProdutos() {
-  const c = document.getElementById("content");
-  c.innerHTML = `
-    <div class="stats">
-      <div class="stat-card">
-        <div class="label">Total de produtos</div>
-        <div class="value" id="stat-total">—</div>
-        <div class="sub" id="stat-total-sub">cadastrados</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Registros de preço</div>
-        <div class="value" id="stat-registros">—</div>
-        <div class="sub">no banco</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Última coleta</div>
-        <div class="value" id="stat-ultima">—</div>
-        <div class="sub">do n8n</div>
-      </div>
-    </div>
-
-    <div class="table-card">
-      <div class="table-header">
-        <h3 id="tabela-titulo">Produtos cadastrados</h3>
-        ${usuario.perfil === "admin"
-          ? '<button class="btn-primary" onclick="abrirModalProduto()">+ Novo produto</button>'
-          : ""}
-      </div>
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th style="width:40px;"></th>
-              <th>Nome</th>
-              <th>SKU</th>
-              <th>EAN</th>
-              <th>Palavras-chave</th>
-              <th style="text-align:right;">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="tbody-produtos">
-            <tr><td colspan="6" class="empty">Carregando…</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `;
-  await carregarProdutos();
+// ── MODAL CADASTRO ──────────────────────────────────────────────
+function openModal() { document.getElementById('modal-bg').classList.add('open'); document.getElementById('f-nome').focus(); }
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('open');
+  ['f-nome','f-sku','f-ean','f-kw1','f-kw2','f-preco-ml','f-preco-amz','f-preco-shp','f-preco-dr'].forEach(id=>document.getElementById(id).value='');
+  const msg=document.getElementById('modal-msg'); msg.className='auth-msg'; msg.innerHTML='';
 }
+function closeModalBg(e) { if(e.target===document.getElementById('modal-bg')) closeModal(); }
 
-async function carregarProdutos() {
-  if (document.getElementById("nav-produtos").classList.contains("active") === false) return;
-  const url = buscaAtual ? `/produtos?busca=${encodeURIComponent(buscaAtual)}` : `/produtos`;
+async function salvarProduto() {
+  const nome=document.getElementById('f-nome').value.trim();
+  const sku=document.getElementById('f-sku').value.trim().toUpperCase();
+  const ean=document.getElementById('f-ean').value.trim();
+  const kw1=document.getElementById('f-kw1').value.trim().toLowerCase();
+  const kw2=document.getElementById('f-kw2').value.trim().toLowerCase();
+  const msg=document.getElementById('modal-msg');
+  if(!nome||!sku||!ean||!kw1){msg.textContent='Preencha nome, SKU, EAN e palavra-chave.';msg.className='auth-msg error show';return;}
+  const jaExisteSku = produtos.find(p=>p.sku===sku);
+  if(jaExisteSku){msg.textContent='SKU já cadastrado.';msg.className='auth-msg error show';return;}
+  const jaExisteEan = produtos.find(p=>p.ean===ean);
+  if(jaExisteEan){msg.textContent='EAN já cadastrado em: '+jaExisteEan.nome;msg.className='auth-msg error show';return;}
+  const meu_preco = {
+    mercado_livre: parseFloat(document.getElementById('f-preco-ml').value)||null,
+    amazon: parseFloat(document.getElementById('f-preco-amz').value)||null,
+    shopee: parseFloat(document.getElementById('f-preco-shp').value)||null,
+    droga_raia: parseFloat(document.getElementById('f-preco-dr').value)||null,
+  };
   try {
-    const res = await api(url);
-    produtos = await res.json();
-  } catch (e) {
-    produtos = [];
+    await apiPost('/produtos',{nome,sku,ean,kw1,kw2,meu_preco});
+    await carregarProdutos(); await atualizarStats();
+    msg.innerHTML=`Produto cadastrado com sucesso! ✓<br><div style="display:flex;gap:8px;margin-top:10px">
+      <button class="btn btn-primary" style="flex:1" onclick="['f-nome','f-sku','f-ean','f-kw1','f-kw2','f-preco-ml','f-preco-amz','f-preco-shp','f-preco-dr'].forEach(id=>document.getElementById(id).value='');document.getElementById('modal-msg').className='auth-msg';document.getElementById('modal-msg').innerHTML=''">Cadastrar novo</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="closeModal()">Fechar</button></div>`;
+    msg.className='auth-msg success show';
+  } catch(e) {
+    msg.textContent=e.message; msg.className='auth-msg error show';
   }
+}
+
+// ── MODAL EDITAR ──────────────────────────────────────────────
+function openEditModal(id) {
+  const p=produtos.find(p=>p.id===id); if(!p) return;
+  produtoEditandoId=id;
+  document.getElementById('e-nome').value=p.nome;
+  document.getElementById('e-sku').value=p.sku||'';
+  document.getElementById('e-ean').value=p.ean;
+  document.getElementById('e-kw1').value=p.kw1;
+  document.getElementById('e-kw2').value=p.kw2||'';
+  document.getElementById('e-preco-ml').value=p.meu_preco?.mercado_livre||'';
+  document.getElementById('e-preco-amz').value=p.meu_preco?.amazon||'';
+  document.getElementById('e-preco-shp').value=p.meu_preco?.shopee||'';
+  document.getElementById('e-preco-dr').value=p.meu_preco?.droga_raia||'';
+  const msg=document.getElementById('modal-edit-msg'); msg.className='auth-msg'; msg.textContent='';
+  document.getElementById('modal-edit-bg').classList.add('open');
+}
+function closeEditModal() { document.getElementById('modal-edit-bg').classList.remove('open'); produtoEditandoId=null; }
+function closeEditModalBg(e) { if(e.target===document.getElementById('modal-edit-bg')) closeEditModal(); }
+async function salvarEdicao() {
+  const nome=document.getElementById('e-nome').value.trim();
+  const sku=document.getElementById('e-sku').value.trim().toUpperCase();
+  const ean=document.getElementById('e-ean').value.trim();
+  const kw1=document.getElementById('e-kw1').value.trim().toLowerCase();
+  const kw2=document.getElementById('e-kw2').value.trim().toLowerCase();
+  const msg=document.getElementById('modal-edit-msg');
+  if(!nome||!sku||!ean||!kw1){msg.textContent='Preencha todos os campos.';msg.className='auth-msg error show';return;}
+  const meu_preco = {
+    mercado_livre: parseFloat(document.getElementById('e-preco-ml').value)||null,
+    amazon: parseFloat(document.getElementById('e-preco-amz').value)||null,
+    shopee: parseFloat(document.getElementById('e-preco-shp').value)||null,
+    droga_raia: parseFloat(document.getElementById('e-preco-dr').value)||null,
+  };
+  try {
+    await apiPut(`/produtos/${produtoEditandoId}`,{nome,sku,ean,kw1,kw2,meu_preco});
+    msg.textContent='Produto atualizado com sucesso!'; msg.className='auth-msg success show';
+    await carregarProdutos();
+    setTimeout(()=>closeEditModal(),1500);
+  } catch(e) { msg.textContent=e.message; msg.className='auth-msg error show'; }
+}
+
+// ── PRODUTOS ──────────────────────────────────────────────
+async function carregarProdutos() { produtos=await apiGet('/produtos'); renderTabela(); }
+
+function onSearch() {
+  const q = document.getElementById('search-input').value.toLowerCase().trim();
   renderTabela();
-  carregarEstatisticas();
-}
-
-async function carregarEstatisticas() {
-  let url = "/estatisticas";
-  if (buscaAtual && produtos.length === 1) url += `?produto_id=${produtos[0].id}`;
-  try {
-    const res = await api(url);
-    const d = await res.json();
-    document.getElementById("stat-total").textContent = d.total_produtos ?? "—";
-    document.getElementById("stat-registros").textContent = d.total_registros ?? "—";
-    if (d.ultima_coleta) {
-      const dt = new Date(d.ultima_coleta);
-      document.getElementById("stat-ultima").textContent =
-        dt.toLocaleDateString("pt-BR") + " " + dt.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
-    } else {
-      document.getElementById("stat-ultima").textContent = "—";
-    }
-    if (buscaAtual && produtos.length === 1) {
-      document.getElementById("stat-total-sub").textContent = `do produto "${produtos[0].nome}"`;
-    } else {
-      document.getElementById("stat-total-sub").textContent = "cadastrados";
-    }
-  } catch (e) {}
+  if(q) {
+    const filtrados = produtos.filter(p=>p.nome.toLowerCase().includes(q)||p.ean.includes(q)||(p.sku||'').toLowerCase().includes(q));
+    if(filtrados.length===1) atualizarStatsProduto(filtrados[0].id);
+    else atualizarStats();
+  } else {
+    atualizarStats();
+  }
 }
 
 function renderTabela() {
-  const tbody = document.getElementById("tbody-produtos");
-  if (!tbody) return;
-  if (produtos.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="empty">Nenhum produto encontrado</td></tr>`;
+  const q=document.getElementById('search-input').value.toLowerCase().trim();
+  const filtrados=q?produtos.filter(p=>p.nome.toLowerCase().includes(q)||p.ean.includes(q)||(p.sku||'').toLowerCase().includes(q)):produtos;
+  const tbody=document.getElementById('tabela-body');
+  if(!filtrados.length){
+    tbody.innerHTML=`<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">◈</div>${q?'Nenhum produto encontrado.':'Nenhum produto cadastrado ainda.'}</div></td></tr>`;
     return;
   }
-  tbody.innerHTML = produtos.map(p => `
-    <tr class="row-main ${produtoExpandidoId === p.id ? "expanded" : ""}" onclick="toggleProduto('${p.id}')">
-      <td><span class="expand-arrow ${produtoExpandidoId === p.id ? "open" : ""}">▶</span></td>
-      <td><strong>${escapeHtml(p.nome)}</strong></td>
-      <td>${escapeHtml(p.sku || "—")}</td>
-      <td>${escapeHtml(p.ean || "—")}</td>
-      <td>${[p.palavra_chave_1, p.palavra_chave_2].filter(x => x).map(escapeHtml).join(", ")}</td>
-      <td style="text-align:right;" onclick="event.stopPropagation();">
-        ${usuario.perfil === "admin" ? `
-          <button class="btn-edit" onclick="abrirModalProduto('${p.id}')">Editar</button>
-          <button class="btn-danger" onclick="excluirProduto('${p.id}')">Excluir</button>
-        ` : ""}
+  tbody.innerHTML=filtrados.map(p=>`
+    <tr class="row-main" onclick="toggleExpand('${p.id}')">
+      <td><span class="chevron" id="chev-${p.id}">▶</span></td>
+      <td><strong>${p.nome}</strong></td>
+      <td><span class="ean-code">${p.sku||'—'}</span></td>
+      <td><span class="ean-code">${p.ean}</span></td>
+      <td><span class="tag">${p.kw1}</span>${p.kw2?`<span class="tag">${p.kw2}</span>`:''}</td>
+      <td onclick="event.stopPropagation()" style="display:flex;gap:6px;align-items:center">
+        ${perfil==='admin'?`<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="openEditModal('${p.id}')">Editar</button>
+        <button class="btn btn-danger" onclick="excluirProduto('${p.id}')">Excluir</button>`:''}
       </td>
     </tr>
-    <tr class="row-detail" id="detail-${p.id}" style="display:${produtoExpandidoId === p.id ? "table-row" : "none"};">
-      <td colspan="6">
-        <div class="detail-content" id="detail-content-${p.id}">
-          <div class="empty">Carregando…</div>
+    <tr class="row-expand" id="expand-${p.id}">
+      <td class="expand-cell" colspan="6">
+        <div class="expand-inner" id="expand-inner-${p.id}">
+          <div style="color:var(--muted);font-size:13px;font-family:'DM Mono',monospace">Carregando...</div>
         </div>
       </td>
     </tr>
-  `).join("");
-  if (produtoExpandidoId) carregarDetalhe(produtoExpandidoId);
+  `).join('');
 }
 
-async function toggleProduto(id) {
-  if (produtoExpandidoId === id) {
-    produtoExpandidoId = null;
-  } else {
-    produtoExpandidoId = id;
-  }
-  renderTabela();
-}
-
-async function carregarDetalhe(id) {
-  const produto = produtos.find(p => p.id === id);
-  if (!produto) return;
-  const cont = document.getElementById(`detail-content-${id}`);
-  if (!cont) return;
-
-  let canais = {};
-  let historico = [];
-  try {
-    const [r1, r2] = await Promise.all([
-      api(`/produtos/${id}/canais`),
-      api(`/produtos/${id}/historico?dias=30`),
-    ]);
-    canais = await r1.json();
-    historico = await r2.json();
-  } catch (e) {}
-
-  const pp = produto.precos_praticados || {};
-
-  cont.innerHTML = `
-    <div class="channels-grid">
-      ${CANAIS.map(c => {
-        const dados = canais[c.key] || {};
-        const meuPreco = pp[c.key];
-        const menor = dados.menor_preco_atual;
-        const variacao = dados.variacao_media_7d;
-        return `
-          <div class="channel-card">
-            <div class="channel-name">${c.label}</div>
-            <div class="price-row">
-              <span class="label">Meu preço</span>
-              <span class="value">${meuPreco != null ? formatBRL(meuPreco) : "—"}</span>
-            </div>
-            <div class="price-row">
-              <span class="label">Menor concorrente</span>
-              <span class="value">${menor != null ? formatBRL(menor) : "—"}</span>
-            </div>
-            <div class="price-row">
-              <span class="label">Variação média 7d</span>
-              <span class="value">${formatVariacao(variacao)}</span>
-            </div>
-            <div class="price-row" style="border-top:1px solid #f3f4f6; margin-top:6px; padding-top:8px;">
-              <span class="label">Coletas 7d</span>
-              <span class="value">${dados.registros || 0}</span>
-            </div>
-          </div>
-        `;
-      }).join("")}
-    </div>
-    <div class="chart-wrap">
-      <canvas id="chart-${id}"></canvas>
-    </div>
-  `;
-
-  desenharGrafico(id, historico);
-}
-
-function desenharGrafico(id, historico) {
-  const ctx = document.getElementById(`chart-${id}`);
-  if (!ctx) return;
-  if (chartCanal) { chartCanal.destroy(); chartCanal = null; }
-
-  // Conjunto único de timestamps (rótulos do eixo X)
-  const labelSet = new Set();
-  historico.forEach(h => labelSet.add(h.data));
-  const labels = Array.from(labelSet).sort();
-  const labelsFormat = labels.map(l => {
-    const d = new Date(l);
-    return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
-  });
-
-  // Agrupa preços por canal alinhados aos labels
-  const porCanal = {};
-  CANAIS.forEach(c => porCanal[c.key] = labels.map(() => null));
-  historico.forEach(h => {
-    if (!porCanal[h.canal]) return;
-    const idx = labels.indexOf(h.data);
-    if (idx >= 0) porCanal[h.canal][idx] = h.preco;
-  });
-
-  const cores = {
-    mercado_livre: "#facc15",
-    amazon: "#fb923c",
-    shopee: "#f43f5e",
-    droga_raia: "#3b82f6",
-  };
-
-  const datasets = CANAIS.map(c => ({
-    label: c.label,
-    data: porCanal[c.key],
-    borderColor: cores[c.key],
-    backgroundColor: cores[c.key] + "30",
-    tension: 0.3,
-    spanGaps: true,
-  })).filter(ds => ds.data.some(v => v != null));
-
-  if (datasets.length === 0) {
-    ctx.parentElement.innerHTML = '<div class="empty">Sem histórico ainda — aguarde a primeira coleta do n8n.</div>';
+async function toggleExpand(id) {
+  const row = document.getElementById(`expand-${id}`);
+  const chev = document.getElementById(`chev-${id}`);
+  if(row.classList.contains('open')) {
+    row.classList.remove('open');
+    chev.classList.remove('open');
+    if(miniCharts[id]) { miniCharts[id].destroy(); delete miniCharts[id]; }
     return;
   }
-
-  chartCanal = new Chart(ctx, {
-    type: "line",
-    data: { labels: labelsFormat, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { position: "bottom" } },
-      scales: {
-        x: { ticks: { maxTicksLimit: 8 } },
-        y: { ticks: { callback: v => "R$ " + v.toFixed(2) } },
-      },
-    },
-  });
-}
-
-/* ================== MODAL PRODUTO ================== */
-function abrirModalProduto(id = null) {
-  produtoEditandoId = id;
-  document.getElementById("modal-title").textContent = id ? "Editar produto" : "Novo produto";
-  document.getElementById("modal-alert").innerHTML = "";
-  document.getElementById("modal-form").style.display = "block";
-  document.getElementById("modal-success").style.display = "none";
-  document.getElementById("modal-actions").style.display = "flex";
-  document.getElementById("modal-success-actions").style.display = "none";
-
-  if (id) {
-    const p = produtos.find(x => x.id === id);
-    if (p) {
-      document.getElementById("p-nome").value = p.nome || "";
-      document.getElementById("p-sku").value = p.sku || "";
-      document.getElementById("p-ean").value = p.ean || "";
-      document.getElementById("p-pc1").value = p.palavra_chave_1 || "";
-      document.getElementById("p-pc2").value = p.palavra_chave_2 || "";
-      const pp = p.precos_praticados || {};
-      document.getElementById("p-pp-ml").value = pp.mercado_livre ?? "";
-      document.getElementById("p-pp-am").value = pp.amazon ?? "";
-      document.getElementById("p-pp-sh").value = pp.shopee ?? "";
-      document.getElementById("p-pp-dr").value = pp.droga_raia ?? "";
-    }
-  } else {
-    ["p-nome","p-sku","p-ean","p-pc1","p-pc2","p-pp-ml","p-pp-am","p-pp-sh","p-pp-dr"]
-      .forEach(i => document.getElementById(i).value = "");
+  // Fecha o anterior
+  if(expandedRow && expandedRow !== id) {
+    document.getElementById(`expand-${expandedRow}`)?.classList.remove('open');
+    document.getElementById(`chev-${expandedRow}`)?.classList.remove('open');
+    if(miniCharts[expandedRow]) { miniCharts[expandedRow].destroy(); delete miniCharts[expandedRow]; }
   }
-  document.getElementById("modal-produto").classList.add("show");
-}
-
-function fecharModal() {
-  document.getElementById("modal-produto").classList.remove("show");
-  produtoEditandoId = null;
-}
-
-async function salvarProduto() {
-  const alert = document.getElementById("modal-alert");
-  alert.innerHTML = "";
-
-  const nome = document.getElementById("p-nome").value.trim();
-  const sku = document.getElementById("p-sku").value.trim();
-  const ean = document.getElementById("p-ean").value.trim();
-  const pc1 = document.getElementById("p-pc1").value.trim();
-  const pc2 = document.getElementById("p-pc2").value.trim();
-
-  if (!nome || !sku || !ean || !pc1) {
-    alert.innerHTML = '<div class="alert error">Preencha nome, SKU, EAN e palavra-chave 1.</div>';
-    return;
-  }
-
-  const pp = {
-    mercado_livre: parseNum(document.getElementById("p-pp-ml").value),
-    amazon: parseNum(document.getElementById("p-pp-am").value),
-    shopee: parseNum(document.getElementById("p-pp-sh").value),
-    droga_raia: parseNum(document.getElementById("p-pp-dr").value),
-  };
-
-  const payload = {
-    nome, sku, ean,
-    palavra_chave_1: pc1,
-    palavra_chave_2: pc2,
-    precos_praticados: pp,
-  };
-
-  const url = produtoEditandoId ? `/produtos/${produtoEditandoId}` : "/produtos";
-  const method = produtoEditandoId ? "PUT" : "POST";
-
+  expandedRow = id;
+  row.classList.add('open');
+  chev.classList.add('open');
+  // Carrega dados
+  const p = produtos.find(x=>x.id===id);
+  const inner = document.getElementById(`expand-inner-${id}`);
   try {
-    const res = await api(url, { method, body: JSON.stringify(payload) });
-    let data = {};
-    try { data = await res.json(); } catch (e) {}
-    if (!res.ok) {
-      alert.innerHTML = `<div class="alert error">${data.detail || "Erro ao salvar"}</div>`;
-      return;
+    const canais = await apiGet(`/historico/${id}/canais`);
+    const nomes = {'Mercado Livre':'mercado_livre','Amazon':'amazon','Shopee':'shopee','Droga Raia':'droga_raia'};
+    const canaisHtml = ['Mercado Livre','Amazon','Shopee','Droga Raia'].map(canal=>{
+      const dados = canais[canal];
+      const meuPreco = p.meu_preco?.[nomes[canal]];
+      const menorConcorrente = dados?.menor_preco;
+      const variacao = dados?.variacao_media;
+      const semDados = !menorConcorrente;
+      let varHtml = '<span class="canal-variation neutral">sem dados</span>';
+      if(variacao!==null && variacao!==undefined) {
+        const cls = variacao>0?'up':'down';
+        const icon = variacao>0?'▲':'▼';
+        varHtml = `<span class="canal-variation ${cls}">${icon} ${Math.abs(variacao).toFixed(1)}% (7d)</span>`;
+      }
+      return `<div class="canal-card">
+        <div class="canal-name">${canal}</div>
+        <div class="canal-row"><span class="canal-label">Meu preço</span><span class="canal-price meu">${meuPreco?'R$ '+meuPreco.toFixed(2):'—'}</span></div>
+        <div class="canal-row"><span class="canal-label">Menor concorrente</span><span class="canal-price concorrente">${menorConcorrente?'R$ '+menorConcorrente.toFixed(2):'—'}</span></div>
+        ${varHtml}
+      </div>`;
+    }).join('');
+    // Mini gráfico com todos os registros ML
+    const mlDados = canais['Mercado Livre']?.registros || [];
+    const chartId = `chart-mini-${id}`;
+    inner.innerHTML = `<div class="canal-grid">${canaisHtml}</div>
+      ${mlDados.length?`<div class="chart-wrap">
+        <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--muted);margin-bottom:8px">HISTÓRICO MERCADO LIVRE (7 DIAS)</div>
+        <canvas id="${chartId}" style="max-height:120px"></canvas>
+      </div>`:''}`;
+    if(mlDados.length) {
+      const ctx = document.getElementById(chartId)?.getContext('2d');
+      if(ctx) {
+        miniCharts[id] = new Chart(ctx, {
+          type:'line',
+          data:{labels:mlDados.map(r=>{const d=new Date(r.data);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});}),
+            datasets:[{data:mlDados.map(r=>r.preco),borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,.05)',borderWidth:1.5,pointRadius:0,fill:true,tension:.3}]},
+          options:{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a24',bodyColor:'#00e5a0',bodyFont:{family:'DM Mono'},callbacks:{label:c=>'R$ '+c.parsed.y.toFixed(2)}}},
+            scales:{x:{ticks:{color:'#6b6b80',font:{family:'DM Mono',size:9},maxTicksLimit:6,maxRotation:0},grid:{color:'rgba(42,42,56,.5)'}},
+              y:{ticks:{color:'#6b6b80',font:{family:'DM Mono',size:9},callback:v=>'R$'+v.toFixed(0)},grid:{color:'rgba(42,42,56,.5)'}}}}
+        });
+      }
     }
-
-    document.getElementById("modal-form").style.display = "none";
-    document.getElementById("modal-actions").style.display = "none";
-    document.getElementById("modal-success").style.display = "block";
-    document.getElementById("modal-success").innerHTML = `<div class="alert success">${data.mensagem || (produtoEditandoId ? "Produto atualizado!" : "Produto cadastrado com sucesso!")}</div>`;
-    document.getElementById("modal-success-actions").style.display = "flex";
-    await carregarProdutos();
-  } catch (e) {
-    alert.innerHTML = '<div class="alert error">Erro de conexão</div>';
+  } catch(e) {
+    inner.innerHTML = `<div style="color:var(--muted);font-size:13px">Sem dados de histórico ainda.</div>`;
   }
 }
 
 async function excluirProduto(id) {
-  if (!confirm("Tem certeza que deseja excluir este produto e todo o histórico?")) return;
+  if(!confirm('Excluir produto e todo seu histórico?')) return;
+  await apiDel('/produtos/'+id);
+  await carregarProdutos(); await atualizarStats();
+}
+
+async function atualizarStats() {
   try {
-    const res = await api(`/produtos/${id}`, { method: "DELETE" });
-    if (!res.ok) {
-      const d = await res.json().catch(() => ({}));
-      alert(d.detail || "Erro ao excluir");
-      return;
-    }
-    await carregarProdutos();
-  } catch (e) {
-    alert("Erro de conexão");
-  }
+    const s=await apiGet('/stats');
+    document.getElementById('stat-total').textContent=s.total_produtos;
+    document.getElementById('stat-registros').textContent=s.total_registros;
+    document.getElementById('stat-ultima').textContent=s.ultima_coleta?new Date(s.ultima_coleta).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+  } catch(e){}
 }
 
-/* ================== USUÁRIOS ================== */
-async function renderTelaUsuarios() {
-  const c = document.getElementById("content");
-  c.innerHTML = `
-    <div class="table-card">
-      <div class="table-header"><h3>Solicitações pendentes</h3></div>
-      <div class="table-scroll" id="tbody-pendentes">Carregando…</div>
-    </div>
-    <div style="height:18px;"></div>
-    <div class="table-card">
-      <div class="table-header"><h3>Usuários cadastrados</h3></div>
-      <div class="table-scroll" id="tbody-usuarios">Carregando…</div>
-    </div>
-  `;
-  await carregarPendentes();
-  await carregarUsuarios();
-}
-
-async function carregarPendentes() {
+async function atualizarStatsProduto(id) {
   try {
-    const res = await api("/pendentes");
-    const lista = await res.json();
-    const badge = document.getElementById("badge-pendentes");
-    if (lista.length > 0) {
-      badge.textContent = lista.length;
-      badge.style.display = "inline-block";
-    } else {
-      badge.style.display = "none";
-    }
-    const cont = document.getElementById("tbody-pendentes");
-    if (!cont) return;
-    if (lista.length === 0) {
-      cont.innerHTML = '<div class="empty">Nenhuma solicitação pendente</div>';
-      return;
-    }
-    cont.innerHTML = lista.map(u => `
-      <div class="user-row">
-        <div class="info">
-          <div class="name">${escapeHtml(u.nome)}</div>
-          <div class="email">${escapeHtml(u.email)}</div>
-        </div>
-        <div style="display:flex; gap:6px; align-items:center;">
-          <button class="btn-edit" onclick="aprovarUsuario('${u.id}','admin')">Aprovar como Admin</button>
-          <button class="btn-edit" onclick="aprovarUsuario('${u.id}','visualizador')">Aprovar Visualizador</button>
-          <button class="btn-danger" onclick="rejeitarUsuario('${u.id}')">Rejeitar</button>
-        </div>
-      </div>
-    `).join("");
-  } catch (e) {}
+    const s=await apiGet(`/stats/${id}`);
+    document.getElementById('stat-total').textContent='1';
+    document.getElementById('stat-registros').textContent=s.total_registros;
+    document.getElementById('stat-ultima').textContent=s.ultima_coleta?new Date(s.ultima_coleta).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+  } catch(e){}
 }
 
+// ── GRÁFICO ──────────────────────────────────────────────
+function atualizarSelectProduto() {
+  const sel=document.getElementById('select-produto'), atual=sel.value;
+  sel.innerHTML='<option value="">Selecione um produto...</option>';
+  produtos.forEach(p=>sel.innerHTML+=`<option value="${p.id}" ${p.id===atual?'selected':''}>${p.nome}</option>`);
+}
+function setPeriodo(dias,btn) {
+  periodoAtivo=dias;
+  document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderGrafico();
+}
+async function renderGrafico() {
+  const produtoId=document.getElementById('select-produto').value;
+  const container=document.getElementById('grafico-content');
+  if(!produtoId){container.innerHTML=`<div class="no-product"><div class="big">◉</div><p>Selecione um produto para ver o histórico</p></div>`;return;}
+  const produto=produtos.find(p=>p.id===produtoId);
+  const hist=await apiGet(`/historico/${produtoId}?dias=${periodoAtivo}`);
+  if(!hist.length){container.innerHTML=`<div class="no-product"><div class="big">◉</div><p>Sem dados para o período selecionado.</p></div>`;return;}
+  const precos=hist.map(h=>h.preco), labels=hist.map(h=>{const d=new Date(h.data);return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})+' '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});});
+  const atual=precos[precos.length-1], anterior=precos[0];
+  const diff=atual-anterior, diffPct=((diff/anterior)*100).toFixed(1);
+  container.innerHTML=`<div class="chart-card" style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px">
+      <div><div class="chart-product-name">${produto.nome}</div><div class="chart-ean">EAN: ${produto.ean}</div></div>
+      <div><div class="price-current">R$ ${atual.toFixed(2)}</div><div class="price-change ${diff>0?'up':'down'}">${diff>0?'▲':'▼'} ${Math.abs(diffPct)}% nos últimos ${periodoAtivo}d</div></div>
+    </div>
+    <canvas id="chart-canvas" style="max-height:220px"></canvas>
+  </div>
+  <div class="history-title">Registros recentes</div>
+  <div class="table-container" style="flex:none">
+    <table><thead><tr><th>Data e hora</th><th>Preço</th><th>Vendedor</th><th>Canal</th></tr></thead>
+    <tbody>${[...hist].reverse().slice(0,20).map(h=>`<tr>
+      <td class="ean-code">${new Date(h.data).toLocaleString('pt-BR')}</td>
+      <td style="font-family:'DM Mono',monospace;color:var(--accent)">R$ ${h.preco.toFixed(2)}</td>
+      <td style="color:var(--muted);font-size:12px">${h.vendedor}</td>
+      <td style="color:var(--muted);font-size:12px">${h.canal||'—'}</td>
+    </tr>`).join('')}</tbody></table>
+  </div>`;
+  if(chartInstance) chartInstance.destroy();
+  chartInstance=new Chart(document.getElementById('chart-canvas').getContext('2d'),{type:'line',
+    data:{labels,datasets:[{label:'Preço',data:precos,borderColor:'#00e5a0',backgroundColor:'rgba(0,229,160,.05)',borderWidth:2,pointRadius:hist.length>100?0:2,pointBackgroundColor:'#00e5a0',fill:true,tension:.3}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1a1a24',borderColor:'#2a2a38',borderWidth:1,titleColor:'#6b6b80',bodyColor:'#00e5a0',bodyFont:{family:'DM Mono',size:12},callbacks:{label:c=>'R$ '+c.parsed.y.toFixed(2)}}},
+      scales:{x:{ticks:{color:'#6b6b80',font:{family:'DM Mono',size:9},maxTicksLimit:8,maxRotation:0},grid:{color:'rgba(42,42,56,.8)'}},
+        y:{ticks:{color:'#6b6b80',font:{family:'DM Mono',size:10},callback:v=>'R$ '+v.toFixed(0)},grid:{color:'rgba(42,42,56,.8)'}}}}});
+}
+
+// ── USUÁRIOS ──────────────────────────────────────────────
 async function carregarUsuarios() {
-  try {
-    const res = await api("/usuarios");
-    const lista = await res.json();
-    const cont = document.getElementById("tbody-usuarios");
-    if (!cont) return;
-    cont.innerHTML = lista.map(u => `
-      <div class="user-row">
-        <div class="info">
-          <div class="name">${escapeHtml(u.nome)}</div>
-          <div class="email">${escapeHtml(u.email)}</div>
-        </div>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <span class="badge ${u.perfil === 'admin' ? 'admin' : 'viewer'}">${u.perfil}</span>
-          <span class="badge ${u.status === 'aprovado' ? 'approved' : u.status === 'pendente' ? 'pending' : 'rejected'}">${u.status}</span>
-        </div>
-      </div>
-    `).join("");
-  } catch (e) {}
+  const usuarios=await apiGet('/usuarios');
+  const tbody=document.getElementById('tabela-usuarios');
+  if(!usuarios.length){tbody.innerHTML=`<tr><td colspan="6"><div class="empty-state"><div class="empty-icon">◎</div>Nenhum usuário.</div></td></tr>`;return;}
+  tbody.innerHTML=usuarios.map(u=>`<tr>
+    <td><strong>${u.nome}</strong></td>
+    <td class="ean-code">${u.email}</td>
+    <td><span class="perfil-badge">${u.perfil}</span></td>
+    <td><span class="status ${u.status}">${u.status}</span></td>
+    <td class="ean-code">${new Date(u.criadoEm).toLocaleDateString('pt-BR')}</td>
+    <td style="display:flex;gap:5px;flex-wrap:wrap">
+      ${u.status==='pendente'?`<button class="btn btn-success" onclick="aprovarUsuario('${u.id}','admin')">Admin</button>
+        <button class="btn btn-warn" onclick="aprovarUsuario('${u.id}','visualizador')">Visualizador</button>
+        <button class="btn btn-danger" onclick="rejeitarUsuario('${u.id}')">Rejeitar</button>`
+      :u.status==='aprovado'?`<button class="btn btn-danger" onclick="excluirUsuario('${u.id}')">Excluir</button>`
+      :`<button class="btn btn-ghost" style="font-size:11px;padding:5px 10px" onclick="aprovarUsuario('${u.id}','visualizador')">Reativar</button>`}
+    </td>
+  </tr>`).join('');
 }
-
-async function aprovarUsuario(id, perfil) {
-  await api(`/aprovar/${id}?perfil=${perfil}`, { method: "POST" });
-  carregarPendentes();
-  carregarUsuarios();
-}
-
-async function rejeitarUsuario(id) {
-  await api(`/rejeitar/${id}`, { method: "POST" });
-  carregarPendentes();
-  carregarUsuarios();
-}
-
-/* ================== HELPERS ================== */
-function formatBRL(v) {
-  if (v == null) return "—";
-  return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-}
-
-function formatVariacao(v) {
-  if (v == null) return '<span class="variation-zero">—</span>';
-  if (v > 0) return `<span class="variation-up">▲ ${v.toFixed(2)}%</span>`;
-  if (v < 0) return `<span class="variation-down">▼ ${Math.abs(v).toFixed(2)}%</span>`;
-  return '<span class="variation-zero">0,00%</span>';
-}
-
-function parseNum(v) {
-  if (v === "" || v == null) return null;
-  const n = parseFloat(v);
-  return isNaN(n) ? null : n;
-}
-
-function escapeHtml(s) {
-  if (s == null) return "";
-  return String(s)
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
-}
+async function aprovarUsuario(id,p){await apiPut(`/usuarios/${id}/aprovar`,{perfil:p});carregarUsuarios();verificarPendentes();}
+async function rejeitarUsuario(id){if(!confirm('Rejeitar?'))return;await apiPut(`/usuarios/${id}/rejeitar`);carregarUsuarios();verificarPendentes();}
+async function excluirUsuario(id){if(!confirm('Excluir?'))return;await apiDel(`/usuarios/${id}`);carregarUsuarios();}
+async function verificarPendentes(){try{const d=await apiGet('/usuarios/pendentes');const b=document.getElementById('badge-pendentes');if(d.pendentes>0){b.textContent=d.pendentes;b.style.display='block';}else b.style.display='none';}catch(e){}}
 </script>
 </body>
 </html>
+HTMLEOF
+echo "OK"
+Saída
+
+OK
