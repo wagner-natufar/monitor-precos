@@ -52,6 +52,70 @@
     --auth-gradient: linear-gradient(135deg, #14532d 0%, #16a34a 100%);
   }
 
+  /* === PÁGINA DE DETALHE === */
+  .page-detalhe { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+  .page-detalhe.active { display: flex; }
+  .detalhe-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--topbar-bg);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .btn-voltar {
+    display: flex; align-items: center; gap: 6px;
+    background: var(--secondary-bg); color: var(--secondary-text);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-voltar:hover { background: var(--secondary-hover); }
+  .detalhe-titulo { font-size: 18px; font-weight: 700; color: var(--text); }
+  .detalhe-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .detalhe-body { flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+
+  /* Filtro de canal */
+  .canal-filter { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .canal-filter-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+  .canal-btn {
+    padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface);
+    color: var(--text-muted); cursor: pointer; transition: all .15s;
+  }
+  .canal-btn.active, .canal-btn:hover {
+    background: var(--primary); color: var(--primary-text-on); border-color: var(--primary);
+  }
+  .canal-btn.todos.active { background: var(--primary-soft); color: var(--primary); border-color: var(--primary); }
+
+  /* Tabela de canais (linha) */
+  .canal-table { width: 100%; border-collapse: collapse; background: var(--surface); border-radius: 10px; overflow: hidden; box-shadow: var(--shadow); }
+  .canal-table thead th {
+    padding: 10px 16px; text-align: left; font-size: 11px; font-weight: 600;
+    color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em;
+    background: var(--thead-bg); border-bottom: 1px solid var(--border);
+  }
+  .canal-table tbody td {
+    padding: 12px 16px; font-size: 13px; border-bottom: 1px solid var(--border-light);
+  }
+  .canal-table tbody tr:last-child td { border-bottom: none; }
+  .canal-table tbody tr:hover td { background: var(--row-hover); }
+  .canal-nome { font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+  .canal-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .price-val { font-weight: 600; color: var(--text); font-variant-numeric: tabular-nums; }
+  .price-val.meu { color: var(--primary); }
+  .price-val.sem-dado { color: var(--text-soft); font-weight: 400; }
+  .var-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;
+  }
+  .var-badge.up { background: rgba(22,163,74,.12); color: var(--variation-up); }
+  .var-badge.down { background: rgba(220,38,38,.12); color: var(--variation-down); }
+  .var-badge.neutro { background: var(--secondary-bg); color: var(--text-muted); }
+  .chart-wrap-detalhe { background: var(--surface); border-radius: 10px; padding: 16px 20px; box-shadow: var(--shadow); }
+  .chart-wrap-detalhe h3 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
+  .chart-wrap-detalhe canvas { max-height: 260px; }
+
   [data-theme="dark"] {
     --bg: #0a0f0c;
     --surface: #14201a;
@@ -728,8 +792,8 @@ function renderTabela() {
     return;
   }
   tbody.innerHTML = produtos.map(p => `
-    <tr class="row-main ${produtoExpandidoId === p.id ? "expanded" : ""}" onclick="toggleProduto('${p.id}')">
-      <td><span class="expand-arrow ${produtoExpandidoId === p.id ? "open" : ""}">▶</span></td>
+    <tr class="row-main" onclick="toggleProduto('${p.id}')" title="Clique para ver detalhes">
+      <td><span class="expand-arrow">▶</span></td>
       <td><strong>${escapeHtml(p.nome)}</strong></td>
       <td>${escapeHtml(p.sku || "—")}</td>
       <td>${escapeHtml(p.ean || "—")}</td>
@@ -752,20 +816,50 @@ function renderTabela() {
   if (produtoExpandidoId) carregarDetalhe(produtoExpandidoId);
 }
 
+let canalAtivo = 'todos';
+
 async function toggleProduto(id) {
-  if (produtoExpandidoId === id) {
-    produtoExpandidoId = null;
-  } else {
-    produtoExpandidoId = id;
-  }
-  renderTabela();
+  // Abre página de detalhe
+  const produto = produtos.find(p => p.id === id);
+  if (!produto) return;
+
+  // Esconde todas as tabs e mostra detalhe
+  document.querySelectorAll('.tab-panel, .page-detalhe').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-detalhe').classList.add('active');
+
+  document.getElementById('detalhe-titulo').textContent = produto.nome;
+  document.getElementById('detalhe-sub').textContent = `SKU: ${produto.sku || '—'} · EAN: ${produto.ean}`;
+  document.getElementById('detalhe-content').innerHTML = '<p style="color:var(--text-muted)">Carregando...</p>';
+  canalAtivo = 'todos';
+  // Reset botões de canal
+  document.querySelectorAll('.canal-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.canal-btn.todos')?.classList.add('active');
+
+  await carregarDetalhe(id);
 }
+
+function voltarParaProdutos() {
+  document.querySelectorAll('.tab-panel, .page-detalhe').forEach(el => el.classList.remove('active'));
+  document.getElementById('page-produtos').classList.add('active');
+  if (chartCanal) { chartCanal.destroy(); chartCanal = null; }
+}
+
+function filtrarCanal(canal, btn) {
+  canalAtivo = canal;
+  document.querySelectorAll('.canal-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  // Re-renderiza tabela e gráfico com filtro
+  const id = document.getElementById('page-detalhe').dataset.produtoId;
+  if (id) renderDetalheComFiltro(id);
+}
+
+let detalheDados = { canais: {}, historico: [], produto: null };
 
 async function carregarDetalhe(id) {
   const produto = produtos.find(p => p.id === id);
   if (!produto) return;
-  const cont = document.getElementById(`detail-content-${id}`);
-  if (!cont) return;
+
+  document.getElementById('page-detalhe').dataset.produtoId = id;
 
   let canais = {};
   let historico = [];
@@ -778,50 +872,80 @@ async function carregarDetalhe(id) {
     historico = await r2.json();
   } catch (e) {}
 
+  detalheDados = { canais, historico, produto };
+  renderDetalheComFiltro(id);
+}
+
+const CANAL_CORES = {
+  mercado_livre: '#facc15',
+  amazon: '#fb923c',
+  shopee: '#f43f5e',
+  droga_raia: '#3b82f6',
+};
+
+function renderDetalheComFiltro(id) {
+  const { canais, historico, produto } = detalheDados;
+  if (!produto) return;
+
   const pp = produto.precos_praticados || {};
+  const cont = document.getElementById('detalhe-content');
+
+  // Filtra canais
+  const canaisFiltrados = canalAtivo === 'todos' ? CANAIS : CANAIS.filter(c => c.key === canalAtivo);
+  const historicoFiltrado = canalAtivo === 'todos' ? historico : historico.filter(h => h.canal === canalAtivo);
 
   cont.innerHTML = `
-    <div class="channels-grid">
-      ${CANAIS.map(c => {
-        const dados = canais[c.key] || {};
-        const meuPreco = pp[c.key];
-        const menor = dados.menor_preco_atual;
-        const variacao = dados.variacao_media_7d;
-        return `
-          <div class="channel-card">
-            <div class="channel-name">${c.label}</div>
-            <div class="price-row">
-              <span class="label">Meu preço</span>
-              <span class="value">${meuPreco != null ? formatBRL(meuPreco) : "—"}</span>
-            </div>
-            <div class="price-row">
-              <span class="label">Menor concorrente</span>
-              <span class="value">${menor != null ? formatBRL(menor) : "—"}</span>
-            </div>
-            <div class="price-row">
-              <span class="label">Variação média 7d</span>
-              <span class="value">${formatVariacao(variacao)}</span>
-            </div>
-            <div class="price-row" style="border-top:1px solid #f3f4f6; margin-top:6px; padding-top:8px;">
-              <span class="label">Coletas 7d</span>
-              <span class="value">${dados.registros || 0}</span>
-            </div>
-          </div>
-        `;
-      }).join("")}
+    <div style="overflow-x:auto">
+      <table class="canal-table">
+        <thead>
+          <tr>
+            <th>Canal</th>
+            <th>Meu preço</th>
+            <th>Menor preço no e-commerce</th>
+            <th>Variação média 7d</th>
+            <th>Coletas 7d</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${canaisFiltrados.map(c => {
+            const dados = canais[c.key] || {};
+            const meuPreco = pp[c.key];
+            const menor = dados.menor_preco_atual;
+            const variacao = dados.variacao_media_7d;
+            return `<tr>
+              <td><div class="canal-nome"><span class="canal-dot" style="background:${CANAL_CORES[c.key]}"></span>${c.label}</div></td>
+              <td><span class="price-val meu">${meuPreco != null ? formatBRL(meuPreco) : '<span class="price-val sem-dado">—</span>'}</span></td>
+              <td><span class="price-val">${menor != null ? formatBRL(menor) : '<span class="price-val sem-dado">—</span>'}</span></td>
+              <td>${formatVariacaoBadge(variacao)}</td>
+              <td style="color:var(--text-muted)">${dados.registros || 0}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
     </div>
-    <div class="chart-wrap">
-      <canvas id="chart-${id}"></canvas>
+    <div class="chart-wrap-detalhe">
+      <h3>Histórico de preços ${canalAtivo === 'todos' ? '— todos os canais' : '— ' + (CANAIS.find(c=>c.key===canalAtivo)?.label || '')}</h3>
+      <canvas id="chart-detalhe-${id}"></canvas>
     </div>
   `;
 
-  desenharGrafico(id, historico);
+  desenharGrafico('detalhe-' + id, historicoFiltrado, canaisFiltrados);
 }
 
-function desenharGrafico(id, historico) {
+function formatVariacaoBadge(variacao) {
+  if (variacao == null) return '<span class="var-badge neutro">— sem dados</span>';
+  const cls = variacao >= 0 ? 'up' : 'down';
+  const icon = variacao >= 0 ? '▲' : '▼';
+  const label = variacao >= 0 ? 'subiu' : 'caiu';
+  return `<span class="var-badge ${cls}">${icon} ${Math.abs(variacao).toFixed(1)}% ${label}</span>`;
+}
+
+function desenharGrafico(id, historico, canaisFiltrados) {
   const ctx = document.getElementById(`chart-${id}`);
   if (!ctx) return;
   if (chartCanal) { chartCanal.destroy(); chartCanal = null; }
+
+  const canaisParaUsar = canaisFiltrados || CANAIS;
 
   // Conjunto único de timestamps (rótulos do eixo X)
   const labelSet = new Set();
@@ -834,25 +958,18 @@ function desenharGrafico(id, historico) {
 
   // Agrupa preços por canal alinhados aos labels
   const porCanal = {};
-  CANAIS.forEach(c => porCanal[c.key] = labels.map(() => null));
+  canaisParaUsar.forEach(c => porCanal[c.key] = labels.map(() => null));
   historico.forEach(h => {
     if (!porCanal[h.canal]) return;
     const idx = labels.indexOf(h.data);
     if (idx >= 0) porCanal[h.canal][idx] = h.preco;
   });
 
-  const cores = {
-    mercado_livre: "#facc15",
-    amazon: "#fb923c",
-    shopee: "#f43f5e",
-    droga_raia: "#3b82f6",
-  };
-
-  const datasets = CANAIS.map(c => ({
+  const datasets = canaisParaUsar.map(c => ({
     label: c.label,
     data: porCanal[c.key],
-    borderColor: cores[c.key],
-    backgroundColor: cores[c.key] + "30",
+    borderColor: CANAL_CORES[c.key],
+    backgroundColor: CANAL_CORES[c.key] + "30",
     tension: 0.3,
     spanGaps: true,
   })).filter(ds => ds.data.some(v => v != null));
