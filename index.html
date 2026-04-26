@@ -156,6 +156,23 @@
   /* Empty state */
   .empty { padding: 60px 20px; text-align: center; color: #9ca3af; }
 
+  /* Histórico */
+  .hist-filtros { background: #fff; border-radius: 12px; padding: 18px;
+                  box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 18px;
+                  display: grid; grid-template-columns: 1fr 1fr auto; gap: 14px; align-items: end; }
+  .hist-filtros .field { display: flex; flex-direction: column; gap: 6px; }
+  .hist-filtros label { font-size: 12px; color: #6b7280; font-weight: 600; text-transform: uppercase; }
+  .hist-filtros input, .hist-filtros select { padding: 10px 12px; border: 1px solid #d1d5db;
+                                              border-radius: 8px; font-size: 14px; }
+  .hist-filtros input:focus, .hist-filtros select:focus { outline: none; border-color: #6366f1; }
+  .periodo-grupo { display: flex; gap: 6px; }
+  .periodo-btn { padding: 9px 14px; border: 1px solid #d1d5db; background: #fff;
+                 border-radius: 8px; font-size: 13px; color: #374151; }
+  .periodo-btn:hover { background: #f3f4f6; }
+  .periodo-btn.active { background: #4f46e5; color: #fff; border-color: #4f46e5; }
+  .hist-chart-wrap { background: #fff; border-radius: 12px; padding: 18px;
+                     box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 18px; height: 380px; }
+
   /* Users panel */
   .user-row { display: flex; justify-content: space-between; align-items: center;
               padding: 14px 20px; border-bottom: 1px solid #f3f4f6; }
@@ -223,6 +240,9 @@
     <nav>
       <button id="nav-produtos" class="active" onclick="setTab('produtos')">
         <span class="icon">📦</span><span class="label">Produtos</span>
+      </button>
+      <button id="nav-historico" onclick="setTab('historico')">
+        <span class="icon">📈</span><span class="label">Histórico</span>
       </button>
       <button id="nav-usuarios" style="display:none;" onclick="setTab('usuarios')">
         <span class="icon">👥</span><span class="label">Usuários</span>
@@ -448,11 +468,15 @@ function toggleSidebar() {
 
 function setTab(tab) {
   document.getElementById("nav-produtos").classList.toggle("active", tab === "produtos");
+  document.getElementById("nav-historico").classList.toggle("active", tab === "historico");
   document.getElementById("nav-usuarios").classList.toggle("active", tab === "usuarios");
-  document.getElementById("page-title").textContent = tab === "produtos" ? "Produtos" : "Usuários";
+
+  const titulos = { produtos: "Produtos", historico: "Histórico de preços", usuarios: "Usuários" };
+  document.getElementById("page-title").textContent = titulos[tab] || "";
   document.getElementById("search-box").style.display = tab === "produtos" ? "block" : "none";
 
   if (tab === "produtos") renderTelaProdutos();
+  else if (tab === "historico") renderTelaHistorico();
   else renderTelaUsuarios();
 }
 
@@ -817,6 +841,215 @@ async function excluirProduto(id) {
   } catch (e) {
     alert("Erro de conexão");
   }
+}
+
+/* ================== HISTÓRICO ================== */
+let histProdutoId = null;
+let histDias = 30;
+let histTodos = [];           // produtos disponíveis (cache)
+let histChart = null;
+
+async function renderTelaHistorico() {
+  // Busca produtos pra alimentar o seletor
+  try {
+    const res = await api("/produtos");
+    histTodos = await res.json();
+  } catch (e) { histTodos = []; }
+
+  const c = document.getElementById("content");
+  c.innerHTML = `
+    <div class="hist-filtros">
+      <div class="field">
+        <label>Buscar produto</label>
+        <input type="text" id="hist-busca" placeholder="Nome, SKU ou EAN..." />
+      </div>
+      <div class="field">
+        <label>Produto</label>
+        <select id="hist-produto"></select>
+      </div>
+      <div class="field">
+        <label>Período</label>
+        <div class="periodo-grupo" id="hist-periodos">
+          <button class="periodo-btn" data-dias="7">7d</button>
+          <button class="periodo-btn" data-dias="15">15d</button>
+          <button class="periodo-btn active" data-dias="30">30d</button>
+          <button class="periodo-btn" data-dias="60">60d</button>
+          <button class="periodo-btn" data-dias="90">90d</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="hist-chart-wrap">
+      <canvas id="hist-chart"></canvas>
+    </div>
+
+    <div class="table-card">
+      <div class="table-header"><h3>Coletas</h3></div>
+      <div class="table-scroll" style="max-height:300px;">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Canal</th>
+              <th>Preço</th>
+              <th>Vendedor</th>
+            </tr>
+          </thead>
+          <tbody id="hist-tabela">
+            <tr><td colspan="4" class="empty">Selecione um produto</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  preencherSelectHistorico("");
+
+  document.getElementById("hist-busca").addEventListener("input", (e) => {
+    preencherSelectHistorico(e.target.value.trim());
+  });
+  document.getElementById("hist-produto").addEventListener("change", (e) => {
+    histProdutoId = e.target.value || null;
+    carregarHistorico();
+  });
+  document.getElementById("hist-periodos").addEventListener("click", (e) => {
+    const b = e.target.closest("button.periodo-btn");
+    if (!b) return;
+    document.querySelectorAll("#hist-periodos .periodo-btn").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+    histDias = parseInt(b.dataset.dias);
+    carregarHistorico();
+  });
+
+  // Se já tinha um produto selecionado anteriormente, carrega
+  if (histProdutoId) {
+    document.getElementById("hist-produto").value = histProdutoId;
+    carregarHistorico();
+  }
+}
+
+function preencherSelectHistorico(busca) {
+  const sel = document.getElementById("hist-produto");
+  if (!sel) return;
+  const termo = (busca || "").toLowerCase();
+  const filtrados = histTodos.filter(p => {
+    if (!termo) return true;
+    return (p.nome || "").toLowerCase().includes(termo)
+        || (p.sku || "").toLowerCase().includes(termo)
+        || (p.ean || "").toLowerCase().includes(termo);
+  });
+
+  sel.innerHTML = `<option value="">— escolha um produto —</option>` +
+    filtrados.map(p => `<option value="${p.id}">${escapeHtml(p.nome)} (SKU ${escapeHtml(p.sku || "—")})</option>`).join("");
+
+  if (histProdutoId && filtrados.find(p => p.id === histProdutoId)) {
+    sel.value = histProdutoId;
+  } else {
+    histProdutoId = null;
+  }
+}
+
+async function carregarHistorico() {
+  if (!histProdutoId) {
+    document.getElementById("hist-tabela").innerHTML =
+      `<tr><td colspan="4" class="empty">Selecione um produto</td></tr>`;
+    if (histChart) { histChart.destroy(); histChart = null; }
+    const ctx = document.getElementById("hist-chart");
+    if (ctx) ctx.getContext("2d").clearRect(0, 0, ctx.width, ctx.height);
+    return;
+  }
+
+  let historico = [];
+  try {
+    const res = await api(`/produtos/${histProdutoId}/historico?dias=${histDias}`);
+    historico = await res.json();
+  } catch (e) { historico = []; }
+
+  // Tabela
+  const tb = document.getElementById("hist-tabela");
+  if (historico.length === 0) {
+    tb.innerHTML = `<tr><td colspan="4" class="empty">Sem coletas no período de ${histDias} dias</td></tr>`;
+  } else {
+    const labelCanal = { mercado_livre: "Mercado Livre", amazon: "Amazon", shopee: "Shopee", droga_raia: "Droga Raia" };
+    tb.innerHTML = historico.slice().reverse().map(h => {
+      const d = new Date(h.data);
+      return `
+        <tr>
+          <td>${d.toLocaleDateString("pt-BR")} ${d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</td>
+          <td>${escapeHtml(labelCanal[h.canal] || h.canal || "—")}</td>
+          <td>${formatBRL(h.preco)}</td>
+          <td>${escapeHtml(h.vendedor || "—")}</td>
+        </tr>
+      `;
+    }).join("");
+  }
+
+  desenharGraficoHistorico(historico);
+}
+
+function desenharGraficoHistorico(historico) {
+  const ctx = document.getElementById("hist-chart");
+  if (!ctx) return;
+  if (histChart) { histChart.destroy(); histChart = null; }
+
+  const labelSet = new Set();
+  historico.forEach(h => labelSet.add(h.data));
+  const labels = Array.from(labelSet).sort();
+  const labelsFormat = labels.map(l => {
+    const d = new Date(l);
+    return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"});
+  });
+
+  const porCanal = {};
+  CANAIS.forEach(c => porCanal[c.key] = labels.map(() => null));
+  historico.forEach(h => {
+    if (!porCanal[h.canal]) return;
+    const idx = labels.indexOf(h.data);
+    if (idx >= 0) porCanal[h.canal][idx] = h.preco;
+  });
+
+  const cores = {
+    mercado_livre: "#facc15",
+    amazon: "#fb923c",
+    shopee: "#f43f5e",
+    droga_raia: "#3b82f6",
+  };
+
+  const datasets = CANAIS.map(c => ({
+    label: c.label,
+    data: porCanal[c.key],
+    borderColor: cores[c.key],
+    backgroundColor: cores[c.key] + "30",
+    tension: 0.3,
+    spanGaps: true,
+  })).filter(ds => ds.data.some(v => v != null));
+
+  if (datasets.length === 0) {
+    if (histChart) { histChart.destroy(); histChart = null; }
+    ctx.parentElement.innerHTML = '<div class="empty">Sem coletas no período selecionado.</div>';
+    // restaura o canvas pra próxima renderização
+    setTimeout(() => {
+      const wrap = document.querySelector(".hist-chart-wrap");
+      if (wrap && !document.getElementById("hist-chart")) {
+        wrap.innerHTML = '<canvas id="hist-chart"></canvas>';
+      }
+    }, 0);
+    return;
+  }
+
+  histChart = new Chart(ctx, {
+    type: "line",
+    data: { labels: labelsFormat, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { position: "bottom" } },
+      scales: {
+        x: { ticks: { maxTicksLimit: 10 } },
+        y: { ticks: { callback: v => "R$ " + v.toFixed(2) } },
+      },
+    },
+  });
 }
 
 /* ================== USUÁRIOS ================== */
