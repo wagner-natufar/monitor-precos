@@ -1,212 +1,410 @@
-from fastapi import FastAPI, HTTPException, Depends
+import os
+import jwt
+import hashlib
+from datetime import datetime, timedelta
+from typing import Optional
+from fastapi import FastAPI, HTTPException, Depends, Header
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
-from typing import Optional
 from motor.motor_asyncio import AsyncIOMotorClient
-from datetime import datetime, timedelta
 from bson import ObjectId
 import uvicorn
-import hashlib
-import jwt
-import os
 
-app = FastAPI()
+# === Config ===
+MONGO_URL = os.getenv("MONGO_URL", "mongodb://127.0.0.1:27017")
+JWT_SECRET = os.getenv("JWT_SECRET", "monitor-precos-secret-key-change-me")
+JWT_ALG = "HS256"
+
+# === DB ===
+client = AsyncIOMotorClient(MONGO_URL)
+db = client.monitor_precos
+produtos_col = db.produtos
+historico_col = db.historico
+usuarios_col = db.usuarios
+
+# === App ===
+app = FastAPI(title="Monitor de Preços")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-MONGO_URL = os.getenv("MONGO_URL", "mongodb://127.0.0.1:27017")
-client = AsyncIOMotorClient(MONGO_URL)
-db = client["monitor_precos"]
-col_produtos  = db["produtos"]
-col_historico = db["historico"]
-col_usuarios  = db["usuarios"]
+CANAIS = ["mercado_livre", "amazon", "shopee", "droga_raia"]
 
-JWT_SECRET    = "monitor-precos-secret-2026"
-JWT_ALGORITHM = "HS256"
-security      = HTTPBearer()
-
-# ── HELPERS ──────────────────────────────────────────────
-
-def hash_senha(s): return hashlib.sha256(s.encode()).hexdigest()
-
-def criar_token(uid, perfil):
-    return jwt.encode({"sub": uid, "perfil": perfil, "exp": datetime.utcnow() + timedelta(days=7)}, JWT_SECRET, algorithm=JWT_ALGORITHM)
+# === Helpers ===
 
 def serial(doc):
-    d = {}
-    for k, v in doc.items():
-        if k == "_id":
-            d["id"] = str(v)
-        elif isinstance(v, ObjectId):
-            d[k] = str(v)
+    """Converte documento do Mongo em dict serializável (ObjectId -> str, datetime -> iso)."""
+    if doc is None:
+        return None
+    out = {}
+    for k, v in dict(doc).items():
+        key = "id" if k == "_id" else k
+        if isinstance(v, ObjectId):
+            out[key] = str(v)
+        elif isinstance(v, datetime):
+            out[key] = v.isoformat()
+        elif isinstance(v, dict):
+            out[key] = {kk: (str(vv) if isinstance(vv, ObjectId)
+                             else vv.isoformat() if isinstance(vv, datetime)
+                             else vv)
+                        for kk, vv in v.items()}
         else:
-            d[k] = v
-    return d
+            out[key] = v
+    return out
 
-def verificar_token(credentials: HTTPAuthorizationCredentials = Depends(security)):
+
+def hash_senha(senha: str) -> str:
+    return hashlib.sha256(senha.encode()).hexdigest()
+
+
+def criar_token(user_id: str, perfil: str) -> str:
+    payload = {
+        "user_id": user_id,
+        "perfil": perfil,
+        "exp": datetime.utcnow() + timedelta(days=30),
+    }
+    return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALG)
+
+
+async def get_user(authorization: Optional[str] = Header(None)):
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Não autenticado")
+    token = authorization.split(" ", 1)[1]
     try:
-        return jwt.decode(credentials.credentials, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expirado")
-    except jwt.InvalidTokenError:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALG])
+        return payload
+    except jwt.PyJWTError:
         raise HTTPException(status_code=401, detail="Token inválido")
 
-def exigir_admin(payload=Depends(verificar_token)):
-    if payload.get("perfil") != "admin":
-        raise HTTPException(status_code=403, detail="Acesso negado")
-    return payload
 
-def usuario_aprovado(payload=Depends(verificar_token)):
-    return payload
+async def admin_required(user=Depends(get_user)):
+    if user.get("perfil") != "admin":
+        raise HTTPException(status_code=403, detail="Acesso restrito ao admin")
+    return user
 
-# ── MODELS ──────────────────────────────────────────────
 
-class SolicitacaoAcesso(BaseModel):
-    nome: str
-    email: str
-    senha: str
+# === Models ===
 
-class Login(BaseModel):
-    email: str
-    senha: str
+class PrecosPraticados(BaseModel):
+    mercado_livre: Optional[float] = None
+    amazon: Optional[float] = None
+    shopee: Optional[float] = None
+    droga_raia: Optional[float] = None
 
-class AprovarUsuario(BaseModel):
-    perfil: str
 
 class Produto(BaseModel):
     nome: str
     sku: str
     ean: str
-    kw1: str
-    kw2: Optional[str] = ""
+    palavra_chave_1: str
+    palavra_chave_2: Optional[str] = ""
+    precos_praticados: Optional[PrecosPraticados] = None
 
-class RegistroPreco(BaseModel):
+
+class LoginInput(BaseModel):
+    email: str
+    senha: str
+
+
+class CadastroInput(BaseModel):
+    nome: str
+    email: str
+    senha: str
+
+
+class HistoricoInput(BaseModel):
     produto_id: str
+    canal: str
     preco: float
-    vendedor: str
-    canal: str = "Mercado Livre"
+    vendedor: Optional[str] = ""
+    url: Optional[str] = ""
 
-# ── AUTH ──────────────────────────────────────────────
 
-@app.post("/auth/solicitar")
-async def solicitar_acesso(dados: SolicitacaoAcesso):
-    if await col_usuarios.find_one({"email": dados.email}):
+# === Auth ===
+
+@app.post("/auth/registrar")
+async def registrar(data: CadastroInput):
+    existente = await usuarios_col.find_one({"email": data.email})
+    if existente:
         raise HTTPException(status_code=400, detail="E-mail já cadastrado")
-    total = await col_usuarios.count_documents({})
-    status_u = "aprovado" if total == 0 else "pendente"
-    perfil   = "admin"    if total == 0 else "visualizador"
-    doc = {"nome": dados.nome, "email": dados.email, "senha": hash_senha(dados.senha),
-           "perfil": perfil, "status": status_u, "criadoEm": datetime.now().isoformat()}
-    result = await col_usuarios.insert_one(doc)
-    uid = str(result.inserted_id)
-    if status_u == "aprovado":
-        return {"mensagem": "Conta admin criada!", "token": criar_token(uid, perfil), "perfil": perfil, "nome": dados.nome}
-    return {"mensagem": "Solicitação enviada! Aguarde aprovação."}
+
+    total = await usuarios_col.count_documents({})
+    primeiro_admin = total == 0
+
+    novo = {
+        "nome": data.nome,
+        "email": data.email,
+        "senha_hash": hash_senha(data.senha),
+        "perfil": "admin" if primeiro_admin else "visualizador",
+        "status": "aprovado" if primeiro_admin else "pendente",
+        "criado_em": datetime.utcnow(),
+    }
+    res = await usuarios_col.insert_one(novo)
+    user_id = str(res.inserted_id)
+
+    if primeiro_admin:
+        token = criar_token(user_id, "admin")
+        return {
+            "token": token,
+            "perfil": "admin",
+            "nome": data.nome,
+            "primeiro_admin": True,
+        }
+    return {
+        "mensagem": "Solicitação enviada! Aguarde aprovação do administrador.",
+        "primeiro_admin": False,
+    }
+
 
 @app.post("/auth/login")
-async def login(dados: Login):
-    u = await col_usuarios.find_one({"email": dados.email, "senha": hash_senha(dados.senha)})
-    if not u:
+async def login(data: LoginInput):
+    user = await usuarios_col.find_one({"email": data.email})
+    if not user or user["senha_hash"] != hash_senha(data.senha):
         raise HTTPException(status_code=401, detail="E-mail ou senha incorretos")
-    if u["status"] == "pendente":
-        raise HTTPException(status_code=403, detail="Conta ainda não aprovada")
-    if u["status"] == "rejeitado":
-        raise HTTPException(status_code=403, detail="Solicitação rejeitada")
-    return {"token": criar_token(str(u["_id"]), u["perfil"]), "perfil": u["perfil"], "nome": u["nome"]}
+    if user["status"] == "pendente":
+        raise HTTPException(status_code=403, detail="Cadastro aguardando aprovação")
+    if user["status"] == "rejeitado":
+        raise HTTPException(status_code=403, detail="Acesso negado")
+
+    user_id = str(user["_id"])
+    token = criar_token(user_id, user["perfil"])
+    return {"token": token, "perfil": user["perfil"], "nome": user["nome"]}
+
 
 @app.get("/auth/me")
-async def me(payload=Depends(verificar_token)):
-    u = await col_usuarios.find_one({"_id": ObjectId(payload["sub"])})
-    if not u:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado")
-    return {"id": str(u["_id"]), "nome": u["nome"], "email": u["email"], "perfil": u["perfil"]}
+async def me(user=Depends(get_user)):
+    return {"perfil": user["perfil"], "user_id": user["user_id"]}
 
-# ── USUÁRIOS ──────────────────────────────────────────────
+
+# === Usuários (admin) ===
+
+@app.get("/pendentes")
+async def listar_pendentes(user=Depends(admin_required)):
+    docs = await usuarios_col.find({"status": "pendente"}).to_list(1000)
+    return [{**serial(d), "senha_hash": None} for d in docs]
+
 
 @app.get("/usuarios")
-async def listar_usuarios(payload=Depends(exigir_admin)):
-    return [serial({k: v for k, v in u.items() if k != "senha"}) async for u in col_usuarios.find().sort("criadoEm", -1)]
+async def listar_usuarios(user=Depends(admin_required)):
+    docs = await usuarios_col.find().to_list(1000)
+    return [{**serial(d), "senha_hash": None} for d in docs]
 
-@app.get("/usuarios/pendentes")
-async def pendentes(payload=Depends(exigir_admin)):
-    return {"pendentes": await col_usuarios.count_documents({"status": "pendente"})}
 
-@app.put("/usuarios/{uid}/aprovar")
-async def aprovar(uid: str, dados: AprovarUsuario, payload=Depends(exigir_admin)):
-    await col_usuarios.update_one({"_id": ObjectId(uid)}, {"$set": {"status": "aprovado", "perfil": dados.perfil, "aprovadoEm": datetime.now().isoformat()}})
-    return {"ok": True}
+@app.post("/aprovar/{user_id}")
+async def aprovar(user_id: str, perfil: str = "visualizador", user=Depends(admin_required)):
+    if perfil not in ["admin", "visualizador"]:
+        raise HTTPException(status_code=400, detail="Perfil inválido")
+    res = await usuarios_col.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"status": "aprovado", "perfil": perfil}},
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    return {"mensagem": "Usuário aprovado"}
 
-@app.put("/usuarios/{uid}/rejeitar")
-async def rejeitar(uid: str, payload=Depends(exigir_admin)):
-    await col_usuarios.update_one({"_id": ObjectId(uid)}, {"$set": {"status": "rejeitado"}})
-    return {"ok": True}
 
-@app.delete("/usuarios/{uid}")
-async def excluir_usuario(uid: str, payload=Depends(exigir_admin)):
-    if uid == payload["sub"]:
-        raise HTTPException(status_code=400, detail="Não pode excluir sua própria conta")
-    await col_usuarios.delete_one({"_id": ObjectId(uid)})
-    return {"ok": True}
+@app.post("/rejeitar/{user_id}")
+async def rejeitar(user_id: str, user=Depends(admin_required)):
+    res = await usuarios_col.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"status": "rejeitado"}},
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    return {"mensagem": "Usuário rejeitado"}
 
-# ── PRODUTOS ──────────────────────────────────────────────
+
+# === Produtos ===
 
 @app.get("/produtos")
-async def listar_produtos(payload=Depends(usuario_aprovado)):
-    return [serial(p) async for p in col_produtos.find()]
+async def listar_produtos(busca: Optional[str] = None, user=Depends(get_user)):
+    filtro = {}
+    if busca:
+        filtro = {
+            "$or": [
+                {"nome": {"$regex": busca, "$options": "i"}},
+                {"ean": {"$regex": busca, "$options": "i"}},
+                {"sku": {"$regex": busca, "$options": "i"}},
+            ]
+        }
+    docs = await produtos_col.find(filtro).to_list(5000)
+    return [serial(d) for d in docs]
+
 
 @app.post("/produtos")
-async def cadastrar_produto(produto: Produto, payload=Depends(exigir_admin)):
-    if await col_produtos.find_one({"sku": produto.sku}):
-        raise HTTPException(status_code=400, detail="Produto já cadastrado com esse SKU")
+async def cadastrar_produto(produto: Produto, user=Depends(admin_required)):
+    # Validar SKU duplicado
+    if await produtos_col.find_one({"sku": produto.sku}):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Produto já cadastrado com o SKU {produto.sku}",
+        )
+    # Validar EAN duplicado
+    if await produtos_col.find_one({"ean": produto.ean}):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Produto já cadastrado com o EAN {produto.ean}",
+        )
+
     doc = produto.dict()
-    doc["criadoEm"] = datetime.now().isoformat()
-    result = await col_produtos.insert_one(doc)
-    return {"id": str(result.inserted_id), "mensagem": "Produto cadastrado com sucesso"}
+    doc["criado_em"] = datetime.utcnow()
+    res = await produtos_col.insert_one(doc)
+    return {"id": str(res.inserted_id), "mensagem": "Produto cadastrado com sucesso!"}
 
-@app.put("/produtos/{pid}")
-async def editar_produto(pid: str, produto: Produto, payload=Depends(exigir_admin)):
-    existente = await col_produtos.find_one({"sku": produto.sku, "_id": {"$ne": ObjectId(pid)}})
-    if existente:
-        raise HTTPException(status_code=400, detail="Já existe outro produto com esse SKU")
-    await col_produtos.update_one({"_id": ObjectId(pid)}, {"$set": produto.dict()})
-    return {"ok": True, "mensagem": "Produto atualizado com sucesso"}
 
-@app.delete("/produtos/{pid}")
-async def excluir_produto(pid: str, payload=Depends(exigir_admin)):
-    await col_produtos.delete_one({"_id": ObjectId(pid)})
-    await col_historico.delete_many({"produto_id": pid})
-    return {"ok": True}
+@app.put("/produtos/{produto_id}")
+async def editar_produto(produto_id: str, produto: Produto, user=Depends(admin_required)):
+    try:
+        oid = ObjectId(produto_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID inválido")
 
-# ── HISTÓRICO ──────────────────────────────────────────────
+    if await produtos_col.find_one({"sku": produto.sku, "_id": {"$ne": oid}}):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Outro produto já usa o SKU {produto.sku}",
+        )
+    if await produtos_col.find_one({"ean": produto.ean, "_id": {"$ne": oid}}):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Outro produto já usa o EAN {produto.ean}",
+        )
 
-@app.get("/historico/{produto_id}")
-async def listar_historico(produto_id: str, dias: int = 7, payload=Depends(usuario_aprovado)):
-    inicio = (datetime.now() - timedelta(days=dias)).isoformat()
-    return [serial(r) async for r in col_historico.find({"produto_id": produto_id, "data": {"$gte": inicio}}).sort("data", 1)]
+    res = await produtos_col.update_one({"_id": oid}, {"$set": produto.dict()})
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    return {"mensagem": "Produto atualizado com sucesso!"}
+
+
+@app.delete("/produtos/{produto_id}")
+async def excluir_produto(produto_id: str, user=Depends(admin_required)):
+    try:
+        oid = ObjectId(produto_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="ID inválido")
+    res = await produtos_col.delete_one({"_id": oid})
+    await historico_col.delete_many({"produto_id": produto_id})
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    return {"mensagem": "Produto excluído"}
+
+
+# === Histórico ===
+
+@app.get("/produtos/{produto_id}/historico")
+async def historico_produto(produto_id: str, dias: int = 30, canal: Optional[str] = None, user=Depends(get_user)):
+    desde = datetime.utcnow() - timedelta(days=dias)
+    filtro = {"produto_id": produto_id, "data": {"$gte": desde}}
+    if canal:
+        filtro["canal"] = canal
+    docs = await historico_col.find(filtro).sort("data", 1).to_list(10000)
+    return [serial(d) for d in docs]
+
+
+@app.get("/produtos/{produto_id}/canais")
+async def canais_produto(produto_id: str, user=Depends(get_user)):
+    """
+    Retorna por canal:
+      - menor_preco_atual: último menor preço coletado
+      - variacao_media_7d: média das variações % entre cada mudança real de preço
+      - registros: quantidade de coletas no período
+    """
+    desde = datetime.utcnow() - timedelta(days=7)
+    resultado = {}
+
+    for canal in CANAIS:
+        docs = await historico_col.find({
+            "produto_id": produto_id,
+            "canal": canal,
+            "data": {"$gte": desde},
+        }).sort("data", 1).to_list(10000)
+
+        if not docs:
+            resultado[canal] = {
+                "menor_preco_atual": None,
+                "variacao_media_7d": None,
+                "registros": 0,
+            }
+            continue
+
+        precos = [d["preco"] for d in docs]
+        menor_atual = precos[-1]
+
+        # Variação só quando o preço efetivamente mudou
+        variacoes = []
+        anterior = precos[0]
+        for p in precos[1:]:
+            if p != anterior and anterior > 0:
+                variacao = ((p - anterior) / anterior) * 100
+                variacoes.append(variacao)
+                anterior = p
+
+        media = sum(variacoes) / len(variacoes) if variacoes else None
+
+        resultado[canal] = {
+            "menor_preco_atual": menor_atual,
+            "variacao_media_7d": media,
+            "registros": len(docs),
+        }
+
+    return resultado
+
 
 @app.post("/historico")
-async def salvar_preco(registro: RegistroPreco):
-    doc = registro.dict()
-    doc["data"] = datetime.now().isoformat()
-    result = await col_historico.insert_one(doc)
-    return {"id": str(result.inserted_id)}
+async def registrar_preco(data: HistoricoInput, user=Depends(admin_required)):
+    """Endpoint usado pelo n8n para salvar preços coletados."""
+    if data.canal not in CANAIS:
+        raise HTTPException(status_code=400, detail=f"Canal inválido. Use: {CANAIS}")
+    doc = {
+        "produto_id": data.produto_id,
+        "canal": data.canal,
+        "preco": float(data.preco),
+        "vendedor": data.vendedor or "",
+        "url": data.url or "",
+        "data": datetime.utcnow(),
+    }
+    res = await historico_col.insert_one(doc)
+    return {"id": str(res.inserted_id)}
 
-@app.get("/stats")
-async def stats(payload=Depends(usuario_aprovado)):
-    total_produtos  = await col_produtos.count_documents({})
-    total_registros = await col_historico.count_documents({})
-    ultimo = await col_historico.find_one(sort=[("data", -1)])
-    return {"total_produtos": total_produtos, "total_registros": total_registros, "ultima_coleta": ultimo["data"] if ultimo else None}
 
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
+@app.get("/estatisticas")
+async def estatisticas(produto_id: Optional[str] = None, user=Depends(get_user)):
+    """Cards do topo: total de produtos, total de registros, última coleta."""
+    if produto_id:
+        try:
+            oid = ObjectId(produto_id)
+            total_produtos = await produtos_col.count_documents({"_id": oid})
+        except Exception:
+            total_produtos = 0
+        filtro_hist = {"produto_id": produto_id}
+    else:
+        total_produtos = await produtos_col.count_documents({})
+        filtro_hist = {}
+
+    total_registros = await historico_col.count_documents(filtro_hist)
+    ultimo = await historico_col.find_one(filtro_hist, sort=[("data", -1)])
+    ultima_coleta = ultimo["data"].isoformat() if ultimo else None
+
+    return {
+        "total_produtos": total_produtos,
+        "total_registros": total_registros,
+        "ultima_coleta": ultima_coleta,
+    }
+
+
+# === Static ===
+
+@app.get("/")
+async def root():
+    return FileResponse("index.html")
+
 
 if __name__ == "__main__":
-    uvicorn.run("server:app", host="0.0.0.0", port=8080)
+    uvicorn.run("server:app", host="0.0.0.0", port=8080, reload=True)
