@@ -767,3 +767,18 @@ if __name__ == "__main__":
         reload=True,
     )
  
+
+# === Webhook ML ===
+
+@app.post("/ml/notificacoes")
+async def ml_notificacoes(request: Request):
+    """
+    Endpoint de notificações do Mercado Livre.
+    Necessário para certificação do app no portal de desenvolvedores.
+    """
+    try:
+        body = await request.json()
+        print(f"[ML Webhook] Notificação recebida: {body}")
+    except Exception:
+        pass
+    return {"status": "ok"}
