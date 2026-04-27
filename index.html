@@ -45,6 +45,10 @@
     --danger-bg: #fef2f2;
     --danger-text: #b91c1c;
     --danger-hover: #fee2e2;
+    --warning-bg: #fef3c7;
+    --warning-text: #92400e;
+    --orange-bg: #ffedd5;
+    --orange-text: #c2410c;
     --variation-up: #16a34a;
     --variation-down: #dc2626;
     --auth-gradient: linear-gradient(135deg, #14532d 0%, #16a34a 100%);
@@ -89,6 +93,10 @@
     --danger-bg: rgba(239,68,68,0.12);
     --danger-text: #f87171;
     --danger-hover: rgba(239,68,68,0.2);
+    --warning-bg: rgba(245,158,11,0.16);
+    --warning-text: #fbbf24;
+    --orange-bg: rgba(249,115,22,0.16);
+    --orange-text: #fb923c;
     --variation-up: #4ade80;
     --variation-down: #f87171;
     --auth-gradient: linear-gradient(135deg, #050a07 0%, #14532d 100%);
@@ -410,9 +418,55 @@
     padding: 24px 30px;
   }
 
+  .small-meta {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 12px;
+  }
+
+  .filters {
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 18px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-light);
+    margin-bottom: 18px;
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 14px;
+    align-items: end;
+  }
+
+  .filters .field,
+  .hist-filtros .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .filters label,
+  .hist-filtros label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .filters input,
+  .filters select,
+  .hist-filtros input,
+  .hist-filtros select,
+  .user-row select {
+    padding: 10px 12px;
+    border: 1px solid var(--input-border);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text);
+  }
+
   .stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
     gap: 16px;
     margin-bottom: 24px;
   }
@@ -441,6 +495,60 @@
     color: var(--text-soft);
     font-size: 12px;
     margin-top: 4px;
+  }
+
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 0.9fr) minmax(420px, 1.6fr);
+    gap: 18px;
+    align-items: start;
+  }
+
+  .panel {
+    background: var(--surface);
+    border-radius: 8px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-light);
+    overflow: hidden;
+  }
+
+  .panel-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .panel-head h3 {
+    font-size: 16px;
+  }
+
+  .panel-body {
+    padding: 18px 20px;
+  }
+
+  .ranking-row {
+    display: grid;
+    grid-template-columns: 110px 1fr 52px;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+
+  .ranking-bar {
+    height: 10px;
+    background: var(--secondary-bg);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .ranking-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 999px;
   }
 
   .table-card {
@@ -511,6 +619,12 @@
 
   tbody tr.row-main:hover {
     background: var(--row-hover);
+  }
+
+  .sortable {
+    cursor: pointer;
+    user-select: none;
+    color: var(--primary);
   }
 
   .btn-primary {
@@ -740,6 +854,35 @@
     font-weight: 600;
   }
 
+  .status-badge {
+    display: inline-flex;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .status-ganhando {
+    background: var(--success-bg);
+    color: var(--success-text);
+  }
+
+  .status-competitivo {
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+
+  .status-acima {
+    background: var(--warning-bg);
+    color: var(--warning-text);
+  }
+
+  .status-muito-acima {
+    background: var(--error-bg);
+    color: var(--error-text);
+  }
+
   .hist-filtros {
     background: var(--surface);
     border-radius: 8px;
@@ -751,29 +894,6 @@
     grid-template-columns: 1fr 1fr auto auto;
     gap: 14px;
     align-items: end;
-  }
-
-  .hist-filtros .field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .hist-filtros label {
-    font-size: 12px;
-    color: var(--text-muted);
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-
-  .hist-filtros input,
-  .hist-filtros select,
-  .user-row select {
-    padding: 10px 12px;
-    border: 1px solid var(--input-border);
-    border-radius: 8px;
-    background: var(--input-bg);
-    color: var(--text);
   }
 
   .periodo-grupo {
@@ -803,7 +923,7 @@
     box-shadow: var(--shadow);
     border: 1px solid var(--border-light);
     margin-bottom: 18px;
-    height: 380px;
+    height: 480px;
   }
 
   .modal-bg {
@@ -967,6 +1087,16 @@
     color: var(--success-text);
   }
 
+  @media (max-width: 1100px) {
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .stats {
+      grid-template-columns: repeat(2, minmax(160px, 1fr));
+    }
+  }
+
   @media (max-width: 900px) {
     .sidebar {
       width: 72px;
@@ -994,12 +1124,17 @@
       padding: 16px;
     }
 
+    .filters,
     .hist-filtros {
       grid-template-columns: 1fr;
     }
 
     .detail-title {
       flex-direction: column;
+    }
+
+    .stats {
+      grid-template-columns: 1fr;
     }
   }
 </style>
@@ -1064,7 +1199,12 @@
     </button>
 
     <nav>
-      <button id="nav-produtos" class="active" onclick="setTab('produtos')">
+      <button id="nav-dashboard" class="active" onclick="setTab('dashboard')">
+        <span class="icon">D</span>
+        <span class="label">Dashboard</span>
+      </button>
+
+      <button id="nav-produtos" onclick="setTab('produtos')">
         <span class="icon">P</span>
         <span class="label">Produtos</span>
       </button>
@@ -1095,7 +1235,7 @@
 
   <main class="main">
     <div class="topbar">
-      <h2 id="page-title">Produtos</h2>
+      <h2 id="page-title">Dashboard</h2>
 
       <div class="search" id="top-search">
         <input type="text" id="busca-produtos" placeholder="Buscar por nome, SKU ou EAN..." />
@@ -1220,7 +1360,14 @@ let produtoEditandoId = null;
 let produtoDetalheId = null;
 let produtoDetalheCanal = "todos";
 let menuProdutoAbertoId = null;
+let menuUsuarioAbertoId = null;
 let detailChart = null;
+
+let dashBusca = "";
+let dashCanal = "todos";
+let dashDias = 30;
+let dashSort = "prioridade";
+let dashData = null;
 
 let histProdutoId = null;
 let histDias = 30;
@@ -1330,6 +1477,10 @@ document.addEventListener("click", () => {
   if (menuProdutoAbertoId) {
     fecharMenusProduto();
   }
+
+  if (menuUsuarioAbertoId) {
+    fecharMenusUsuario();
+  }
 });
 
 function podeGerenciarProdutos() {
@@ -1358,13 +1509,14 @@ async function iniciarApp() {
 
     localStorage.setItem("nome", usuario.nome);
     localStorage.setItem("perfil", usuario.perfil);
+    localStorage.setItem("user_id", me.user_id || "");
   } catch (e) {}
 
   document.getElementById("user-name").textContent = usuario.nome;
   document.getElementById("user-role").textContent = usuario.perfil;
   document.getElementById("nav-usuarios").style.display = podeGerenciarUsuarios() ? "flex" : "none";
 
-  setTab("produtos");
+  setTab("dashboard");
 
   if (podeGerenciarUsuarios()) {
     carregarPendentes();
@@ -1376,6 +1528,7 @@ function logout() {
   localStorage.removeItem("token");
   localStorage.removeItem("nome");
   localStorage.removeItem("perfil");
+  localStorage.removeItem("user_id");
   showScreen("login");
 }
 
@@ -1401,7 +1554,7 @@ async function api(path, opts = {}) {
 
 function setTab(tab) {
   if (tab === "usuarios" && !podeGerenciarUsuarios()) {
-    tab = "produtos";
+    tab = "dashboard";
   }
 
   document.querySelectorAll(".sidebar nav button").forEach(b => b.classList.remove("active"));
@@ -1426,7 +1579,14 @@ function setTab(tab) {
   }
 
   menuProdutoAbertoId = null;
+  menuUsuarioAbertoId = null;
   produtoDetalheId = null;
+
+  if (tab === "dashboard") {
+    title.textContent = "Dashboard";
+    search.style.display = "none";
+    renderTelaDashboard();
+  }
 
   if (tab === "produtos") {
     title.textContent = "Produtos";
@@ -1466,6 +1626,234 @@ function aplicarTema(theme) {
   document.getElementById("theme-icon").textContent = theme === "dark" ? "☀" : "◐";
   document.getElementById("theme-label").textContent = theme === "dark" ? "Modo claro" : "Modo escuro";
 }
+
+/* ================= DASHBOARD ================= */
+
+async function renderTelaDashboard() {
+  const c = document.getElementById("content");
+
+  c.innerHTML = `
+    <div class="small-meta" id="dash-ultima-coleta">Última coleta: —</div>
+
+    <div class="filters">
+      <div class="field">
+        <label>Buscar produto</label>
+        <input type="text" id="dash-busca" placeholder="Nome, SKU ou EAN..." value="${escapeHtml(dashBusca)}" />
+      </div>
+
+      <div class="field">
+        <label>Canal</label>
+        <select id="dash-canal">
+          <option value="todos">Todos</option>
+          ${CANAIS.map(canal => `<option value="${canal.key}">${canal.label}</option>`).join("")}
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Período</label>
+        <select id="dash-dias">
+          <option value="7">7 dias</option>
+          <option value="15">15 dias</option>
+          <option value="30">30 dias</option>
+          <option value="60">60 dias</option>
+          <option value="90">90 dias</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="stats" id="dash-cards">
+      <div class="stat-card"><div class="label">Produtos</div><div class="value">...</div></div>
+      <div class="stat-card"><div class="label">Registros</div><div class="value">...</div></div>
+      <div class="stat-card"><div class="label">Ganhando</div><div class="value">...</div></div>
+      <div class="stat-card"><div class="label">Acima do mercado</div><div class="value">...</div></div>
+      <div class="stat-card"><div class="label">Muito acima</div><div class="value">...</div></div>
+      <div class="stat-card"><div class="label">Gap médio</div><div class="value">...</div></div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Ranking por e-commerce</h3>
+        </div>
+        <div class="panel-body" id="dash-ranking">
+          <div class="empty">Carregando...</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>Status competitivo</h3>
+        </div>
+        <div class="table-scroll" style="max-height:520px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>Canal</th>
+                <th>Meu preço</th>
+                <th>Menor preço no e-commerce</th>
+                <th class="sortable" onclick="toggleDashSort()">Gap ${dashSort === "prioridade" ? "↓" : "↑"}</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="dash-status">
+              <tr><td colspan="6" class="empty">Carregando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("dash-canal").value = dashCanal;
+  document.getElementById("dash-dias").value = String(dashDias);
+
+  document.getElementById("dash-busca").addEventListener("input", debounce((e) => {
+    dashBusca = e.target.value.trim();
+    carregarDashboard();
+  }, 300));
+
+  document.getElementById("dash-canal").addEventListener("change", (e) => {
+    dashCanal = e.target.value || "todos";
+    carregarDashboard();
+  });
+
+  document.getElementById("dash-dias").addEventListener("change", (e) => {
+    dashDias = parseInt(e.target.value, 10);
+    carregarDashboard();
+  });
+
+  await carregarDashboard();
+}
+
+async function carregarDashboard() {
+  const params = new URLSearchParams();
+
+  if (dashBusca) {
+    params.set("busca", dashBusca);
+  }
+
+  if (dashCanal && dashCanal !== "todos") {
+    params.set("canal", dashCanal);
+  }
+
+  params.set("dias", String(dashDias));
+
+  try {
+    const res = await api(`/dashboard?${params.toString()}`);
+    dashData = await res.json();
+  } catch (e) {
+    dashData = null;
+  }
+
+  renderDashboardDados();
+}
+
+function renderDashboardDados() {
+  if (!dashData) {
+    document.getElementById("dash-cards").innerHTML = '<div class="empty">Erro ao carregar dashboard</div>';
+    return;
+  }
+
+  document.getElementById("dash-ultima-coleta").textContent =
+    `Última coleta: ${dashData.ultima_coleta ? formatData(dashData.ultima_coleta) : "—"}`;
+
+  document.getElementById("dash-cards").innerHTML = `
+    <div class="stat-card">
+      <div class="label">Produtos</div>
+      <div class="value">${dashData.total_produtos ?? 0}</div>
+      <div class="sub">cadastrados</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="label">Registros</div>
+      <div class="value">${dashData.total_registros ?? 0}</div>
+      <div class="sub">coletas salvas</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="label">Ganhando</div>
+      <div class="value">${formatPercent(dashData.percentual_ganhando)}</div>
+      <div class="sub">preço menor ou igual</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="label">Acima do mercado</div>
+      <div class="value">${dashData.acima_mercado ?? 0}</div>
+      <div class="sub">gap acima de 3%</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="label">Muito acima</div>
+      <div class="value">${dashData.muito_acima ?? 0}</div>
+      <div class="sub">gap acima de 10%</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="label">Gap médio</div>
+      <div class="value">${dashData.gap_medio == null ? "—" : formatSignedPercent(dashData.gap_medio)}</div>
+      <div class="sub">vs menor preço</div>
+    </div>
+  `;
+
+  renderRankingEcommerce();
+  renderStatusCompetitivo();
+}
+
+function renderRankingEcommerce() {
+  const cont = document.getElementById("dash-ranking");
+  const ranking = dashData.ranking_ecommerce || [];
+
+  if (ranking.length === 0 || ranking.every(x => !x.vitorias)) {
+    cont.innerHTML = '<div class="empty">Sem dados suficientes no período</div>';
+    return;
+  }
+
+  cont.innerHTML = ranking.map(item => `
+    <div class="ranking-row">
+      <div>${escapeHtml(CANAL_LABEL[item.canal] || item.canal)}</div>
+      <div class="ranking-bar">
+        <div class="ranking-fill" style="width:${Math.max(0, Math.min(100, item.percentual || 0))}%"></div>
+      </div>
+      <div>${formatPercent(item.percentual)}</div>
+    </div>
+  `).join("");
+}
+
+function renderStatusCompetitivo() {
+  const tb = document.getElementById("dash-status");
+  let lista = [...(dashData.status_competitivo || [])];
+
+  lista.sort((a, b) => {
+    if (dashSort === "prioridade") {
+      return b.gap - a.gap;
+    }
+    return a.gap - b.gap;
+  });
+
+  if (lista.length === 0) {
+    tb.innerHTML = '<tr><td colspan="6" class="empty">Sem comparações com dados suficientes</td></tr>';
+    return;
+  }
+
+  tb.innerHTML = lista.map(item => `
+    <tr>
+      <td><strong>${escapeHtml(item.produto)}</strong></td>
+      <td>${escapeHtml(CANAL_LABEL[item.canal] || item.canal)}</td>
+      <td>${formatBRL(item.meu_preco)}</td>
+      <td>${formatBRL(item.menor_preco)}</td>
+      <td>${formatSignedPercent(item.gap)}</td>
+      <td>${statusBadge(item.status)}</td>
+    </tr>
+  `).join("");
+}
+
+function toggleDashSort() {
+  dashSort = dashSort === "prioridade" ? "melhor" : "prioridade";
+  renderTelaDashboard();
+}
+
+/* ================= PRODUTOS ================= */
 
 async function renderTelaProdutos() {
   const c = document.getElementById("content");
@@ -1626,7 +2014,7 @@ function fecharMenusProduto() {
 
   if (produtoDetalheId) {
     renderDetalheProduto();
-  } else {
+  } else if (document.getElementById("tbody-produtos")) {
     renderTabelaProdutos();
   }
 }
@@ -1973,6 +2361,8 @@ async function excluirProduto(id) {
   }
 }
 
+/* ================= HISTÓRICO ================= */
+
 async function renderTelaHistorico() {
   try {
     const res = await api("/produtos");
@@ -2017,31 +2407,6 @@ async function renderTelaHistorico() {
 
     <div class="hist-chart-wrap" id="hist-chart-wrap">
       <canvas id="hist-chart"></canvas>
-    </div>
-
-    <div class="table-card full">
-      <div class="table-header">
-        <h3>Coletas</h3>
-      </div>
-
-      <div class="table-scroll" style="max-height:300px;">
-        <table>
-          <thead>
-            <tr>
-              <th>Data</th>
-              <th>Canal</th>
-              <th>Preço</th>
-              <th>Vendedor</th>
-            </tr>
-          </thead>
-
-          <tbody id="hist-tabela">
-            <tr>
-              <td colspan="4" class="empty">Selecione um produto</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
     </div>
   `;
 
@@ -2112,16 +2477,11 @@ function preencherSelectHistorico(busca) {
 }
 
 async function carregarHistorico() {
-  const tb = document.getElementById("hist-tabela");
   const wrap = document.getElementById("hist-chart-wrap");
 
   if (!histProdutoId) {
-    if (tb) {
-      tb.innerHTML = `<tr><td colspan="4" class="empty">Selecione um produto</td></tr>`;
-    }
-
     if (wrap) {
-      wrap.innerHTML = '<canvas id="hist-chart"></canvas>';
+      wrap.innerHTML = '<div class="empty">Selecione um produto para visualizar o histórico.</div>';
     }
 
     if (histChart) {
@@ -2140,19 +2500,6 @@ async function carregarHistorico() {
     historico = await res.json();
   } catch (err) {
     historico = [];
-  }
-
-  if (historico.length === 0) {
-    tb.innerHTML = `<tr><td colspan="4" class="empty">Sem coletas no período selecionado</td></tr>`;
-  } else {
-    tb.innerHTML = historico.slice().reverse().map(h => `
-      <tr>
-        <td>${formatData(h.data)}</td>
-        <td>${escapeHtml(CANAL_LABEL[h.canal] || h.canal || "—")}</td>
-        <td>${formatBRL(h.preco)}</td>
-        <td>${escapeHtml(h.vendedor || "—")}</td>
-      </tr>
-    `).join("");
   }
 
   desenharGraficoHistorico(historico);
@@ -2197,7 +2544,7 @@ function desenharGraficoHistorico(historico) {
   }).filter(ds => ds.data.some(v => v != null));
 
   if (datasets.length === 0) {
-    wrap.innerHTML = '<div class="empty">Sem coletas no período selecionado.</div>';
+    wrap.innerHTML = '<div class="empty">Sem histórico para os filtros selecionados.</div>';
     return;
   }
 
@@ -2216,9 +2563,11 @@ function desenharGraficoHistorico(historico) {
   });
 }
 
+/* ================= USUÁRIOS ================= */
+
 async function renderTelaUsuarios() {
   if (!podeGerenciarUsuarios()) {
-    setTab("produtos");
+    setTab("dashboard");
     return;
   }
 
@@ -2342,10 +2691,33 @@ async function carregarUsuarios() {
           <span class="badge ${u.status === "aprovado" ? "approved" : u.status === "pendente" ? "pending" : "rejected"}">
             ${escapeHtml(u.status || "aprovado")}
           </span>
+
+          <div class="actions-cell" onclick="event.stopPropagation();">
+            <button class="kebab-btn" onclick="toggleMenuUsuario(event, '${u.id}')">⋯</button>
+
+            <div class="action-menu ${menuUsuarioAbertoId === u.id ? "show" : ""}">
+              <button onclick="rejeitarUsuario('${u.id}')">Rejeitar</button>
+              <button class="danger" onclick="excluirUsuario('${u.id}')">Excluir</button>
+            </div>
+          </div>
         </div>
       </div>
     `).join("");
   } catch (err) {}
+}
+
+function toggleMenuUsuario(event, id) {
+  event.stopPropagation();
+  menuUsuarioAbertoId = menuUsuarioAbertoId === id ? null : id;
+  carregarUsuarios();
+}
+
+function fecharMenusUsuario() {
+  menuUsuarioAbertoId = null;
+
+  if (document.getElementById("tbody-usuarios")) {
+    carregarUsuarios();
+  }
 }
 
 async function aprovarUsuarioSelecionado(id) {
@@ -2416,6 +2788,32 @@ async function rejeitarUsuario(id) {
   }
 }
 
+async function excluirUsuario(id) {
+  if (!confirm("Tem certeza que deseja excluir este usuário?")) {
+    return;
+  }
+
+  try {
+    const res = await api(`/usuarios/${id}`, {
+      method: "DELETE",
+    });
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      alert(data.detail || "Erro ao excluir usuário");
+      return;
+    }
+
+    await carregarPendentes();
+    await carregarUsuarios();
+  } catch (e) {
+    alert("Erro de conexão");
+  }
+}
+
+/* ================= HELPERS ================= */
+
 function formatBRL(v) {
   if (v == null || v === "") {
     return "—";
@@ -2431,6 +2829,25 @@ function formatBRL(v) {
     style: "currency",
     currency: "BRL",
   });
+}
+
+function formatPercent(v) {
+  if (v == null || Number.isNaN(Number(v))) {
+    return "0%";
+  }
+
+  return `${Number(v).toFixed(1)}%`;
+}
+
+function formatSignedPercent(v) {
+  if (v == null || Number.isNaN(Number(v))) {
+    return "—";
+  }
+
+  const n = Number(v);
+  const sinal = n > 0 ? "+" : "";
+
+  return `${sinal}${n.toFixed(1)}%`;
 }
 
 function formatVariacao(v) {
@@ -2449,6 +2866,28 @@ function formatVariacao(v) {
   }
 
   return '<span class="variation-zero">0,00%</span>';
+}
+
+function statusBadge(status) {
+  const s = status || "";
+
+  if (s === "Ganhando") {
+    return '<span class="status-badge status-ganhando">Ganhando</span>';
+  }
+
+  if (s === "Competitivo") {
+    return '<span class="status-badge status-competitivo">Competitivo</span>';
+  }
+
+  if (s === "Acima") {
+    return '<span class="status-badge status-acima">Acima</span>';
+  }
+
+  if (s === "Muito acima") {
+    return '<span class="status-badge status-muito-acima">Muito acima</span>';
+  }
+
+  return `<span class="status-badge">${escapeHtml(s || "—")}</span>`;
 }
 
 function formatData(value) {
