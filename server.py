@@ -4,7 +4,7 @@ import hashlib
 from datetime import datetime, timedelta
 from typing import Optional
  
-from fastapi import FastAPI, HTTPException, Depends, Header
+from fastapi import FastAPI, HTTPException, Depends, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
