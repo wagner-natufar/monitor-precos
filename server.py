@@ -140,21 +140,14 @@ async def product_manager_required(user=Depends(get_user)):
     return user
 
 
-async def ultimo_master(oid: ObjectId) -> bool:
-    user = await usuarios_col.find_one({"_id": oid})
-
-    if not user:
-        return False
-
-    if user.get("perfil") != "master" or user.get("status", "aprovado") != "aprovado":
-        return False
-
-    total_masters = await usuarios_col.count_documents({
-        "perfil": "master",
-        "status": "aprovado",
-    })
-
-    return total_masters <= 1
+def classificar_gap(gap):
+    if gap <= 0:
+        return "Ganhando"
+    if gap <= 3:
+        return "Competitivo"
+    if gap <= 10:
+        return "Acima"
+    return "Muito acima"
 
 
 # === Models ===
@@ -225,13 +218,11 @@ async def registrar(data: CadastroInput):
             "token": token,
             "perfil": "master",
             "nome": data.nome,
-            "primeiro_admin": True,
             "primeiro_master": True,
         }
 
     return {
         "mensagem": "Solicitação enviada! Aguarde aprovação do administrador.",
-        "primeiro_admin": False,
         "primeiro_master": False,
     }
 
@@ -345,12 +336,6 @@ async def aprovar(
 async def rejeitar(user_id: str, user=Depends(master_required)):
     oid = object_id_or_400(user_id)
 
-    if await ultimo_master(oid):
-        raise HTTPException(
-            status_code=400,
-            detail="Não é possível rejeitar o último master",
-        )
-
     res = await usuarios_col.update_one(
         {"_id": oid},
         {"$set": {"status": "rejeitado"}},
@@ -373,12 +358,6 @@ async def alterar_perfil_usuario(
 
     oid = object_id_or_400(user_id)
 
-    if perfil != "master" and await ultimo_master(oid):
-        raise HTTPException(
-            status_code=400,
-            detail="Não é possível remover o último master",
-        )
-
     res = await usuarios_col.update_one(
         {"_id": oid},
         {"$set": {"perfil": perfil}},
@@ -388,6 +367,18 @@ async def alterar_perfil_usuario(
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
 
     return {"mensagem": "Função atualizada"}
+
+
+@app.delete("/usuarios/{user_id}")
+async def excluir_usuario(user_id: str, user=Depends(master_required)):
+    oid = object_id_or_400(user_id)
+
+    res = await usuarios_col.delete_one({"_id": oid})
+
+    if res.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    return {"mensagem": "Usuário excluído"}
 
 
 # === Produtos ===
@@ -577,6 +568,153 @@ async def registrar_preco(data: HistoricoInput, user=Depends(product_manager_req
     res = await historico_col.insert_one(doc)
 
     return {"id": str(res.inserted_id)}
+
+
+# === Dashboard ===
+
+@app.get("/dashboard")
+async def dashboard(
+    busca: Optional[str] = None,
+    canal: Optional[str] = None,
+    dias: int = 30,
+    user=Depends(get_user),
+):
+    canal = normalizar_canal(canal)
+    desde = datetime.utcnow() - timedelta(days=dias)
+
+    filtro_produtos = {}
+
+    if busca:
+        filtro_produtos = {
+            "$or": [
+                {"nome": {"$regex": busca, "$options": "i"}},
+                {"ean": {"$regex": busca, "$options": "i"}},
+                {"sku": {"$regex": busca, "$options": "i"}},
+            ]
+        }
+
+    produtos = await produtos_col.find(filtro_produtos).to_list(5000)
+    produto_ids = [str(p["_id"]) for p in produtos]
+
+    filtro_hist = {}
+
+    if produto_ids:
+        filtro_hist["produto_id"] = {"$in": produto_ids}
+    elif busca:
+        filtro_hist["produto_id"] = {"$in": []}
+
+    total_produtos = len(produtos)
+    total_registros = await historico_col.count_documents(filtro_hist)
+
+    ultimo = await historico_col.find_one(filtro_hist, sort=[("data", -1)])
+    ultima_coleta = ultimo["data"].isoformat() if ultimo else None
+
+    comparacoes = []
+    vitorias_ecommerce = {c: 0 for c in CANAIS}
+    total_vitorias = 0
+
+    canais_consulta = [canal] if canal else CANAIS
+
+    for produto in produtos:
+        produto_id = str(produto["_id"])
+        pp = produto.get("precos_praticados") or {}
+
+        precos_por_canal = {}
+
+        for c in CANAIS:
+            ultimo_canal = await historico_col.find_one(
+                {
+                    "produto_id": produto_id,
+                    "canal": c,
+                    "data": {"$gte": desde},
+                },
+                sort=[("data", -1)],
+            )
+
+            if ultimo_canal and ultimo_canal.get("preco") is not None:
+                precos_por_canal[c] = float(ultimo_canal["preco"])
+
+        if precos_por_canal:
+            menor_global = min(precos_por_canal.values())
+            canais_vencedores = [
+                c for c, preco in precos_por_canal.items()
+                if preco == menor_global
+            ]
+
+            for c in canais_vencedores:
+                vitorias_ecommerce[c] += 1
+                total_vitorias += 1
+
+        for c in canais_consulta:
+            meu_preco = pp.get(c)
+            menor_preco = precos_por_canal.get(c)
+
+            if meu_preco is None or menor_preco is None or menor_preco <= 0:
+                continue
+
+            meu_preco = float(meu_preco)
+            menor_preco = float(menor_preco)
+            gap = ((meu_preco - menor_preco) / menor_preco) * 100
+            status = classificar_gap(gap)
+
+            comparacoes.append({
+                "produto_id": produto_id,
+                "produto": produto.get("nome", ""),
+                "sku": produto.get("sku", ""),
+                "ean": produto.get("ean", ""),
+                "canal": c,
+                "meu_preco": meu_preco,
+                "menor_preco": menor_preco,
+                "gap": gap,
+                "status": status,
+            })
+
+    total_comparacoes = len(comparacoes)
+    ganhando = len([x for x in comparacoes if x["gap"] <= 0])
+    acima = len([x for x in comparacoes if x["gap"] > 3])
+    muito_acima = len([x for x in comparacoes if x["gap"] > 10])
+    gap_medio = (
+        sum(x["gap"] for x in comparacoes) / total_comparacoes
+        if total_comparacoes
+        else None
+    )
+
+    percentual_ganhando = (
+        (ganhando / total_comparacoes) * 100
+        if total_comparacoes
+        else 0
+    )
+
+    ranking_ecommerce = []
+
+    for c in CANAIS:
+        percentual = (
+            (vitorias_ecommerce[c] / total_vitorias) * 100
+            if total_vitorias
+            else 0
+        )
+
+        ranking_ecommerce.append({
+            "canal": c,
+            "vitorias": vitorias_ecommerce[c],
+            "percentual": percentual,
+        })
+
+    ranking_ecommerce.sort(key=lambda x: x["vitorias"], reverse=True)
+    comparacoes.sort(key=lambda x: x["gap"], reverse=True)
+
+    return {
+        "total_produtos": total_produtos,
+        "total_registros": total_registros,
+        "ultima_coleta": ultima_coleta,
+        "total_comparacoes": total_comparacoes,
+        "percentual_ganhando": percentual_ganhando,
+        "acima_mercado": acima,
+        "muito_acima": muito_acima,
+        "gap_medio": gap_medio,
+        "ranking_ecommerce": ranking_ecommerce,
+        "status_competitivo": comparacoes,
+    }
 
 
 @app.get("/estatisticas")
