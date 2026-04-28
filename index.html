@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Monitor de Preços</title>
+<title>Monitor de PreÃ§os</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root {
@@ -979,7 +979,8 @@
     font-weight: 500;
   }
 
-  .modal-body input {
+  .modal-body input,
+  .modal-body select {
     width: 100%;
     padding: 10px 12px;
     border: 1px solid var(--input-border);
@@ -988,7 +989,8 @@
     color: var(--text);
   }
 
-  .modal-body input:focus {
+  .modal-body input:focus,
+  .modal-body select:focus {
     outline: none;
     border-color: var(--input-focus);
   }
@@ -1031,22 +1033,45 @@
   }
 
   .user-row {
-    display: flex;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: minmax(280px, 1fr) minmax(430px, auto);
     align-items: center;
-    padding: 14px 20px;
+    padding: 18px 20px;
     border-bottom: 1px solid var(--border-light);
-    gap: 12px;
+    gap: 14px;
+    min-height: 84px;
+  }
+
+  .user-row .info {
+    min-width: 0;
   }
 
   .user-row .info .name {
     font-weight: 600;
     color: var(--text);
+    font-size: 15px;
+    line-height: 1.35;
   }
 
   .user-row .info .email {
     color: var(--text-muted);
     font-size: 13px;
+    line-height: 1.35;
+    margin-top: 4px;
+    overflow-wrap: anywhere;
+  }
+
+  .user-row-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    min-width: 430px;
+  }
+
+  .users-list {
+    overflow-x: auto;
   }
 
   .badge {
@@ -1136,6 +1161,18 @@
     .stats {
       grid-template-columns: 1fr;
     }
+
+    .user-row {
+      grid-template-columns: 1fr;
+      align-items: flex-start;
+      min-height: auto;
+    }
+
+    .user-row-actions {
+      min-width: 0;
+      width: 100%;
+      justify-content: flex-start;
+    }
   }
 </style>
 </head>
@@ -1143,8 +1180,8 @@
 
 <div id="screen-login" class="auth-bg">
   <div class="auth-card">
-    <h1>Monitor de Preços</h1>
-    <p class="sub">Faça login para acessar</p>
+    <h1>Monitor de PreÃ§os</h1>
+    <p class="sub">FaÃ§a login para acessar</p>
 
     <form id="form-login">
       <label>E-mail</label>
@@ -1158,14 +1195,14 @@
 
     <div id="login-msg"></div>
 
-    <p class="switch">Não tem acesso? <a onclick="showScreen('register')">Solicitar acesso</a></p>
+    <p class="switch">NÃ£o tem acesso? <a onclick="showScreen('register')">Solicitar acesso</a></p>
   </div>
 </div>
 
 <div id="screen-register" class="auth-bg" style="display:none;">
   <div class="auth-card">
     <h1>Solicitar acesso</h1>
-    <p class="sub">Cadastre-se e aguarde aprovação</p>
+    <p class="sub">Cadastre-se e aguarde aprovaÃ§Ã£o</p>
 
     <form id="form-register">
       <label>Nome</label>
@@ -1182,7 +1219,7 @@
 
     <div id="register-msg"></div>
 
-    <p class="switch">Já tem acesso? <a onclick="showScreen('login')">Voltar ao login</a></p>
+    <p class="switch">JÃ¡ tem acesso? <a onclick="showScreen('login')">Voltar ao login</a></p>
   </div>
 </div>
 
@@ -1194,7 +1231,7 @@
     </div>
 
     <button class="toggle" onclick="toggleSidebar()">
-      <span class="toggle-icon">≡</span>
+      <span class="toggle-icon">â‰¡</span>
       <span>Recolher menu</span>
     </button>
 
@@ -1209,25 +1246,40 @@
         <span class="label">Produtos</span>
       </button>
 
+      <button id="nav-pendentes" style="display:none;" onclick="setTab('pendentes')">
+        <span class="icon">!</span>
+        <span class="label">Pendentes</span>
+      </button>
+
+      <button id="nav-simulador" style="display:none;" onclick="setTab('simulador')">
+        <span class="icon">S</span>
+        <span class="label">Simular Regras</span>
+      </button>
+
+      <button id="nav-config" style="display:none;" onclick="setTab('config')">
+        <span class="icon">C</span>
+        <span class="label">Config. A/B/C</span>
+      </button>
+
       <button id="nav-historico" onclick="setTab('historico')">
         <span class="icon">H</span>
-        <span class="label">Histórico</span>
+        <span class="label">HistÃ³rico</span>
       </button>
 
       <button id="nav-usuarios" style="display:none;" onclick="setTab('usuarios')">
         <span class="icon">U</span>
-        <span class="label">Usuários</span>
+        <span class="label">UsuÃ¡rios</span>
         <span class="badge" id="badge-pendentes" style="display:none;">0</span>
       </button>
     </nav>
 
     <button class="theme-toggle" onclick="toggleTheme()">
-      <span class="icon" id="theme-icon">◐</span>
+      <span class="icon" id="theme-icon">â—</span>
       <span class="label" id="theme-label">Modo escuro</span>
     </button>
 
     <div class="user-block">
-      <div class="name" id="user-name">Usuário</div>
+      <div class="name" id="user-name">UsuÃ¡rio</div>
       <div class="role" id="user-role">visualizador</div>
       <button class="logout" onclick="logout()">Sair</button>
     </div>
@@ -1250,7 +1302,7 @@
   <div class="modal">
     <div class="modal-head">
       <h3 id="modal-title">Novo produto</h3>
-      <button class="close" onclick="fecharModal()">×</button>
+      <button class="close" onclick="fecharModal()">Ã—</button>
     </div>
 
     <div class="modal-body">
@@ -1284,7 +1336,47 @@
           </div>
         </div>
 
-        <div class="section-title">Meus preços praticados</div>
+        <div class="row-2">
+          <div>
+            <label>Curva ABC</label>
+            <select id="p-curva">
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C" selected>C</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Estoque atual</label>
+            <input type="number" step="0.01" id="p-estoque" />
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div>
+            <label>Custo unitÃ¡rio</label>
+            <input type="number" step="0.01" id="p-custo" />
+          </div>
+
+          <div>
+            <label>ID Tiny (opcional)</label>
+            <input type="text" id="p-tiny-id" />
+          </div>
+        </div>
+
+        <div class="row-2">
+          <div>
+            <label>PreÃ§o mÃ­nimo do produto</label>
+            <input type="number" step="0.01" id="p-preco-min" />
+          </div>
+
+          <div>
+            <label>PreÃ§o mÃ¡ximo do produto</label>
+            <input type="number" step="0.01" id="p-preco-max" />
+          </div>
+        </div>
+
+        <div class="section-title">Meus preÃ§os praticados</div>
 
         <div class="row-2">
           <div>
@@ -1348,10 +1440,12 @@ const CORES = {
   droga_raia: "#3b82f6",
 };
 
+const APP_TIMEZONE = "America/Sao_Paulo";
+
 let token = localStorage.getItem("token") || "";
 
 let usuario = {
-  nome: localStorage.getItem("nome") || "Usuário",
+  nome: localStorage.getItem("nome") || "UsuÃ¡rio",
   perfil: localStorage.getItem("perfil") || "visualizador",
 };
 
@@ -1374,6 +1468,8 @@ let histDias = 30;
 let histCanal = "todos";
 let histTodos = [];
 let histChart = null;
+let pendentesProdutos = [];
+let pricingGrupos = [];
 
 aplicarTemaSalvo();
 
@@ -1409,7 +1505,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
     token = data.token;
 
     usuario = {
-      nome: data.nome || "Usuário",
+      nome: data.nome || "UsuÃ¡rio",
       perfil: data.perfil || "visualizador",
     };
 
@@ -1419,7 +1515,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
 
     iniciarApp();
   } catch (err) {
-    renderMensagem(msg, "error", "Erro de conexão");
+    renderMensagem(msg, "error", "Erro de conexÃ£o");
   }
 });
 
@@ -1451,7 +1547,7 @@ document.getElementById("form-register").addEventListener("submit", async (e) =>
       token = data.token;
 
       usuario = {
-        nome: data.nome || "Usuário",
+        nome: data.nome || "UsuÃ¡rio",
         perfil: data.perfil || "master",
       };
 
@@ -1463,9 +1559,9 @@ document.getElementById("form-register").addEventListener("submit", async (e) =>
       return;
     }
 
-    renderMensagem(msg, "success", data.mensagem || "Solicitação enviada.");
+    renderMensagem(msg, "success", data.mensagem || "SolicitaÃ§Ã£o enviada.");
   } catch (err) {
-    renderMensagem(msg, "error", "Erro de conexão");
+    renderMensagem(msg, "error", "Erro de conexÃ£o");
   }
 });
 
@@ -1515,6 +1611,9 @@ async function iniciarApp() {
   document.getElementById("user-name").textContent = usuario.nome;
   document.getElementById("user-role").textContent = usuario.perfil;
   document.getElementById("nav-usuarios").style.display = podeGerenciarUsuarios() ? "flex" : "none";
+  document.getElementById("nav-pendentes").style.display = podeGerenciarProdutos() ? "flex" : "none";
+  document.getElementById("nav-simulador").style.display = podeGerenciarProdutos() ? "flex" : "none";
+  document.getElementById("nav-config").style.display = podeGerenciarProdutos() ? "flex" : "none";
 
   setTab("dashboard");
 
@@ -1546,7 +1645,7 @@ async function api(path, opts = {}) {
 
   if (res.status === 401) {
     logout();
-    throw new Error("Não autenticado");
+    throw new Error("NÃ£o autenticado");
   }
 
   return res;
@@ -1554,6 +1653,9 @@ async function api(path, opts = {}) {
 
 function setTab(tab) {
   if (tab === "usuarios" && !podeGerenciarUsuarios()) {
+    tab = "dashboard";
+  }
+  if ((tab === "pendentes" || tab === "simulador" || tab === "config") && !podeGerenciarProdutos()) {
     tab = "dashboard";
   }
 
@@ -1595,9 +1697,27 @@ function setTab(tab) {
   }
 
   if (tab === "historico") {
-    title.textContent = "Histórico";
+    title.textContent = "HistÃ³rico";
     search.style.display = "none";
     renderTelaHistorico();
+  }
+
+  if (tab === "pendentes") {
+    title.textContent = "Pendentes";
+    search.style.display = "none";
+    renderTelaPendentes();
+  }
+
+  if (tab === "simulador") {
+    title.textContent = "Simular Regras";
+    search.style.display = "none";
+    renderTelaSimulador();
+  }
+
+  if (tab === "config") {
+    title.textContent = "Configuração A/B/C";
+    search.style.display = "none";
+    renderTelaConfigABC();
   }
 
   if (tab === "usuarios") {
@@ -1623,7 +1743,7 @@ function aplicarTemaSalvo() {
 
 function aplicarTema(theme) {
   document.documentElement.dataset.theme = theme;
-  document.getElementById("theme-icon").textContent = theme === "dark" ? "☀" : "◐";
+  document.getElementById("theme-icon").textContent = theme === "dark" ? "â˜€" : "â—";
   document.getElementById("theme-label").textContent = theme === "dark" ? "Modo claro" : "Modo escuro";
 }
 
@@ -1633,7 +1753,7 @@ async function renderTelaDashboard() {
   const c = document.getElementById("content");
 
   c.innerHTML = `
-    <div class="small-meta" id="dash-ultima-coleta">Última coleta: —</div>
+    <div class="small-meta" id="dash-ultima-coleta">Ãšltima coleta: â€”</div>
 
     <div class="filters">
       <div class="field">
@@ -1650,7 +1770,7 @@ async function renderTelaDashboard() {
       </div>
 
       <div class="field">
-        <label>Período</label>
+        <label>PerÃ­odo</label>
         <select id="dash-dias">
           <option value="7">7 dias</option>
           <option value="15">15 dias</option>
@@ -1667,7 +1787,7 @@ async function renderTelaDashboard() {
       <div class="stat-card"><div class="label">Ganhando</div><div class="value">...</div></div>
       <div class="stat-card"><div class="label">Acima do mercado</div><div class="value">...</div></div>
       <div class="stat-card"><div class="label">Muito acima</div><div class="value">...</div></div>
-      <div class="stat-card"><div class="label">Gap médio</div><div class="value">...</div></div>
+      <div class="stat-card"><div class="label">Gap mÃ©dio</div><div class="value">...</div></div>
     </div>
 
     <div class="dashboard-grid">
@@ -1690,9 +1810,9 @@ async function renderTelaDashboard() {
               <tr>
                 <th>Produto</th>
                 <th>Canal</th>
-                <th>Meu preço</th>
-                <th>Menor preço no e-commerce</th>
-                <th class="sortable" onclick="toggleDashSort()">Gap ${dashSort === "prioridade" ? "↓" : "↑"}</th>
+                <th>Meu preÃ§o</th>
+                <th>Menor preÃ§o no e-commerce</th>
+                <th class="sortable" onclick="toggleDashSort()">Gap ${dashSort === "prioridade" ? "â†“" : "â†‘"}</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -1756,7 +1876,7 @@ function renderDashboardDados() {
   }
 
   document.getElementById("dash-ultima-coleta").textContent =
-    `Última coleta: ${dashData.ultima_coleta ? formatData(dashData.ultima_coleta) : "—"}`;
+    `Ãšltima coleta: ${dashData.ultima_coleta ? formatData(dashData.ultima_coleta) : "â€”"}`;
 
   document.getElementById("dash-cards").innerHTML = `
     <div class="stat-card">
@@ -1774,7 +1894,7 @@ function renderDashboardDados() {
     <div class="stat-card">
       <div class="label">Ganhando</div>
       <div class="value">${formatPercent(dashData.percentual_ganhando)}</div>
-      <div class="sub">preço menor ou igual</div>
+      <div class="sub">preÃ§o menor ou igual</div>
     </div>
 
     <div class="stat-card">
@@ -1790,9 +1910,9 @@ function renderDashboardDados() {
     </div>
 
     <div class="stat-card">
-      <div class="label">Gap médio</div>
-      <div class="value">${dashData.gap_medio == null ? "—" : formatSignedPercent(dashData.gap_medio)}</div>
-      <div class="sub">vs menor preço</div>
+      <div class="label">Gap mÃ©dio</div>
+      <div class="value">${dashData.gap_medio == null ? "â€”" : formatSignedPercent(dashData.gap_medio)}</div>
+      <div class="sub">vs menor preÃ§o</div>
     </div>
   `;
 
@@ -1805,7 +1925,7 @@ function renderRankingEcommerce() {
   const ranking = dashData.ranking_ecommerce || [];
 
   if (ranking.length === 0 || ranking.every(x => !x.vitorias)) {
-    cont.innerHTML = '<div class="empty">Sem dados suficientes no período</div>';
+    cont.innerHTML = '<div class="empty">Sem dados suficientes no perÃ­odo</div>';
     return;
   }
 
@@ -1832,7 +1952,7 @@ function renderStatusCompetitivo() {
   });
 
   if (lista.length === 0) {
-    tb.innerHTML = '<tr><td colspan="6" class="empty">Sem comparações com dados suficientes</td></tr>';
+    tb.innerHTML = '<tr><td colspan="6" class="empty">Sem comparaÃ§Ãµes com dados suficientes</td></tr>';
     return;
   }
 
@@ -1865,7 +1985,15 @@ async function renderTelaProdutos() {
         <div class="value">...</div>
       </div>
       <div class="stat-card">
-        <div class="label">Registros</div>
+        <div class="label">Pendentes</div>
+        <div class="value">...</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Preço médio mercado</div>
+        <div class="value">...</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Preço sugerido médio</div>
         <div class="value">...</div>
       </div>
       <div class="stat-card">
@@ -1874,27 +2002,36 @@ async function renderTelaProdutos() {
       </div>
     </div>
 
-    <div class="table-card">
+    <div class="table-card full">
       <div class="table-header">
         <h3>Produtos cadastrados</h3>
-        ${podeGerenciarProdutos() ? '<button class="btn-primary" onclick="abrirModalProduto()">Novo produto</button>' : ""}
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          ${podeGerenciarProdutos() ? '<button class="btn-secondary" onclick="sincronizarTinyIncremental()">Sync Tiny</button>' : ""}
+          ${podeGerenciarProdutos() ? '<button class="btn-primary" onclick="abrirModalProduto()">Novo produto</button>' : ""}
+        </div>
       </div>
 
-      <div class="table-scroll">
+      <div class="table-scroll users-list">
         <table>
           <thead>
             <tr>
-              <th>Detalhe</th>
               <th>Produto</th>
               <th>SKU</th>
               <th>EAN</th>
-              <th>Palavras-chave</th>
+              <th>Curva</th>
+              <th>Custo</th>
+              <th>Estoque</th>
+              <th>Menor</th>
+              <th>Maior</th>
+              <th>Médio</th>
+              <th>Sugerido</th>
+              <th>Status</th>
               <th style="text-align:right;">Ações</th>
             </tr>
           </thead>
           <tbody id="tbody-produtos">
             <tr>
-              <td colspan="6" class="empty">Carregando...</td>
+              <td colspan="12" class="empty">Carregando...</td>
             </tr>
           </tbody>
         </table>
@@ -1932,6 +2069,18 @@ async function carregarEstatisticas() {
     url += `?produto_id=${produtos[0].id}`;
   }
 
+  const totalPendentes = produtos.filter(p => (p.status_integracao || "") === "pendente").length;
+  const mediasMercado = produtos.map(p => Number(p.preco_medio_mercado)).filter(v => Number.isFinite(v));
+  const mediasSugeridas = produtos.map(p => Number(p.preco_sugerido)).filter(v => Number.isFinite(v));
+
+  const precoMedioMercado = mediasMercado.length
+    ? mediasMercado.reduce((a, b) => a + b, 0) / mediasMercado.length
+    : null;
+
+  const precoMedioSugerido = mediasSugeridas.length
+    ? mediasSugeridas.reduce((a, b) => a + b, 0) / mediasSugeridas.length
+    : null;
+
   try {
     const res = await api(url);
     const data = await res.json();
@@ -1944,9 +2093,21 @@ async function carregarEstatisticas() {
       </div>
 
       <div class="stat-card">
-        <div class="label">Registros</div>
-        <div class="value">${data.total_registros ?? 0}</div>
-        <div class="sub">Coletas no histórico</div>
+        <div class="label">Pendentes</div>
+        <div class="value">${totalPendentes}</div>
+        <div class="sub">Sem SKU ou custo</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="label">Preço médio mercado</div>
+        <div class="value">${precoMedioMercado == null ? "—" : formatBRL(precoMedioMercado)}</div>
+        <div class="sub">Últimos dados por canal</div>
+      </div>
+
+      <div class="stat-card">
+        <div class="label">Preço sugerido médio</div>
+        <div class="value">${precoMedioSugerido == null ? "—" : formatBRL(precoMedioSugerido)}</div>
+        <div class="sub">Com regra A/B/C</div>
       </div>
 
       <div class="stat-card">
@@ -1966,23 +2127,23 @@ function renderTabelaProdutos() {
   }
 
   if (produtos.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhum produto encontrado</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="12" class="empty">Nenhum produto encontrado</td></tr>';
     return;
   }
 
   tbody.innerHTML = produtos.map(p => `
     <tr class="row-main" onclick="abrirDetalheProduto('${p.id}')">
-      <td>
-        <span class="detail-open">
-          <span class="circle">›</span>
-          Ver detalhes
-        </span>
-      </td>
-
       <td><strong>${escapeHtml(p.nome)}</strong></td>
       <td>${escapeHtml(p.sku || "—")}</td>
       <td>${escapeHtml(p.ean || "—")}</td>
-      <td>${[p.palavra_chave_1, p.palavra_chave_2].filter(Boolean).map(escapeHtml).join(", ") || "—"}</td>
+      <td>${escapeHtml(p.curva_abc || "C")}</td>
+      <td>${formatBRL(p.custo_unitario)}</td>
+      <td>${p.estoque_atual == null ? "—" : Number(p.estoque_atual).toFixed(2)}</td>
+      <td>${formatBRL(p.menor_preco_mercado)}</td>
+      <td>${formatBRL(p.maior_preco_mercado)}</td>
+      <td>${formatBRL(p.preco_medio_mercado)}</td>
+      <td>${formatBRL(p.preco_sugerido)}</td>
+      <td>${statusIntegracaoBadge(p.status_integracao, p.pendencias)}</td>
 
       <td class="actions-cell" onclick="event.stopPropagation();">
         ${podeGerenciarProdutos() ? `
@@ -2042,7 +2203,7 @@ async function renderDetalheProduto() {
   c.innerHTML = `
     <div class="product-detail-page">
       <div class="detail-toolbar">
-        <button class="btn-secondary" onclick="voltarParaProdutos()">← Voltar</button>
+        <button class="btn-secondary" onclick="voltarParaProdutos()">â† Voltar</button>
 
         <div class="channel-filter">
           <button class="${produtoDetalheCanal === "todos" ? "active" : ""}" onclick="filtrarDetalheCanal('todos')">Todos</button>
@@ -2058,13 +2219,14 @@ async function renderDetalheProduto() {
       <div class="detail-title">
         <div>
           <h3>${escapeHtml(produto.nome)}</h3>
-          <p>SKU ${escapeHtml(produto.sku || "—")} · EAN ${escapeHtml(produto.ean || "—")}</p>
-          <p>Palavras-chave: ${[produto.palavra_chave_1, produto.palavra_chave_2].filter(Boolean).map(escapeHtml).join(", ") || "—"}</p>
+          <p>SKU ${escapeHtml(produto.sku || "â€”")} Â· EAN ${escapeHtml(produto.ean || "â€”")}</p>
+          <p>Curva ${escapeHtml(produto.curva_abc || "C")} Â· Custo ${formatBRL(produto.custo_unitario)} Â· Estoque ${produto.estoque_atual == null ? "â€”" : Number(produto.estoque_atual).toFixed(2)}</p>
+          <p>Palavras-chave: ${[produto.palavra_chave_1, produto.palavra_chave_2].filter(Boolean).map(escapeHtml).join(", ") || "â€”"}</p>
         </div>
 
         ${podeGerenciarProdutos() ? `
           <div class="actions-cell" onclick="event.stopPropagation();">
-            <button class="kebab-btn" onclick="toggleMenuProduto(event, '${produto.id}')">⋯</button>
+            <button class="kebab-btn" onclick="toggleMenuProduto(event, '${produto.id}')">â‹¯</button>
 
             <div class="action-menu ${menuProdutoAbertoId === produto.id ? "show" : ""}">
               <button onclick="abrirModalProduto('${produto.id}')">Editar</button>
@@ -2133,9 +2295,9 @@ async function carregarDadosDetalheProduto() {
         <thead>
           <tr>
             <th>E-commerce</th>
-            <th>Meu preço</th>
-            <th>Menor preço no e-commerce</th>
-            <th>Variação média 7d</th>
+            <th>Meu preÃ§o</th>
+            <th>Menor preÃ§o no e-commerce</th>
+            <th>VariaÃ§Ã£o mÃ©dia 7d</th>
             <th>Coletas 7d</th>
           </tr>
         </thead>
@@ -2147,8 +2309,8 @@ async function carregarDadosDetalheProduto() {
             return `
               <tr>
                 <td><strong>${c.label}</strong></td>
-                <td>${pp[c.key] != null ? formatBRL(pp[c.key]) : "—"}</td>
-                <td>${dados.menor_preco_atual != null ? formatBRL(dados.menor_preco_atual) : "—"}</td>
+                <td>${pp[c.key] != null ? formatBRL(pp[c.key]) : "â€”"}</td>
+                <td>${dados.menor_preco_atual != null ? formatBRL(dados.menor_preco_atual) : "â€”"}</td>
                 <td>${formatVariacao(dados.variacao_media_7d)}</td>
                 <td>${dados.registros || 0}</td>
               </tr>
@@ -2203,7 +2365,7 @@ function desenharGraficoDetalhe(historico) {
 
   if (datasets.length === 0) {
     document.getElementById("detail-chart-wrap").innerHTML =
-      '<div class="empty">Sem histórico para este filtro.</div>';
+      '<div class="empty">Sem histÃ³rico para este filtro.</div>';
     return;
   }
 
@@ -2242,6 +2404,12 @@ function abrirModalProduto(id = null) {
       document.getElementById("p-ean").value = p.ean || "";
       document.getElementById("p-pc1").value = p.palavra_chave_1 || "";
       document.getElementById("p-pc2").value = p.palavra_chave_2 || "";
+      document.getElementById("p-curva").value = p.curva_abc || "C";
+      document.getElementById("p-estoque").value = p.estoque_atual ?? "";
+      document.getElementById("p-custo").value = p.custo_unitario ?? "";
+      document.getElementById("p-tiny-id").value = p.tiny_id || "";
+      document.getElementById("p-preco-min").value = p.preco_minimo_produto ?? "";
+      document.getElementById("p-preco-max").value = p.preco_maximo_produto ?? "";
 
       const pp = p.precos_praticados || {};
 
@@ -2257,11 +2425,18 @@ function abrirModalProduto(id = null) {
       "p-ean",
       "p-pc1",
       "p-pc2",
+      "p-curva",
+      "p-estoque",
+      "p-custo",
+      "p-tiny-id",
+      "p-preco-min",
+      "p-preco-max",
       "p-pp-ml",
       "p-pp-am",
       "p-pp-sh",
       "p-pp-dr",
     ].forEach(i => document.getElementById(i).value = "");
+    document.getElementById("p-curva").value = "C";
   }
 
   document.getElementById("modal-produto").classList.add("show");
@@ -2281,9 +2456,10 @@ async function salvarProduto() {
   const ean = document.getElementById("p-ean").value.trim();
   const pc1 = document.getElementById("p-pc1").value.trim();
   const pc2 = document.getElementById("p-pc2").value.trim();
+  const curva = document.getElementById("p-curva").value || "C";
 
-  if (!nome || !sku || !ean || !pc1) {
-    renderMensagem(alert, "error", "Preencha nome, SKU, EAN e palavra-chave 1.", "alert");
+  if (!nome) {
+    renderMensagem(alert, "error", "Preencha ao menos o nome do produto.", "alert");
     return;
   }
 
@@ -2291,8 +2467,14 @@ async function salvarProduto() {
     nome,
     sku,
     ean,
-    palavra_chave_1: pc1,
+    palavra_chave_1: pc1 || nome,
     palavra_chave_2: pc2,
+    curva_abc: curva,
+    estoque_atual: parseNum(document.getElementById("p-estoque").value),
+    custo_unitario: parseNum(document.getElementById("p-custo").value),
+    tiny_id: document.getElementById("p-tiny-id").value.trim() || null,
+    preco_minimo_produto: parseNum(document.getElementById("p-preco-min").value),
+    preco_maximo_produto: parseNum(document.getElementById("p-preco-max").value),
     precos_praticados: {
       mercado_livre: parseNum(document.getElementById("p-pp-ml").value),
       amazon: parseNum(document.getElementById("p-pp-am").value),
@@ -2338,14 +2520,14 @@ async function salvarProduto() {
       }
     }
   } catch (err) {
-    renderMensagem(alert, "error", "Erro de conexão", "alert");
+    renderMensagem(alert, "error", "Erro de conexÃ£o", "alert");
   }
 }
 
 async function excluirProduto(id) {
   menuProdutoAbertoId = null;
 
-  if (!confirm("Tem certeza que deseja excluir este produto e todo o histórico?")) {
+  if (!confirm("Tem certeza que deseja excluir este produto e todo o histÃ³rico?")) {
     return;
   }
 
@@ -2361,11 +2543,11 @@ async function excluirProduto(id) {
     produtoDetalheId = null;
     await renderTelaProdutos();
   } catch (err) {
-    alert("Erro de conexão");
+    alert("Erro de conexÃ£o");
   }
 }
 
-/* ================= HISTÓRICO ================= */
+/* ================= HISTÃ“RICO ================= */
 
 async function renderTelaHistorico() {
   try {
@@ -2398,7 +2580,7 @@ async function renderTelaHistorico() {
       </div>
 
       <div class="field">
-        <label>Período</label>
+        <label>PerÃ­odo</label>
         <div class="periodo-grupo" id="hist-periodos">
           <button class="periodo-btn" data-dias="7">7d</button>
           <button class="periodo-btn" data-dias="15">15d</button>
@@ -2470,8 +2652,8 @@ function preencherSelectHistorico(busca) {
       || (p.ean || "").toLowerCase().includes(termo);
   });
 
-  sel.innerHTML = `<option value="">— escolha um produto —</option>` +
-    filtrados.map(p => `<option value="${p.id}">${escapeHtml(p.nome)} (SKU ${escapeHtml(p.sku || "—")})</option>`).join("");
+  sel.innerHTML = `<option value="">â€” escolha um produto â€”</option>` +
+    filtrados.map(p => `<option value="${p.id}">${escapeHtml(p.nome)} (SKU ${escapeHtml(p.sku || "â€”")})</option>`).join("");
 
   if (histProdutoId && filtrados.find(p => p.id === histProdutoId)) {
     sel.value = histProdutoId;
@@ -2485,7 +2667,7 @@ async function carregarHistorico() {
 
   if (!histProdutoId) {
     if (wrap) {
-      wrap.innerHTML = '<div class="empty">Selecione um produto para visualizar o histórico.</div>';
+      wrap.innerHTML = '<div class="empty">Selecione um produto para visualizar o histÃ³rico.</div>';
     }
 
     if (histChart) {
@@ -2548,7 +2730,7 @@ function desenharGraficoHistorico(historico) {
   }).filter(ds => ds.data.some(v => v != null));
 
   if (datasets.length === 0) {
-    wrap.innerHTML = '<div class="empty">Sem histórico para os filtros selecionados.</div>';
+    wrap.innerHTML = '<div class="empty">Sem histÃ³rico para os filtros selecionados.</div>';
     return;
   }
 
@@ -2567,7 +2749,291 @@ function desenharGraficoHistorico(historico) {
   });
 }
 
-/* ================= USUÁRIOS ================= */
+/* ================= PENDENTES ================= */
+
+async function sincronizarTinyIncremental() {
+  if (!podeGerenciarProdutos()) {
+    return;
+  }
+
+  try {
+    const res = await api("/integracoes/tiny/sync/incremental", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(data.detail || "Falha ao sincronizar Tiny");
+      return;
+    }
+    alert(`Sync finalizado. Sincronizados: ${data.total_sincronizados || 0} | Pendentes: ${data.total_pendentes || 0}`);
+    await carregarProdutos();
+  } catch (err) {
+    alert("Erro de conexÃ£o ao sincronizar Tiny");
+  }
+}
+
+async function sincronizarTinyFull() {
+  if (!podeGerenciarProdutos()) {
+    return;
+  }
+
+  if (!confirm("A sincronizaÃ§Ã£o FULL pode levar mais tempo. Deseja continuar?")) {
+    return;
+  }
+
+  try {
+    const res = await api("/integracoes/tiny/sync/full", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(data.detail || "Falha ao sincronizar Tiny (FULL)");
+      return;
+    }
+    alert(`Sync FULL finalizado. Sincronizados: ${data.total_sincronizados || 0} | Pendentes: ${data.total_pendentes || 0}`);
+    await carregarProdutos();
+  } catch (err) {
+    alert("Erro de conexÃ£o ao sincronizar Tiny");
+  }
+}
+
+async function renderTelaPendentes() {
+  const c = document.getElementById("content");
+  c.innerHTML = `
+    <div class="table-card full">
+      <div class="table-header">
+        <h3>PendÃªncias de integraÃ§Ã£o</h3>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn-secondary" onclick="sincronizarTinyIncremental()">Sync incremental</button>
+          <button class="btn-primary" onclick="sincronizarTinyFull()">Sync full</button>
+        </div>
+      </div>
+      <div class="table-scroll users-list">
+        <table>
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>SKU</th>
+              <th>Custo</th>
+              <th>PendÃªncias</th>
+              <th>Status</th>
+              <th style="text-align:right;">AÃ§Ãµes</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-pendencias-produtos">
+            <tr><td colspan="6" class="empty">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  try {
+    const res = await api("/produtos/pendentes");
+    pendentesProdutos = await res.json();
+  } catch (err) {
+    pendentesProdutos = [];
+  }
+
+  const tbody = document.getElementById("tbody-pendencias-produtos");
+  if (!tbody) {
+    return;
+  }
+
+  if (!pendentesProdutos.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma pendÃªncia encontrada</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = pendentesProdutos.map(p => `
+    <tr>
+      <td><strong>${escapeHtml(p.nome || "—")}</strong></td>
+      <td>${escapeHtml(p.sku || "—")}</td>
+      <td>${formatBRL(p.custo_unitario)}</td>
+      <td>${(p.pendencias || []).map(x => `<span class="badge pending">${escapeHtml(x)}</span>`).join(" ") || "—"}</td>
+      <td>${statusIntegracaoBadge(p.status_integracao, p.pendencias)}</td>
+      <td class="actions-cell">
+        <button class="btn-edit" onclick="abrirModalProduto('${p.id}')">Editar</button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+/* ================= SIMULADOR ================= */
+
+async function renderTelaSimulador() {
+  const c = document.getElementById("content");
+  c.innerHTML = `
+    <div class="table-card full">
+      <div class="table-header">
+        <h3>Simular regras de precificaÃ§Ã£o</h3>
+      </div>
+      <div class="panel-body">
+        <div class="filters" style="margin-bottom:16px;">
+          <div class="field">
+            <label>Produto</label>
+            <select id="sim-produto"></select>
+          </div>
+          <div class="field">
+            <label>Grupo</label>
+            <select id="sim-grupo">
+              <option value=\"A\">A</option>
+              <option value=\"B\">B</option>
+              <option value=\"C\" selected>C</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <button class="btn-primary" onclick="executarSimulacaoPreco()">Simular</button>
+          </div>
+        </div>
+        <div id="sim-resultado" class="empty">Selecione um produto e clique em Simular.</div>
+      </div>
+    </div>
+  `;
+
+  let lista = [];
+  try {
+    const res = await api("/produtos");
+    lista = await res.json();
+  } catch (err) {}
+
+  const sel = document.getElementById("sim-produto");
+  if (sel) {
+    sel.innerHTML = `<option value=\"\">— escolha um produto —</option>` +
+      lista.map(p => `<option value=\"${p.id}\">${escapeHtml(p.nome)} (SKU ${escapeHtml(p.sku || "—")})</option>`).join("");
+  }
+}
+
+async function executarSimulacaoPreco() {
+  const produtoId = document.getElementById("sim-produto")?.value || "";
+  const grupo = document.getElementById("sim-grupo")?.value || "C";
+  const out = document.getElementById("sim-resultado");
+
+  if (!produtoId) {
+    if (out) out.innerHTML = '<div class="empty">Selecione um produto para simular.</div>';
+    return;
+  }
+
+  try {
+    const res = await api("/pricing/simular", {
+      method: "POST",
+      body: JSON.stringify({ produto_id: produtoId, grupo }),
+    });
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      if (out) out.innerHTML = `<div class="empty">${escapeHtml(data.detail || "Erro na simulaÃ§Ã£o")}</div>`;
+      return;
+    }
+
+    const m = data.metricas_mercado || {};
+    const s = data.simulacao || {};
+    if (out) {
+      out.innerHTML = `
+        <div class="stats" style="margin:0;">
+          <div class="stat-card"><div class="label">Menor mercado</div><div class="value">${formatBRL(m.menor_preco_mercado)}</div></div>
+          <div class="stat-card"><div class="label">MÃ©dio mercado</div><div class="value">${formatBRL(m.preco_medio_mercado)}</div></div>
+          <div class="stat-card"><div class="label">Maior mercado</div><div class="value">${formatBRL(m.maior_preco_mercado)}</div></div>
+          <div class="stat-card"><div class="label">Piso final</div><div class="value">${formatBRL(s.piso_final)}</div></div>
+          <div class="stat-card"><div class="label">PreÃ§o sugerido</div><div class="value">${formatBRL(s.preco_sugerido)}</div></div>
+        </div>
+      `;
+    }
+  } catch (err) {
+    if (out) out.innerHTML = '<div class="empty">Falha ao simular regra.</div>';
+  }
+}
+
+/* ================= CONFIG A/B/C ================= */
+
+async function renderTelaConfigABC() {
+  const c = document.getElementById("content");
+  c.innerHTML = `
+    <div class="table-card full">
+      <div class="table-header">
+        <h3>ConfiguraÃ§Ã£o de grupos A/B/C</h3>
+      </div>
+      <div class="table-scroll users-list">
+        <table>
+          <thead>
+            <tr>
+              <th>Grupo</th>
+              <th>EstratÃ©gia base</th>
+              <th>Ajuste %</th>
+              <th>Margem mÃ­nima %</th>
+              <th>PreÃ§o mÃ­nimo grupo</th>
+              <th>Limite estoque baixo</th>
+              <th>Ajuste estoque baixo %</th>
+              <th style="text-align:right;">AÃ§Ãµes</th>
+            </tr>
+          </thead>
+          <tbody id="tbody-config-abc"><tr><td colspan="8" class="empty">Carregando...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  try {
+    const res = await api("/pricing/grupos");
+    pricingGrupos = await res.json();
+  } catch (err) {
+    pricingGrupos = [];
+  }
+
+  const tbody = document.getElementById("tbody-config-abc");
+  if (!tbody) {
+    return;
+  }
+
+  if (!pricingGrupos.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Sem configuraÃ§Ãµes</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = pricingGrupos.map(g => `
+    <tr>
+      <td><strong>${escapeHtml(g.grupo)}</strong></td>
+      <td>
+        <select id="cfg-base-${g.grupo}">
+          <option value="menor_preco" ${(g.estrategia_base === "menor_preco") ? "selected" : ""}>menor_preco</option>
+          <option value="preco_medio" ${(g.estrategia_base === "preco_medio") ? "selected" : ""}>preco_medio</option>
+        </select>
+      </td>
+      <td><input type="number" step="0.01" id="cfg-ajuste-${g.grupo}" value="${Number(g.ajuste_percentual ?? 0)}" /></td>
+      <td><input type="number" step="0.01" id="cfg-margem-${g.grupo}" value="${Number(g.margem_minima_percentual ?? 0)}" /></td>
+      <td><input type="number" step="0.01" id="cfg-pmin-${g.grupo}" value="${Number(g.preco_minimo_grupo ?? 0)}" /></td>
+      <td><input type="number" step="0.01" id="cfg-estq-${g.grupo}" value="${Number(g.estoque_baixo_limite ?? 0)}" /></td>
+      <td><input type="number" step="0.01" id="cfg-estq-aj-${g.grupo}" value="${Number(g.estoque_baixo_ajuste_percentual ?? 0)}" /></td>
+      <td class="actions-cell"><button class="btn-primary" onclick="salvarConfigGrupo('${g.grupo}')">Salvar</button></td>
+    </tr>
+  `).join("");
+}
+
+async function salvarConfigGrupo(grupo) {
+  const payload = {
+    estrategia_base: document.getElementById(`cfg-base-${grupo}`)?.value || "menor_preco",
+    ajuste_percentual: parseNum(document.getElementById(`cfg-ajuste-${grupo}`)?.value) ?? 0,
+    margem_minima_percentual: parseNum(document.getElementById(`cfg-margem-${grupo}`)?.value) ?? 0,
+    preco_minimo_grupo: parseNum(document.getElementById(`cfg-pmin-${grupo}`)?.value) ?? 0,
+    estoque_baixo_limite: parseNum(document.getElementById(`cfg-estq-${grupo}`)?.value),
+    estoque_baixo_ajuste_percentual: parseNum(document.getElementById(`cfg-estq-aj-${grupo}`)?.value) ?? 0,
+    ativo: true,
+  };
+
+  try {
+    const res = await api(`/pricing/grupos/${grupo}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(data.detail || "Erro ao salvar configuraÃ§Ã£o");
+      return;
+    }
+    alert(`ConfiguraÃ§Ã£o do grupo ${grupo} salva.`);
+  } catch (err) {
+    alert("Erro de conexÃ£o");
+  }
+}
+
+/* ================= USUÃRIOS ================= */
 
 async function renderTelaUsuarios() {
   if (!podeGerenciarUsuarios()) {
@@ -2580,20 +3046,20 @@ async function renderTelaUsuarios() {
   c.innerHTML = `
     <div class="table-card full">
       <div class="table-header">
-        <h3>Solicitações pendentes</h3>
+        <h3>SolicitaÃ§Ãµes pendentes</h3>
       </div>
 
-      <div class="table-scroll" id="tbody-pendentes">Carregando...</div>
+      <div class="table-scroll users-list" id="tbody-pendentes">Carregando...</div>
     </div>
 
     <div style="height:18px;"></div>
 
     <div class="table-card full">
       <div class="table-header">
-        <h3>Usuários cadastrados</h3>
+        <h3>UsuÃ¡rios cadastrados</h3>
       </div>
 
-      <div class="table-scroll" id="tbody-usuarios">Carregando...</div>
+      <div class="table-scroll users-list" id="tbody-usuarios">Carregando...</div>
     </div>
   `;
 
@@ -2628,7 +3094,7 @@ async function carregarPendentes() {
     }
 
     if (lista.length === 0) {
-      cont.innerHTML = '<div class="empty">Nenhuma solicitação pendente</div>';
+      cont.innerHTML = '<div class="empty">Nenhuma solicitaÃ§Ã£o pendente</div>';
       return;
     }
 
@@ -2639,7 +3105,7 @@ async function carregarPendentes() {
           <div class="email">${escapeHtml(u.email)}</div>
         </div>
 
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <div class="user-row-actions">
           <select id="perfil-pendente-${u.id}">
             <option value="visualizador">Visualizador</option>
             <option value="admin">Admin</option>
@@ -2670,7 +3136,7 @@ async function carregarUsuarios() {
     }
 
     if (lista.length === 0) {
-      cont.innerHTML = '<div class="empty">Nenhum usuário cadastrado</div>';
+      cont.innerHTML = '<div class="empty">Nenhum usuÃ¡rio cadastrado</div>';
       return;
     }
 
@@ -2681,7 +3147,7 @@ async function carregarUsuarios() {
           <div class="email">${escapeHtml(u.email)}</div>
         </div>
 
-        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+        <div class="user-row-actions">
           <select onchange="alterarPerfilUsuario('${u.id}', this.value)">
             <option value="master" ${u.perfil === "master" ? "selected" : ""}>Master</option>
             <option value="admin" ${u.perfil === "admin" ? "selected" : ""}>Admin</option>
@@ -2697,7 +3163,7 @@ async function carregarUsuarios() {
           </span>
 
           <div class="actions-cell" onclick="event.stopPropagation();">
-            <button class="kebab-btn" onclick="toggleMenuUsuario(event, '${u.id}')">⋯</button>
+            <button class="kebab-btn" onclick="toggleMenuUsuario(event, '${u.id}')">â‹¯</button>
 
             <div class="action-menu ${menuUsuarioAbertoId === u.id ? "show" : ""}">
               <button onclick="rejeitarUsuario('${u.id}')">Rejeitar</button>
@@ -2735,14 +3201,14 @@ async function aprovarUsuarioSelecionado(id) {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      alert(data.detail || "Erro ao aprovar usuário");
+      alert(data.detail || "Erro ao aprovar usuÃ¡rio");
       return;
     }
 
     await carregarPendentes();
     await carregarUsuarios();
   } catch (e) {
-    alert("Erro de conexão");
+    alert("Erro de conexÃ£o");
   }
 }
 
@@ -2755,7 +3221,7 @@ async function alterarPerfilUsuario(id, perfil) {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      alert(data.detail || "Erro ao alterar função");
+      alert(data.detail || "Erro ao alterar funÃ§Ã£o");
       await carregarUsuarios();
       return;
     }
@@ -2768,7 +3234,7 @@ async function alterarPerfilUsuario(id, perfil) {
       iniciarApp();
     }
   } catch (e) {
-    alert("Erro de conexão");
+    alert("Erro de conexÃ£o");
   }
 }
 
@@ -2781,19 +3247,19 @@ async function rejeitarUsuario(id) {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      alert(data.detail || "Erro ao rejeitar usuário");
+      alert(data.detail || "Erro ao rejeitar usuÃ¡rio");
       return;
     }
 
     await carregarPendentes();
     await carregarUsuarios();
   } catch (e) {
-    alert("Erro de conexão");
+    alert("Erro de conexÃ£o");
   }
 }
 
 async function excluirUsuario(id) {
-  if (!confirm("Tem certeza que deseja excluir este usuário?")) {
+  if (!confirm("Tem certeza que deseja excluir este usuÃ¡rio?")) {
     return;
   }
 
@@ -2805,14 +3271,14 @@ async function excluirUsuario(id) {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      alert(data.detail || "Erro ao excluir usuário");
+      alert(data.detail || "Erro ao excluir usuÃ¡rio");
       return;
     }
 
     await carregarPendentes();
     await carregarUsuarios();
   } catch (e) {
-    alert("Erro de conexão");
+    alert("Erro de conexÃ£o");
   }
 }
 
@@ -2820,13 +3286,13 @@ async function excluirUsuario(id) {
 
 function formatBRL(v) {
   if (v == null || v === "") {
-    return "—";
+    return "â€”";
   }
 
   const n = Number(v);
 
   if (Number.isNaN(n)) {
-    return "—";
+    return "â€”";
   }
 
   return n.toLocaleString("pt-BR", {
@@ -2845,7 +3311,7 @@ function formatPercent(v) {
 
 function formatSignedPercent(v) {
   if (v == null || Number.isNaN(Number(v))) {
-    return "—";
+    return "â€”";
   }
 
   const n = Number(v);
@@ -2856,17 +3322,17 @@ function formatSignedPercent(v) {
 
 function formatVariacao(v) {
   if (v == null || Number.isNaN(Number(v))) {
-    return '<span class="variation-zero">—</span>';
+    return '<span class="variation-zero">â€”</span>';
   }
 
   const n = Number(v);
 
   if (n > 0) {
-    return `<span class="variation-up">▲ ${n.toFixed(2)}%</span>`;
+    return `<span class="variation-up">â–² ${n.toFixed(2)}%</span>`;
   }
 
   if (n < 0) {
-    return `<span class="variation-down">▼ ${Math.abs(n).toFixed(2)}%</span>`;
+    return `<span class="variation-down">â–¼ ${Math.abs(n).toFixed(2)}%</span>`;
   }
 
   return '<span class="variation-zero">0,00%</span>';
@@ -2891,24 +3357,50 @@ function statusBadge(status) {
     return '<span class="status-badge status-muito-acima">Muito acima</span>';
   }
 
-  return `<span class="status-badge">${escapeHtml(s || "—")}</span>`;
+  return `<span class="status-badge">${escapeHtml(s || "â€”")}</span>`;
+}
+
+function statusIntegracaoBadge(status, pendencias = []) {
+  const st = String(status || "").toLowerCase();
+  if (st === "ok") {
+    return '<span class="badge approved">ok</span>';
+  }
+  if (st === "pendente") {
+    const txt = pendencias && pendencias.length ? `pendente (${pendencias.length})` : "pendente";
+    return `<span class="badge pending">${escapeHtml(txt)}</span>`;
+  }
+  return `<span class="badge viewer">${escapeHtml(status || "—")}</span>`;
 }
 
 function formatData(value) {
   if (!value) {
-    return "—";
+    return "â€”";
   }
 
-  const d = new Date(value);
+  const bruto = String(value).trim();
+  const isoSemFuso = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(bruto)
+    && !/(Z|[+\-]\d{2}:\d{2})$/i.test(bruto);
+
+  const d = new Date(isoSemFuso ? `${bruto}Z` : bruto);
 
   if (Number.isNaN(d.getTime())) {
-    return "—";
+    return "â€”";
   }
 
-  return d.toLocaleDateString("pt-BR") + " " + d.toLocaleTimeString("pt-BR", {
+  const dataFmt = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: APP_TIMEZONE,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(d);
+
+  const horaFmt = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: APP_TIMEZONE,
     hour: "2-digit",
     minute: "2-digit",
-  });
+  }).format(d);
+
+  return `${dataFmt} ${horaFmt}`;
 }
 
 function parseNum(v) {
