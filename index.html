@@ -1387,7 +1387,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const msg = document.getElementById("login-msg");
-  msg.innerHTML = "";
+  limparMensagem(msg);
 
   try {
     const res = await fetch("/auth/login", {
@@ -1402,7 +1402,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      msg.innerHTML = `<div class="msg error">${data.detail || "Erro ao entrar"}</div>`;
+      renderMensagem(msg, "error", data.detail || "Erro ao entrar");
       return;
     }
 
@@ -1419,7 +1419,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
 
     iniciarApp();
   } catch (err) {
-    msg.innerHTML = '<div class="msg error">Erro de conexão</div>';
+    renderMensagem(msg, "error", "Erro de conexão");
   }
 });
 
@@ -1427,7 +1427,7 @@ document.getElementById("form-register").addEventListener("submit", async (e) =>
   e.preventDefault();
 
   const msg = document.getElementById("register-msg");
-  msg.innerHTML = "";
+  limparMensagem(msg);
 
   try {
     const res = await fetch("/auth/registrar", {
@@ -1443,7 +1443,7 @@ document.getElementById("form-register").addEventListener("submit", async (e) =>
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      msg.innerHTML = `<div class="msg error">${data.detail || "Erro ao cadastrar"}</div>`;
+      renderMensagem(msg, "error", data.detail || "Erro ao cadastrar");
       return;
     }
 
@@ -1463,9 +1463,9 @@ document.getElementById("form-register").addEventListener("submit", async (e) =>
       return;
     }
 
-    msg.innerHTML = `<div class="msg success">${data.mensagem || "Solicitação enviada."}</div>`;
+    renderMensagem(msg, "success", data.mensagem || "Solicitação enviada.");
   } catch (err) {
-    msg.innerHTML = '<div class="msg error">Erro de conexão</div>';
+    renderMensagem(msg, "error", "Erro de conexão");
   }
 });
 
@@ -2274,7 +2274,7 @@ function fecharModal() {
 
 async function salvarProduto() {
   const alert = document.getElementById("modal-alert");
-  alert.innerHTML = "";
+  limparMensagem(alert);
 
   const nome = document.getElementById("p-nome").value.trim();
   const sku = document.getElementById("p-sku").value.trim();
@@ -2283,7 +2283,7 @@ async function salvarProduto() {
   const pc2 = document.getElementById("p-pc2").value.trim();
 
   if (!nome || !sku || !ean || !pc1) {
-    alert.innerHTML = '<div class="alert error">Preencha nome, SKU, EAN e palavra-chave 1.</div>';
+    renderMensagem(alert, "error", "Preencha nome, SKU, EAN e palavra-chave 1.", "alert");
     return;
   }
 
@@ -2313,15 +2313,19 @@ async function salvarProduto() {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      alert.innerHTML = `<div class="alert error">${data.detail || "Erro ao salvar"}</div>`;
+      renderMensagem(alert, "error", data.detail || "Erro ao salvar", "alert");
       return;
     }
 
     document.getElementById("modal-form").style.display = "none";
     document.getElementById("modal-actions").style.display = "none";
     document.getElementById("modal-success").style.display = "block";
-    document.getElementById("modal-success").innerHTML =
-      `<div class="alert success">${data.mensagem || "Produto salvo com sucesso!"}</div>`;
+    renderMensagem(
+      document.getElementById("modal-success"),
+      "success",
+      data.mensagem || "Produto salvo com sucesso!",
+      "alert",
+    );
     document.getElementById("modal-success-actions").style.display = "flex";
 
     await carregarProdutos();
@@ -2334,7 +2338,7 @@ async function salvarProduto() {
       }
     }
   } catch (err) {
-    alert.innerHTML = '<div class="alert error">Erro de conexão</div>';
+    renderMensagem(alert, "error", "Erro de conexão", "alert");
   }
 }
 
@@ -2915,6 +2919,27 @@ function parseNum(v) {
   const n = parseFloat(String(v).replace(",", "."));
 
   return Number.isNaN(n) ? null : n;
+}
+
+function limparMensagem(container) {
+  if (!container) {
+    return;
+  }
+
+  container.textContent = "";
+}
+
+function renderMensagem(container, tipo, texto, classeBase = "msg") {
+  if (!container) {
+    return;
+  }
+
+  container.textContent = "";
+
+  const el = document.createElement("div");
+  el.className = `${classeBase} ${tipo}`;
+  el.textContent = texto || "";
+  container.appendChild(el);
 }
 
 function escapeHtml(s) {
