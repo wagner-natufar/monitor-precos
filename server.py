@@ -1,6 +1,9 @@
 import os
 import jwt
 import hashlib
+import base64
+import hmac
+import secrets
 from datetime import datetime, timedelta
 from typing import Optional
  
@@ -14,8 +17,23 @@ import uvicorn
  
 # === Config ===
 MONGO_URL = os.getenv("MONGO_URL", "mongodb://127.0.0.1:27017")
-JWT_SECRET = os.getenv("JWT_SECRET", "monitor-precos-secret-key-change-me")
+JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALG = "HS256"
+PBKDF2_ALG = "sha256"
+PBKDF2_ITERATIONS = 390000
+PBKDF2_SALT_BYTES = 16
+PBKDF2_KEY_BYTES = 32
+CORS_ALLOW_ORIGINS = [
+    origin.strip()
+    for origin in os.getenv(
+        "CORS_ALLOW_ORIGINS",
+        "http://localhost:8080,http://127.0.0.1:8080",
+    ).split(",")
+    if origin.strip()
+]
+
+if not JWT_SECRET:
+    raise RuntimeError("JWT_SECRET nÃ£o configurado. Defina a variÃ¡vel de ambiente JWT_SECRET.")
  
 # === DB ===
 client = AsyncIOMotorClient(MONGO_URL)
@@ -25,14 +43,14 @@ historico_col = db.historico
 usuarios_col = db.usuarios
  
 # === App ===
-app = FastAPI(title="Monitor de Preços")
+app = FastAPI(title="Monitor de PreÃ§os")
  
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=CORS_ALLOW_ORIGINS,
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
 )
  
 CANAIS = ["mercado_livre", "amazon", "shopee", "droga_raia"]
@@ -70,7 +88,51 @@ def serial(doc):
  
  
 def hash_senha(senha: str) -> str:
-    return hashlib.sha256(senha.encode()).hexdigest()
+    salt = secrets.token_bytes(PBKDF2_SALT_BYTES)
+    chave = hashlib.pbkdf2_hmac(
+        PBKDF2_ALG,
+        senha.encode("utf-8"),
+        salt,
+        PBKDF2_ITERATIONS,
+        dklen=PBKDF2_KEY_BYTES,
+    )
+    salt_b64 = base64.b64encode(salt).decode("ascii")
+    chave_b64 = base64.b64encode(chave).decode("ascii")
+    return f"pbkdf2_{PBKDF2_ALG}${PBKDF2_ITERATIONS}${salt_b64}${chave_b64}"
+
+
+def is_hash_legacy_sha256(senha_hash: str) -> bool:
+    return isinstance(senha_hash, str) and len(senha_hash) == 64 and "$" not in senha_hash
+
+
+def verificar_senha(senha: str, senha_hash: str) -> bool:
+    if not senha_hash:
+        return False
+
+    if is_hash_legacy_sha256(senha_hash):
+        return hmac.compare_digest(
+            senha_hash,
+            hashlib.sha256(senha.encode("utf-8")).hexdigest(),
+        )
+
+    try:
+        algoritmo, iteracoes_str, salt_b64, chave_b64 = senha_hash.split("$", 3)
+        if algoritmo != f"pbkdf2_{PBKDF2_ALG}":
+            return False
+
+        iteracoes = int(iteracoes_str)
+        salt = base64.b64decode(salt_b64.encode("ascii"))
+        chave_esperada = base64.b64decode(chave_b64.encode("ascii"))
+        chave_recebida = hashlib.pbkdf2_hmac(
+            PBKDF2_ALG,
+            senha.encode("utf-8"),
+            salt,
+            iteracoes,
+            dklen=len(chave_esperada),
+        )
+        return hmac.compare_digest(chave_esperada, chave_recebida)
+    except Exception:
+        return False
  
  
 def criar_token(user_id: str, perfil: str) -> str:
@@ -86,7 +148,7 @@ def object_id_or_400(value: str):
     try:
         return ObjectId(value)
     except Exception:
-        raise HTTPException(status_code=400, detail="ID inválido")
+        raise HTTPException(status_code=400, detail="ID invÃ¡lido")
  
  
 def normalizar_canal(canal: Optional[str] = None) -> Optional[str]:
@@ -94,14 +156,14 @@ def normalizar_canal(canal: Optional[str] = None) -> Optional[str]:
         return None
  
     if canal not in CANAIS:
-        raise HTTPException(status_code=400, detail=f"Canal inválido. Use: {CANAIS}")
+        raise HTTPException(status_code=400, detail=f"Canal invÃ¡lido. Use: {CANAIS}")
  
     return canal
  
  
 async def get_user(authorization: Optional[str] = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Não autenticado")
+        raise HTTPException(status_code=401, detail="NÃ£o autenticado")
  
     token = authorization.split(" ", 1)[1]
  
@@ -110,15 +172,15 @@ async def get_user(authorization: Optional[str] = Header(None)):
         user_id = payload.get("user_id")
         oid = ObjectId(user_id)
     except Exception:
-        raise HTTPException(status_code=401, detail="Token inválido")
+        raise HTTPException(status_code=401, detail="Token invÃ¡lido")
  
     user_db = await usuarios_col.find_one({"_id": oid})
  
     if not user_db:
-        raise HTTPException(status_code=401, detail="Usuário não encontrado")
+        raise HTTPException(status_code=401, detail="UsuÃ¡rio nÃ£o encontrado")
  
     if user_db.get("status", "aprovado") != "aprovado":
-        raise HTTPException(status_code=403, detail="Usuário sem acesso aprovado")
+        raise HTTPException(status_code=403, detail="UsuÃ¡rio sem acesso aprovado")
  
     return {
         "user_id": str(user_db["_id"]),
@@ -193,7 +255,7 @@ async def registrar(data: CadastroInput):
     existente = await usuarios_col.find_one({"email": data.email})
  
     if existente:
-        raise HTTPException(status_code=400, detail="E-mail já cadastrado")
+        raise HTTPException(status_code=400, detail="E-mail jÃ¡ cadastrado")
  
     total = await usuarios_col.count_documents({})
     primeiro_master = total == 0
@@ -221,7 +283,7 @@ async def registrar(data: CadastroInput):
         }
  
     return {
-        "mensagem": "Solicitação enviada! Aguarde aprovação do administrador.",
+        "mensagem": "SolicitaÃ§Ã£o enviada! Aguarde aprovaÃ§Ã£o do administrador.",
         "primeiro_master": False,
     }
  
@@ -240,13 +302,21 @@ async def login(data: LoginInput):
         or ""
     )
  
-    if senha_armazenada != hash_senha(data.senha):
+    senha_valida = verificar_senha(data.senha, senha_armazenada)
+    if not senha_valida:
         raise HTTPException(status_code=401, detail="E-mail ou senha incorretos")
+
+    # MigraÃ§Ã£o automÃ¡tica de hash legado SHA-256 para PBKDF2.
+    if is_hash_legacy_sha256(senha_armazenada):
+        await usuarios_col.update_one(
+            {"_id": user["_id"]},
+            {"$set": {"senha_hash": hash_senha(data.senha)}},
+        )
  
     status = user.get("status", "aprovado")
  
     if status == "pendente":
-        raise HTTPException(status_code=403, detail="Cadastro aguardando aprovação")
+        raise HTTPException(status_code=403, detail="Cadastro aguardando aprovaÃ§Ã£o")
  
     if status == "rejeitado":
         raise HTTPException(status_code=403, detail="Acesso negado")
@@ -287,7 +357,7 @@ async def me(user=Depends(get_user)):
     }
  
  
-# === Usuários ===
+# === UsuÃ¡rios ===
  
 @app.get("/pendentes")
 async def listar_pendentes(user=Depends(master_required)):
@@ -316,7 +386,7 @@ async def aprovar(
     user=Depends(master_required),
 ):
     if perfil not in PERFIS:
-        raise HTTPException(status_code=400, detail="Perfil inválido")
+        raise HTTPException(status_code=400, detail="Perfil invÃ¡lido")
  
     oid = object_id_or_400(user_id)
  
@@ -326,9 +396,9 @@ async def aprovar(
     )
  
     if res.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        raise HTTPException(status_code=404, detail="UsuÃ¡rio nÃ£o encontrado")
  
-    return {"mensagem": "Usuário aprovado"}
+    return {"mensagem": "UsuÃ¡rio aprovado"}
  
  
 @app.post("/rejeitar/{user_id}")
@@ -341,9 +411,9 @@ async def rejeitar(user_id: str, user=Depends(master_required)):
     )
  
     if res.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        raise HTTPException(status_code=404, detail="UsuÃ¡rio nÃ£o encontrado")
  
-    return {"mensagem": "Usuário rejeitado"}
+    return {"mensagem": "UsuÃ¡rio rejeitado"}
  
  
 @app.put("/usuarios/{user_id}/perfil")
@@ -353,7 +423,7 @@ async def alterar_perfil_usuario(
     user=Depends(master_required),
 ):
     if perfil not in PERFIS:
-        raise HTTPException(status_code=400, detail="Perfil inválido")
+        raise HTTPException(status_code=400, detail="Perfil invÃ¡lido")
  
     oid = object_id_or_400(user_id)
  
@@ -363,9 +433,9 @@ async def alterar_perfil_usuario(
     )
  
     if res.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        raise HTTPException(status_code=404, detail="UsuÃ¡rio nÃ£o encontrado")
  
-    return {"mensagem": "Função atualizada"}
+    return {"mensagem": "FunÃ§Ã£o atualizada"}
  
  
 @app.delete("/usuarios/{user_id}")
@@ -375,9 +445,9 @@ async def excluir_usuario(user_id: str, user=Depends(master_required)):
     res = await usuarios_col.delete_one({"_id": oid})
  
     if res.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+        raise HTTPException(status_code=404, detail="UsuÃ¡rio nÃ£o encontrado")
  
-    return {"mensagem": "Usuário excluído"}
+    return {"mensagem": "UsuÃ¡rio excluÃ­do"}
  
  
 # === Produtos ===
@@ -405,13 +475,13 @@ async def cadastrar_produto(produto: Produto, user=Depends(product_manager_requi
     if await produtos_col.find_one({"sku": produto.sku}):
         raise HTTPException(
             status_code=400,
-            detail=f"Produto já cadastrado com o SKU {produto.sku}",
+            detail=f"Produto jÃ¡ cadastrado com o SKU {produto.sku}",
         )
  
     if await produtos_col.find_one({"ean": produto.ean}):
         raise HTTPException(
             status_code=400,
-            detail=f"Produto já cadastrado com o EAN {produto.ean}",
+            detail=f"Produto jÃ¡ cadastrado com o EAN {produto.ean}",
         )
  
     doc = produto.dict()
@@ -436,13 +506,13 @@ async def editar_produto(
     if await produtos_col.find_one({"sku": produto.sku, "_id": {"$ne": oid}}):
         raise HTTPException(
             status_code=400,
-            detail=f"Outro produto já usa o SKU {produto.sku}",
+            detail=f"Outro produto jÃ¡ usa o SKU {produto.sku}",
         )
  
     if await produtos_col.find_one({"ean": produto.ean, "_id": {"$ne": oid}}):
         raise HTTPException(
             status_code=400,
-            detail=f"Outro produto já usa o EAN {produto.ean}",
+            detail=f"Outro produto jÃ¡ usa o EAN {produto.ean}",
         )
  
     res = await produtos_col.update_one(
@@ -451,7 +521,7 @@ async def editar_produto(
     )
  
     if res.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Produto não encontrado")
+        raise HTTPException(status_code=404, detail="Produto nÃ£o encontrado")
  
     return {"mensagem": "Produto atualizado com sucesso!"}
  
@@ -465,12 +535,12 @@ async def excluir_produto(produto_id: str, user=Depends(product_manager_required
     await historico_col.delete_many({"produto_id": produto_id})
  
     if res.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Produto não encontrado")
+        raise HTTPException(status_code=404, detail="Produto nÃ£o encontrado")
  
-    return {"mensagem": "Produto excluído"}
+    return {"mensagem": "Produto excluÃ­do"}
  
  
-# === Histórico ===
+# === HistÃ³rico ===
  
 @app.get("/produtos/{produto_id}/historico")
 async def historico_produto(
@@ -552,7 +622,7 @@ async def registrar_preco(data: HistoricoInput, user=Depends(product_manager_req
     if data.canal not in CANAIS:
         raise HTTPException(
             status_code=400,
-            detail=f"Canal inválido. Use: {CANAIS}",
+            detail=f"Canal invÃ¡lido. Use: {CANAIS}",
         )
  
     doc = {
@@ -612,25 +682,45 @@ async def dashboard(
     total_vitorias = 0
  
     canais_consulta = [canal] if canal else CANAIS
+    ultimos_precos_por_produto = {}
+
+    if produto_ids:
+        pipeline_ultimos = [
+            {
+                "$match": {
+                    "produto_id": {"$in": produto_ids},
+                    "data": {"$gte": desde},
+                    "canal": {"$in": CANAIS},
+                }
+            },
+            {"$sort": {"produto_id": 1, "canal": 1, "data": -1}},
+            {
+                "$group": {
+                    "_id": {"produto_id": "$produto_id", "canal": "$canal"},
+                    "preco": {"$first": "$preco"},
+                }
+            },
+        ]
+        ultimos = await historico_col.aggregate(pipeline_ultimos).to_list(length=200000)
+
+        for item in ultimos:
+            pid = item.get("_id", {}).get("produto_id")
+            c = item.get("_id", {}).get("canal")
+            preco = item.get("preco")
+
+            if pid is None or c is None or preco is None:
+                continue
+
+            if pid not in ultimos_precos_por_produto:
+                ultimos_precos_por_produto[pid] = {}
+
+            ultimos_precos_por_produto[pid][c] = float(preco)
  
     for produto in produtos:
         produto_id = str(produto["_id"])
         pp = produto.get("precos_praticados") or {}
- 
-        precos_por_canal = {}
- 
-        for c in CANAIS:
-            ultimo_canal = await historico_col.find_one(
-                {
-                    "produto_id": produto_id,
-                    "canal": c,
-                    "data": {"$gte": desde},
-                },
-                sort=[("data", -1)],
-            )
- 
-            if ultimo_canal and ultimo_canal.get("preco") is not None:
-                precos_por_canal[c] = float(ultimo_canal["preco"])
+
+        precos_por_canal = ultimos_precos_por_produto.get(produto_id, {})
  
         if precos_por_canal:
             menor_global = min(precos_por_canal.values())
@@ -757,8 +847,22 @@ async def root():
             "Expires": "0",
         },
     )
- 
- 
+
+# === Webhook ML ===
+
+@app.post("/ml/notificacoes")
+async def ml_notificacoes(request: Request):
+    """
+    Endpoint de notificaÃ§Ãµes do Mercado Livre.
+    NecessÃ¡rio para certificaÃ§Ã£o do app no portal de desenvolvedores.
+    """
+    try:
+        body = await request.json()
+        print(f"[ML Webhook] NotificaÃ§Ã£o recebida: {body}")
+    except Exception:
+        pass
+    return {"status": "ok"}
+
 if __name__ == "__main__":
     uvicorn.run(
         "server:app",
@@ -766,19 +870,4 @@ if __name__ == "__main__":
         port=8080,
         reload=True,
     )
- 
 
-# === Webhook ML ===
-
-@app.post("/ml/notificacoes")
-async def ml_notificacoes(request: Request):
-    """
-    Endpoint de notificações do Mercado Livre.
-    Necessário para certificação do app no portal de desenvolvedores.
-    """
-    try:
-        body = await request.json()
-        print(f"[ML Webhook] Notificação recebida: {body}")
-    except Exception:
-        pass
-    return {"status": "ok"}
