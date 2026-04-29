@@ -1354,6 +1354,55 @@ async def dashboard(
  
     ranking_ecommerce.sort(key=lambda x: x["vitorias"], reverse=True)
     comparacoes.sort(key=lambda x: x["gap"], reverse=True)
+
+    # Evolução real por canal (somente dias com coleta)
+    evolucao_match = {
+        "data": {"$gte": desde},
+        "canal": {"$in": canais_consulta},
+    }
+    if produto_ids:
+        evolucao_match["produto_id"] = {"$in": produto_ids}
+    elif busca:
+        evolucao_match["produto_id"] = {"$in": []}
+
+    pipeline_evolucao = [
+        {"$match": evolucao_match},
+        {
+            "$project": {
+                "canal": 1,
+                "preco_num": {"$toDouble": "$preco"},
+                "dia": {"$dateToString": {"format": "%Y-%m-%d", "date": "$data"}},
+            }
+        },
+        {
+            "$group": {
+                "_id": {"dia": "$dia", "canal": "$canal"},
+                "preco_medio": {"$avg": "$preco_num"},
+            }
+        },
+        {"$sort": {"_id.dia": 1}},
+    ]
+    evolucao_docs = await historico_col.aggregate(pipeline_evolucao).to_list(length=200000)
+
+    labels_set = set()
+    mapa_evolucao: Dict[str, Dict[str, float]] = {}
+    for doc in evolucao_docs:
+        dia = doc.get("_id", {}).get("dia")
+        ch = doc.get("_id", {}).get("canal")
+        preco_medio = to_float(doc.get("preco_medio"))
+        if not dia or not ch or preco_medio is None:
+            continue
+        labels_set.add(dia)
+        if dia not in mapa_evolucao:
+            mapa_evolucao[dia] = {}
+        mapa_evolucao[dia][ch] = round(float(preco_medio), 2)
+
+    labels_ordenadas = sorted(labels_set)
+    series = {c: [] for c in canais_consulta}
+    for dia in labels_ordenadas:
+        dados_dia = mapa_evolucao.get(dia, {})
+        for c in canais_consulta:
+            series[c].append(dados_dia.get(c))
  
     return {
         "total_produtos": total_produtos,
@@ -1366,6 +1415,10 @@ async def dashboard(
         "gap_medio": gap_medio,
         "ranking_ecommerce": ranking_ecommerce,
         "status_competitivo": comparacoes,
+        "evolucao_por_canal": {
+            "labels": labels_ordenadas,
+            "series": series,
+        },
     }
  
  
