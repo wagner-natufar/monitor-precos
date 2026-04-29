@@ -1525,7 +1525,8 @@ async def tiny_sync_status(user=Depends(product_manager_required)):
  
 @app.get("/")
 async def root():
-    index_path = "index.html" if os.path.exists("index.html") else "index.txt"
+    index_candidates = [p for p in ("index.html", "index.txt") if os.path.exists(p)]
+    index_path = max(index_candidates, key=os.path.getmtime) if index_candidates else "index.html"
     return FileResponse(
         index_path,
         media_type="text/html; charset=utf-8",

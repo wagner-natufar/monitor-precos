@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -621,6 +621,10 @@
     background: var(--row-hover);
   }
 
+  tbody tr.row-main.row-pendente {
+    background: #fff8e8;
+  }
+
   .sortable {
     cursor: pointer;
     user-select: none;
@@ -1174,6 +1178,488 @@
       justify-content: flex-start;
     }
   }
+
+  /* ===== Redesign (v4) ===== */
+  body {
+    background: #eff3f2;
+    color: #18212f;
+  }
+
+  .app {
+    background: linear-gradient(180deg, #f6f8fb 0%, #eef3f1 100%);
+  }
+
+  .sidebar {
+    width: 278px;
+    background:
+      radial-gradient(1200px 500px at -200px -160px, #188f63 0%, rgba(24,143,99,0.18) 45%, rgba(24,143,99,0) 70%),
+      linear-gradient(180deg, #072e2d 0%, #03343a 50%, #0a2a2f 100%);
+    border-right: 1px solid rgba(255,255,255,0.09);
+    box-shadow: inset -1px 0 0 rgba(255,255,255,0.06);
+  }
+
+  .sidebar .logo {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.13);
+  }
+
+  .sidebar .logo .icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+  }
+
+  .sidebar .logo span:not(.icon) {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.15;
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .sidebar .logo span:not(.icon)::after {
+    content: "Inteligência de Precificação";
+    margin-top: 6px;
+    font-size: 12px;
+    color: rgba(222,250,236,0.8);
+    font-weight: 500;
+    letter-spacing: 0;
+  }
+
+  .sidebar .toggle {
+    color: rgba(215,244,228,0.86);
+    font-size: 13px;
+    padding: 14px 20px;
+  }
+
+  .sidebar nav {
+    padding: 14px 12px;
+  }
+
+  .sidebar nav button {
+    margin-bottom: 6px;
+    border-radius: 12px;
+    color: #e4f8ee;
+    font-size: 30px;
+    font-weight: 600;
+    padding: 11px 12px;
+    gap: 10px;
+    opacity: 0.95;
+  }
+
+  .sidebar nav button .icon {
+    min-width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .sidebar nav button.active {
+    background: linear-gradient(90deg, rgba(24,166,106,0.92) 0%, rgba(21,141,95,0.92) 100%);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  }
+
+  .sidebar nav button:hover {
+    background: rgba(255,255,255,0.08);
+  }
+
+  .sidebar nav button .badge {
+    background: #ff8b00;
+    color: #fff;
+    border-radius: 999px;
+    font-size: 20px;
+    font-weight: 700;
+    padding: 2px 8px;
+  }
+
+  .theme-toggle {
+    margin-top: auto;
+    border-top: 1px solid rgba(255,255,255,0.12);
+    color: #c9e8d8;
+  }
+
+  .sync-widget {
+    margin: 10px 12px 0;
+    padding: 12px;
+    border: 1px solid rgba(170,237,208,0.35);
+    border-radius: 12px;
+    background: rgba(5,50,40,0.55);
+    color: #dbfff0;
+  }
+
+  .sync-widget .small {
+    font-size: 11px;
+    color: #a7dcc3;
+    margin-bottom: 5px;
+  }
+
+  .sync-widget .when {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 8px;
+  }
+
+  .sync-widget .status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    background: rgba(16,185,129,0.2);
+    color: #bffce2;
+    padding: 3px 8px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+  }
+
+  .sync-widget button {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid rgba(154,233,203,0.45);
+    background: linear-gradient(180deg, #119761 0%, #0c7a4f 100%);
+    color: #fff;
+    padding: 9px 12px;
+    font-weight: 700;
+    font-size: 13px;
+  }
+
+  .sidebar .user-block {
+    border-top: 1px solid rgba(255,255,255,0.12);
+    color: #ecfff5;
+  }
+
+  .sidebar .user-block .role {
+    color: #9ed7bc;
+  }
+
+  .main {
+    background: transparent;
+  }
+
+  .topbar {
+    height: 66px;
+    padding: 0 24px;
+    background: rgba(255,255,255,0.92);
+    border-bottom: 1px solid #dce4ea;
+    backdrop-filter: blur(5px);
+    justify-content: space-between;
+  }
+
+  .topbar h2 {
+    display: none;
+  }
+
+  .menu-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid #d9e1ea;
+    background: #fff;
+    font-size: 26px;
+    line-height: 1;
+    color: #1d2b37;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .notify-pill {
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    background: #0e9a5a;
+    color: #fff;
+    font-size: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+
+  .top-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #1f2937;
+    font-weight: 600;
+  }
+
+  .top-user .avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #0f9d5c 0%, #0c7c49 100%);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .topbar .search {
+    display: none !important;
+  }
+
+  .content {
+    padding: 28px;
+  }
+
+  .page-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .page-title {
+    font-size: 46px;
+    line-height: 1.1;
+    color: #121c2b;
+    letter-spacing: -0.03em;
+  }
+
+  .page-subtitle {
+    color: #5d6877;
+    font-size: 25px;
+    margin-top: 5px;
+  }
+
+  .page-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .btn-secondary,
+  .btn-primary {
+    border-radius: 12px;
+    padding: 11px 18px;
+    font-weight: 600;
+  }
+
+  .btn-secondary {
+    border: 1px solid #d7dfea;
+    background: #fff;
+    color: #275f46;
+  }
+
+  .btn-primary {
+    background: linear-gradient(180deg, #17a862 0%, #0e8a54 100%);
+    border: 1px solid #0f8b55;
+    color: #fff;
+  }
+
+  .filters,
+  .hist-filtros,
+  .table-card,
+  .panel,
+  .channels-table-wrap,
+  .chart-wrap,
+  .detail-title,
+  .stat-card,
+  .hist-chart-wrap {
+    border-radius: 14px;
+    border: 1px solid #dbe2eb;
+    box-shadow: 0 6px 20px rgba(5, 28, 45, 0.05);
+  }
+
+  .filters {
+    padding: 16px;
+    background: #fff;
+  }
+
+  .filters input,
+  .filters select,
+  .hist-filtros input,
+  .hist-filtros select,
+  .user-row select,
+  .table-card input,
+  .table-card select {
+    border-radius: 10px;
+    border: 1px solid #d4dce6;
+    min-height: 40px;
+  }
+
+  .stats {
+    grid-template-columns: repeat(5, minmax(170px, 1fr));
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 16px;
+    background: #fff;
+  }
+
+  .stat-card .value {
+    color: #0f9f58;
+    font-size: 42px;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr 1.25fr;
+    gap: 14px;
+  }
+
+  .panel-head h3,
+  .table-header h3 {
+    font-size: 33px;
+    font-weight: 700;
+    color: #152232;
+  }
+
+  .table-header,
+  .panel-head {
+    padding: 16px 18px;
+    background: #fff;
+  }
+
+  table th {
+    font-size: 21px;
+    background: #f7fbf9;
+    color: #4f5b6b;
+    padding: 12px 14px;
+    border-bottom: 1px solid #dce4eb;
+  }
+
+  tbody td {
+    font-size: 24px;
+    padding: 11px 14px;
+    border-bottom: 1px solid #e5ecf2;
+    vertical-align: middle;
+  }
+
+  .status-badge,
+  .badge {
+    border-radius: 999px;
+    font-size: 18px;
+    font-weight: 700;
+    padding: 4px 10px;
+  }
+
+  .kebab-btn {
+    border-radius: 10px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .hist-filtros {
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+  }
+
+  .periodo-btn {
+    border-radius: 10px;
+  }
+
+  .user-row {
+    grid-template-columns: minmax(280px, 1fr) minmax(520px, auto);
+    padding: 18px 16px;
+  }
+
+  .user-row-actions {
+    min-width: 520px;
+    gap: 10px;
+  }
+
+  .users-list {
+    padding-right: 2px;
+  }
+
+  .sim-layout {
+    display: grid;
+    grid-template-columns: minmax(290px, 0.75fr) minmax(460px, 1.25fr);
+    gap: 14px;
+    align-items: start;
+  }
+
+  .sim-layout .panel {
+    background: #fff;
+  }
+
+  .sim-steps td,
+  .sim-steps th {
+    font-size: 15px;
+  }
+
+  .pending-layout {
+    display: grid;
+    grid-template-columns: minmax(640px, 1.2fr) minmax(260px, 0.8fr);
+    gap: 14px;
+  }
+
+  .pending-side {
+    background: #fff;
+    border: 1px solid #dbe2eb;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 6px 20px rgba(5, 28, 45, 0.05);
+  }
+
+  .group-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(220px, 1fr));
+    gap: 14px;
+  }
+
+  .group-card {
+    background: #fff;
+    border: 1px solid #dbe2eb;
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 6px 20px rgba(5, 28, 45, 0.05);
+  }
+
+  .history-layout {
+    display: grid;
+    grid-template-columns: minmax(420px, 1.4fr) minmax(300px, 0.8fr);
+    gap: 14px;
+    align-items: start;
+  }
+
+  .health-card {
+    background: #fff;
+    border: 1px solid #dbe2eb;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 6px 20px rgba(5, 28, 45, 0.05);
+  }
+
+  .muted {
+    color: #657385;
+    font-size: 13px;
+  }
+
+  @media (max-width: 1300px) {
+    .stats {
+      grid-template-columns: repeat(3, minmax(170px, 1fr));
+    }
+
+    .dashboard-grid,
+    .pending-layout,
+    .sim-layout,
+    .history-layout {
+      grid-template-columns: 1fr;
+    }
+  }
 </style>
 </head>
 <body>
@@ -1226,55 +1712,62 @@
 <div id="screen-app" class="app" style="display:none;">
   <aside class="sidebar" id="sidebar">
     <div class="logo">
-      <span class="icon">M</span>
-      <span>Monitor</span>
+      <span class="icon">??</span>
+      <span>Monitor de Preços</span>
     </div>
 
     <button class="toggle" onclick="toggleSidebar()">
-      <span class="toggle-icon">≡</span>
+      <span class="toggle-icon">?</span>
       <span>Recolher menu</span>
     </button>
 
     <nav>
       <button id="nav-dashboard" class="active" onclick="setTab('dashboard')">
-        <span class="icon">D</span>
+        <span class="icon">?</span>
         <span class="label">Dashboard</span>
       </button>
 
       <button id="nav-produtos" onclick="setTab('produtos')">
-        <span class="icon">P</span>
+        <span class="icon">?</span>
         <span class="label">Produtos</span>
       </button>
 
       <button id="nav-pendentes" style="display:none;" onclick="setTab('pendentes')">
-        <span class="icon">!</span>
+        <span class="icon">?</span>
         <span class="label">Pendentes</span>
       </button>
 
       <button id="nav-simulador" style="display:none;" onclick="setTab('simulador')">
-        <span class="icon">S</span>
+        <span class="icon">?</span>
         <span class="label">Simular Regras</span>
       </button>
 
       <button id="nav-config" style="display:none;" onclick="setTab('config')">
-        <span class="icon">C</span>
+        <span class="icon">?</span>
         <span class="label">Config. A/B/C</span>
       </button>
 
       <button id="nav-historico" onclick="setTab('historico')">
-        <span class="icon">H</span>
+        <span class="icon">?</span>
         <span class="label">Histórico</span>
       </button>
 
       <button id="nav-usuarios" style="display:none;" onclick="setTab('usuarios')">
-        <span class="icon">U</span>
+        <span class="icon">??</span>
         <span class="label">Usuários</span>
         <span class="badge" id="badge-pendentes" style="display:none;">0</span>
       </button>
     </nav>
 
+    <div class="sync-widget" id="tiny-sync-widget" style="display:none;">
+      <div class="small">Última sincronização Tiny</div>
+      <div class="when" id="tiny-sync-when">-</div>
+      <div class="status" id="tiny-sync-status">Operacional</div>
+      <button onclick="sincronizarTinyIncremental()">Sincronizar agora</button>
+    </div>
+
     <button class="theme-toggle" onclick="toggleTheme()">
-      <span class="icon" id="theme-icon">◐</span>
+      <span class="icon" id="theme-icon">?</span>
       <span class="label" id="theme-label">Modo escuro</span>
     </button>
 
@@ -1287,6 +1780,14 @@
 
   <main class="main">
     <div class="topbar">
+      <button class="menu-btn" onclick="toggleSidebar()">?</button>
+      <div class="topbar-right">
+        <span class="notify-pill">3</span>
+        <div class="top-user">
+          <span class="avatar" id="top-user-avatar">A</span>
+          <span id="top-user-name">Admin</span>
+        </div>
+      </div>
       <h2 id="page-title">Dashboard</h2>
 
       <div class="search" id="top-search">
@@ -1302,7 +1803,7 @@
   <div class="modal">
     <div class="modal-head">
       <h3 id="modal-title">Novo produto</h3>
-      <button class="close" onclick="fecharModal()">×</button>
+      <button class="close" onclick="fecharModal()">&times;</button>
     </div>
 
     <div class="modal-body">
@@ -1468,8 +1969,10 @@ let histDias = 30;
 let histCanal = "todos";
 let histTodos = [];
 let histChart = null;
+let simChart = null;
 let pendentesProdutos = [];
 let pricingGrupos = [];
+let simProdutosCache = [];
 
 aplicarTemaSalvo();
 
@@ -1565,9 +2068,12 @@ document.getElementById("form-register").addEventListener("submit", async (e) =>
   }
 });
 
-document.getElementById("busca-produtos").addEventListener("input", debounce(() => {
-  carregarProdutos();
-}, 250));
+const buscaTopInput = document.getElementById("busca-produtos");
+if (buscaTopInput) {
+  buscaTopInput.addEventListener("input", debounce(() => {
+    carregarProdutos();
+  }, 250));
+}
 
 document.addEventListener("click", () => {
   if (menuProdutoAbertoId) {
@@ -1610,15 +2116,60 @@ async function iniciarApp() {
 
   document.getElementById("user-name").textContent = usuario.nome;
   document.getElementById("user-role").textContent = usuario.perfil;
+  document.getElementById("top-user-name").textContent = usuario.nome || "Admin";
+  document.getElementById("top-user-avatar").textContent = (usuario.nome || "A").trim().charAt(0).toUpperCase();
   document.getElementById("nav-usuarios").style.display = podeGerenciarUsuarios() ? "flex" : "none";
   document.getElementById("nav-pendentes").style.display = podeGerenciarProdutos() ? "flex" : "none";
   document.getElementById("nav-simulador").style.display = podeGerenciarProdutos() ? "flex" : "none";
   document.getElementById("nav-config").style.display = podeGerenciarProdutos() ? "flex" : "none";
+  document.getElementById("tiny-sync-widget").style.display = podeGerenciarProdutos() ? "block" : "none";
 
   setTab("dashboard");
+  await atualizarWidgetTinySync();
 
   if (podeGerenciarUsuarios()) {
     carregarPendentes();
+  }
+}
+
+async function atualizarWidgetTinySync() {
+  if (!podeGerenciarProdutos()) {
+    return;
+  }
+
+  const whenEl = document.getElementById("tiny-sync-when");
+  const stEl = document.getElementById("tiny-sync-status");
+  if (!whenEl || !stEl) {
+    return;
+  }
+
+  try {
+    const res = await api("/integracoes/tiny/status");
+    const data = await res.json().catch(() => ({}));
+    const estado = data.estado || {};
+    const quando = estado.last_sync_at ? formatData(estado.last_sync_at) : "Nunca sincronizado";
+    whenEl.textContent = quando;
+
+    const erros = Number(estado.total_erros || 0);
+    const pend = Number(estado.total_pendentes || 0);
+    if (erros > 0) {
+      stEl.textContent = "Com falhas";
+      stEl.style.background = "rgba(239,68,68,0.2)";
+      stEl.style.color = "#ffd3d3";
+    } else if (pend > 0) {
+      stEl.textContent = "Com pendências";
+      stEl.style.background = "rgba(245,158,11,0.2)";
+      stEl.style.color = "#ffe6b4";
+    } else {
+      stEl.textContent = "Sucesso";
+      stEl.style.background = "rgba(16,185,129,0.2)";
+      stEl.style.color = "#bffce2";
+    }
+  } catch (e) {
+    whenEl.textContent = "Sem conexão";
+    stEl.textContent = "Indisponível";
+    stEl.style.background = "rgba(239,68,68,0.2)";
+    stEl.style.color = "#ffd3d3";
   }
 }
 
@@ -1678,6 +2229,11 @@ function setTab(tab) {
   if (histChart) {
     histChart.destroy();
     histChart = null;
+  }
+
+  if (simChart) {
+    simChart.destroy();
+    simChart = null;
   }
 
   menuProdutoAbertoId = null;
@@ -1743,7 +2299,7 @@ function aplicarTemaSalvo() {
 
 function aplicarTema(theme) {
   document.documentElement.dataset.theme = theme;
-  document.getElementById("theme-icon").textContent = theme === "dark" ? "☀" : "◐";
+  document.getElementById("theme-icon").textContent = theme === "dark" ? "?" : "?";
   document.getElementById("theme-label").textContent = theme === "dark" ? "Modo claro" : "Modo escuro";
 }
 
@@ -1753,73 +2309,84 @@ async function renderTelaDashboard() {
   const c = document.getElementById("content");
 
   c.innerHTML = `
-    <div class="small-meta" id="dash-ultima-coleta">Última coleta: —</div>
-
-    <div class="filters">
-      <div class="field">
-        <label>Buscar produto</label>
-        <input type="text" id="dash-busca" placeholder="Nome, SKU ou EAN..." value="${escapeHtml(dashBusca)}" />
-      </div>
-
-      <div class="field">
-        <label>Canal</label>
-        <select id="dash-canal">
-          <option value="todos">Todos</option>
-          ${CANAIS.map(canal => `<option value="${canal.key}">${canal.label}</option>`).join("")}
-        </select>
-      </div>
-
-      <div class="field">
-        <label>Período</label>
-        <select id="dash-dias">
-          <option value="7">7 dias</option>
-          <option value="15">15 dias</option>
-          <option value="30">30 dias</option>
-          <option value="60">60 dias</option>
-          <option value="90">90 dias</option>
-        </select>
-      </div>
-    </div>
-
-    <div class="stats" id="dash-cards">
-      <div class="stat-card"><div class="label">Produtos</div><div class="value">...</div></div>
-      <div class="stat-card"><div class="label">Registros</div><div class="value">...</div></div>
-      <div class="stat-card"><div class="label">Ganhando</div><div class="value">...</div></div>
-      <div class="stat-card"><div class="label">Acima do mercado</div><div class="value">...</div></div>
-      <div class="stat-card"><div class="label">Muito acima</div><div class="value">...</div></div>
-      <div class="stat-card"><div class="label">Gap médio</div><div class="value">...</div></div>
-    </div>
-
-    <div class="dashboard-grid">
-      <div class="panel">
-        <div class="panel-head">
-          <h3>Ranking por e-commerce</h3>
+    <div class="page-shell">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Dashboard de Precificação</h1>
+          <p class="page-subtitle">Visão geral da performance de preços e oportunidades de ajuste.</p>
         </div>
-        <div class="panel-body" id="dash-ranking">
-          <div class="empty">Carregando...</div>
+        <div class="page-actions">
+          <div class="small-meta" id="dash-ultima-coleta">Última coleta: -</div>
+          <select id="dash-dias">
+            <option value="7">7 dias</option>
+            <option value="15">15 dias</option>
+            <option value="30">30 dias</option>
+            <option value="60">60 dias</option>
+            <option value="90">90 dias</option>
+          </select>
+          <button class="btn-secondary" onclick="carregarDashboard()">Filtros</button>
         </div>
       </div>
 
-      <div class="panel">
-        <div class="panel-head">
-          <h3>Status competitivo</h3>
+      <div class="filters">
+        <div class="field">
+          <label>Buscar produto</label>
+          <input type="text" id="dash-busca" placeholder="Nome, SKU ou EAN..." value="${escapeHtml(dashBusca)}" />
         </div>
-        <div class="table-scroll" style="max-height:520px;">
-          <table>
-            <thead>
-              <tr>
-                <th>Produto</th>
-                <th>Canal</th>
-                <th>Meu preço</th>
-                <th>Menor preço no e-commerce</th>
-                <th class="sortable" onclick="toggleDashSort()">Gap ${dashSort === "prioridade" ? "↓" : "↑"}</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="dash-status">
-              <tr><td colspan="6" class="empty">Carregando...</td></tr>
-            </tbody>
-          </table>
+
+        <div class="field">
+          <label>Canal</label>
+          <select id="dash-canal">
+            <option value="todos">Todos</option>
+            ${CANAIS.map(canal => `<option value="${canal.key}">${canal.label}</option>`).join("")}
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Período</label>
+          <div class="muted">Ajuste pelo seletor no topo</div>
+        </div>
+      </div>
+
+      <div class="stats" id="dash-cards">
+        <div class="stat-card"><div class="label">Produtos</div><div class="value">...</div></div>
+        <div class="stat-card"><div class="label">Pendentes</div><div class="value">...</div></div>
+        <div class="stat-card"><div class="label">Preço Médio</div><div class="value">...</div></div>
+        <div class="stat-card"><div class="label">Gap Médio</div><div class="value">...</div></div>
+        <div class="stat-card"><div class="label">Ganhando</div><div class="value">...</div></div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Evolução de Preço por Canal</h3>
+          </div>
+          <div class="panel-body" id="dash-ranking">
+            <div class="empty">Carregando...</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h3>Prioridades de Ajuste</h3>
+          </div>
+          <div class="table-scroll" style="max-height:520px;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>Canal</th>
+                  <th>Meu Preço</th>
+                  <th>Menor Mercado</th>
+                  <th class="sortable" onclick="toggleDashSort()">Gap ${dashSort === "prioridade" ? "?" : "?"}</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="dash-status">
+                <tr><td colspan="6" class="empty">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -1876,43 +2443,37 @@ function renderDashboardDados() {
   }
 
   document.getElementById("dash-ultima-coleta").textContent =
-    `Última coleta: ${dashData.ultima_coleta ? formatData(dashData.ultima_coleta) : "—"}`;
+    `Última coleta: ${dashData.ultima_coleta ? formatData(dashData.ultima_coleta) : "-"}`;
 
   document.getElementById("dash-cards").innerHTML = `
     <div class="stat-card">
       <div class="label">Produtos</div>
       <div class="value">${dashData.total_produtos ?? 0}</div>
-      <div class="sub">cadastrados</div>
+      <div class="sub">ativos no monitor</div>
     </div>
 
     <div class="stat-card">
-      <div class="label">Registros</div>
-      <div class="value">${dashData.total_registros ?? 0}</div>
-      <div class="sub">coletas salvas</div>
+      <div class="label">Pendentes</div>
+      <div class="value">${dashData.total_pendentes_integracao ?? 0}</div>
+      <div class="sub">atenção necessária</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="label">Preço Médio</div>
+      <div class="value">${dashData.preco_medio_mercado == null ? "-" : formatBRL(dashData.preco_medio_mercado)}</div>
+      <div class="sub">mercado</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="label">Gap Médio</div>
+      <div class="value">${dashData.gap_medio == null ? "-" : formatSignedPercent(dashData.gap_medio)}</div>
+      <div class="sub">em relação ao menor</div>
     </div>
 
     <div class="stat-card">
       <div class="label">Ganhando</div>
       <div class="value">${formatPercent(dashData.percentual_ganhando)}</div>
-      <div class="sub">preço menor ou igual</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="label">Acima do mercado</div>
-      <div class="value">${dashData.acima_mercado ?? 0}</div>
-      <div class="sub">gap acima de 3%</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="label">Muito acima</div>
-      <div class="value">${dashData.muito_acima ?? 0}</div>
-      <div class="sub">gap acima de 10%</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="label">Gap médio</div>
-      <div class="value">${dashData.gap_medio == null ? "—" : formatSignedPercent(dashData.gap_medio)}</div>
-      <div class="sub">vs menor preço</div>
+      <div class="sub">produtos competitivos</div>
     </div>
   `;
 
@@ -1935,7 +2496,7 @@ function renderRankingEcommerce() {
       <div class="ranking-bar">
         <div class="ranking-fill" style="width:${Math.max(0, Math.min(100, item.percentual || 0))}%"></div>
       </div>
-      <div>${formatPercent(item.percentual)}</div>
+      <div><strong>${formatPercent(item.percentual)}</strong></div>
     </div>
   `).join("");
 }
@@ -1979,71 +2540,119 @@ async function renderTelaProdutos() {
   const c = document.getElementById("content");
 
   c.innerHTML = `
-    <div class="stats" id="stats">
-      <div class="stat-card">
-        <div class="label">Produtos</div>
-        <div class="value">...</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Pendentes</div>
-        <div class="value">...</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Preço médio mercado</div>
-        <div class="value">...</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Preço sugerido médio</div>
-        <div class="value">...</div>
-      </div>
-      <div class="stat-card">
-        <div class="label">Última coleta</div>
-        <div class="value">...</div>
-      </div>
-    </div>
-
-    <div class="table-card full">
-      <div class="table-header">
-        <h3>Produtos cadastrados</h3>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          ${podeGerenciarProdutos() ? '<button class="btn-secondary" onclick="sincronizarTinyIncremental()">Sync Tiny</button>' : ""}
+    <div class="page-shell">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Produtos</h1>
+          <p class="page-subtitle">Gerencie e acompanhe todos os produtos monitorados.</p>
+        </div>
+        <div class="page-actions">
+          ${podeGerenciarProdutos() ? '<button class="btn-secondary" onclick="sincronizarTinyIncremental()">Sincronizar Tiny</button>' : ""}
           ${podeGerenciarProdutos() ? '<button class="btn-primary" onclick="abrirModalProduto()">Novo produto</button>' : ""}
         </div>
       </div>
 
-      <div class="table-scroll users-list">
-        <table>
-          <thead>
-            <tr>
-              <th>Produto</th>
-              <th>SKU</th>
-              <th>EAN</th>
-              <th>Curva</th>
-              <th>Custo</th>
-              <th>Estoque</th>
-              <th>Menor</th>
-              <th>Maior</th>
-              <th>Médio</th>
-              <th>Sugerido</th>
-              <th>Status</th>
-              <th style="text-align:right;">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="tbody-produtos">
-            <tr>
-              <td colspan="12" class="empty">Carregando...</td>
-            </tr>
-          </tbody>
-        </table>
+      <div class="filters">
+        <div class="field">
+          <label>Buscar</label>
+          <input type="text" id="produtos-busca" placeholder="Buscar por nome, SKU ou EAN..." />
+        </div>
+        <div class="field">
+          <label>Curva</label>
+          <select id="produtos-curva">
+            <option value="todos">Todas</option>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Status</label>
+          <select id="produtos-status">
+            <option value="todos">Todos</option>
+            <option value="ok">OK</option>
+            <option value="pendente">Pendente</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="stats" id="stats">
+        <div class="stat-card">
+          <div class="label">Produtos</div>
+          <div class="value">...</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Pendentes</div>
+          <div class="value">...</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Preço médio mercado</div>
+          <div class="value">...</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Preço sugerido médio</div>
+          <div class="value">...</div>
+        </div>
+        <div class="stat-card">
+          <div class="label">Última coleta</div>
+          <div class="value">...</div>
+        </div>
+      </div>
+
+      <div class="table-card full">
+        <div class="table-header">
+          <h3>Catélogo monitorado</h3>
+        </div>
+
+        <div class="table-scroll users-list">
+          <table>
+            <thead>
+              <tr>
+                <th>Produto</th>
+                <th>SKU</th>
+                <th>EAN</th>
+                <th>Curva</th>
+                <th>Custo</th>
+                <th>Estoque</th>
+                <th>Menor Mercado</th>
+                <th>Maior Mercado</th>
+                <th>Preço Médio</th>
+                <th>Preço Sugerido</th>
+                <th>Status</th>
+                <th style="text-align:right;">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-produtos">
+              <tr>
+                <td colspan="12" class="empty">Carregando...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   `;
+
+  const busca = document.getElementById("produtos-busca");
+  const filtroCurva = document.getElementById("produtos-curva");
+  const filtroStatus = document.getElementById("produtos-status");
+  if (busca) {
+    busca.addEventListener("input", debounce(() => carregarProdutos(), 250));
+  }
+  if (filtroCurva) {
+    filtroCurva.addEventListener("change", () => renderTabelaProdutos());
+  }
+  if (filtroStatus) {
+    filtroStatus.addEventListener("change", () => renderTabelaProdutos());
+  }
 
   await carregarProdutos();
 }
 
 async function carregarProdutos() {
-  const busca = document.getElementById("busca-produtos")?.value.trim() || "";
+  const busca = document.getElementById("produtos-busca")?.value.trim()
+    || document.getElementById("busca-produtos")?.value.trim()
+    || "";
 
   try {
     const res = await api(`/produtos${busca ? `?busca=${encodeURIComponent(busca)}` : ""}`);
@@ -2100,19 +2709,19 @@ async function carregarEstatisticas() {
 
       <div class="stat-card">
         <div class="label">Preço médio mercado</div>
-        <div class="value">${precoMedioMercado == null ? "—" : formatBRL(precoMedioMercado)}</div>
+        <div class="value">${precoMedioMercado == null ? "-" : formatBRL(precoMedioMercado)}</div>
         <div class="sub">Últimos dados por canal</div>
       </div>
 
       <div class="stat-card">
         <div class="label">Preço sugerido médio</div>
-        <div class="value">${precoMedioSugerido == null ? "—" : formatBRL(precoMedioSugerido)}</div>
+        <div class="value">${precoMedioSugerido == null ? "-" : formatBRL(precoMedioSugerido)}</div>
         <div class="sub">Com regra A/B/C</div>
       </div>
 
       <div class="stat-card">
         <div class="label">Última coleta</div>
-        <div class="value" style="font-size:18px;">${data.ultima_coleta ? formatData(data.ultima_coleta) : "—"}</div>
+        <div class="value" style="font-size:18px;">${data.ultima_coleta ? formatData(data.ultima_coleta) : "-"}</div>
         <div class="sub">Último preço salvo</div>
       </div>
     `;
@@ -2121,33 +2730,41 @@ async function carregarEstatisticas() {
 
 function renderTabelaProdutos() {
   const tbody = document.getElementById("tbody-produtos");
+  const curvaFiltro = document.getElementById("produtos-curva")?.value || "todos";
+  const statusFiltro = document.getElementById("produtos-status")?.value || "todos";
 
   if (!tbody) {
     return;
   }
 
-  if (produtos.length === 0) {
+  const lista = produtos.filter(p => {
+    const okCurva = curvaFiltro === "todos" || String(p.curva_abc || "C") === curvaFiltro;
+    const okStatus = statusFiltro === "todos" || String((p.status_integracao || "ok")).toLowerCase() === statusFiltro;
+    return okCurva && okStatus;
+  });
+
+  if (lista.length === 0) {
     tbody.innerHTML = '<tr><td colspan="12" class="empty">Nenhum produto encontrado</td></tr>';
     return;
   }
 
-  tbody.innerHTML = produtos.map(p => `
-    <tr class="row-main" onclick="abrirDetalheProduto('${p.id}')">
+  tbody.innerHTML = lista.map(p => `
+    <tr class="row-main ${String(p.status_integracao || "").toLowerCase() === "pendente" ? "row-pendente" : ""}" onclick="abrirDetalheProduto('${p.id}')">
       <td><strong>${escapeHtml(p.nome)}</strong></td>
-      <td>${escapeHtml(p.sku || "—")}</td>
-      <td>${escapeHtml(p.ean || "—")}</td>
-      <td>${escapeHtml(p.curva_abc || "C")}</td>
+      <td>${escapeHtml(p.sku || "-")}</td>
+      <td>${escapeHtml(p.ean || "-")}</td>
+      <td><span class="badge ${String(p.curva_abc || "C") === "A" ? "approved" : String(p.curva_abc || "C") === "B" ? "admin" : "pending"}">${escapeHtml(p.curva_abc || "C")}</span></td>
       <td>${formatBRL(p.custo_unitario)}</td>
-      <td>${p.estoque_atual == null ? "—" : Number(p.estoque_atual).toFixed(2)}</td>
+      <td>${p.estoque_atual == null ? "-" : Number(p.estoque_atual).toFixed(2)}</td>
       <td>${formatBRL(p.menor_preco_mercado)}</td>
       <td>${formatBRL(p.maior_preco_mercado)}</td>
       <td>${formatBRL(p.preco_medio_mercado)}</td>
-      <td>${formatBRL(p.preco_sugerido)}</td>
+      <td><strong>${formatBRL(p.preco_sugerido)}</strong></td>
       <td>${statusIntegracaoBadge(p.status_integracao, p.pendencias)}</td>
 
       <td class="actions-cell" onclick="event.stopPropagation();">
         ${podeGerenciarProdutos() ? `
-          <button class="kebab-btn" onclick="toggleMenuProduto(event, '${p.id}')">⋯</button>
+          <button class="kebab-btn" onclick="toggleMenuProduto(event, '${p.id}')">?</button>
 
           <div class="action-menu ${menuProdutoAbertoId === p.id ? "show" : ""}">
             <button onclick="abrirModalProduto('${p.id}')">Editar</button>
@@ -2203,7 +2820,7 @@ async function renderDetalheProduto() {
   c.innerHTML = `
     <div class="product-detail-page">
       <div class="detail-toolbar">
-        <button class="btn-secondary" onclick="voltarParaProdutos()">← Voltar</button>
+        <button class="btn-secondary" onclick="voltarParaProdutos()">? Voltar</button>
 
         <div class="channel-filter">
           <button class="${produtoDetalheCanal === "todos" ? "active" : ""}" onclick="filtrarDetalheCanal('todos')">Todos</button>
@@ -2219,14 +2836,14 @@ async function renderDetalheProduto() {
       <div class="detail-title">
         <div>
           <h3>${escapeHtml(produto.nome)}</h3>
-          <p>SKU ${escapeHtml(produto.sku || "—")} · EAN ${escapeHtml(produto.ean || "—")}</p>
-          <p>Curva ${escapeHtml(produto.curva_abc || "C")} · Custo ${formatBRL(produto.custo_unitario)} · Estoque ${produto.estoque_atual == null ? "—" : Number(produto.estoque_atual).toFixed(2)}</p>
-          <p>Palavras-chave: ${[produto.palavra_chave_1, produto.palavra_chave_2].filter(Boolean).map(escapeHtml).join(", ") || "—"}</p>
+          <p>SKU ${escapeHtml(produto.sku || "-")} — EAN ${escapeHtml(produto.ean || "-")}</p>
+          <p>Curva ${escapeHtml(produto.curva_abc || "C")} — Custo ${formatBRL(produto.custo_unitario)} — Estoque ${produto.estoque_atual == null ? "-" : Number(produto.estoque_atual).toFixed(2)}</p>
+          <p>Palavras-chave: ${[produto.palavra_chave_1, produto.palavra_chave_2].filter(Boolean).map(escapeHtml).join(", ") || "-"}</p>
         </div>
 
         ${podeGerenciarProdutos() ? `
           <div class="actions-cell" onclick="event.stopPropagation();">
-            <button class="kebab-btn" onclick="toggleMenuProduto(event, '${produto.id}')">⋯</button>
+            <button class="kebab-btn" onclick="toggleMenuProduto(event, '${produto.id}')">?</button>
 
             <div class="action-menu ${menuProdutoAbertoId === produto.id ? "show" : ""}">
               <button onclick="abrirModalProduto('${produto.id}')">Editar</button>
@@ -2309,8 +2926,8 @@ async function carregarDadosDetalheProduto() {
             return `
               <tr>
                 <td><strong>${c.label}</strong></td>
-                <td>${pp[c.key] != null ? formatBRL(pp[c.key]) : "—"}</td>
-                <td>${dados.menor_preco_atual != null ? formatBRL(dados.menor_preco_atual) : "—"}</td>
+                <td>${pp[c.key] != null ? formatBRL(pp[c.key]) : "-"}</td>
+                <td>${dados.menor_preco_atual != null ? formatBRL(dados.menor_preco_atual) : "-"}</td>
                 <td>${formatVariacao(dados.variacao_media_7d)}</td>
                 <td>${dados.registros || 0}</td>
               </tr>
@@ -2560,39 +3177,71 @@ async function renderTelaHistorico() {
   const c = document.getElementById("content");
 
   c.innerHTML = `
-    <div class="hist-filtros">
-      <div class="field">
-        <label>Buscar produto</label>
-        <input type="text" id="hist-busca" placeholder="Nome, SKU ou EAN..." />
-      </div>
-
-      <div class="field">
-        <label>Produto</label>
-        <select id="hist-produto"></select>
-      </div>
-
-      <div class="field">
-        <label>Canal</label>
-        <select id="hist-canal">
-          <option value="todos">Todos</option>
-          ${CANAIS.map(c => `<option value="${c.key}">${c.label}</option>`).join("")}
-        </select>
-      </div>
-
-      <div class="field">
-        <label>Período</label>
-        <div class="periodo-grupo" id="hist-periodos">
-          <button class="periodo-btn" data-dias="7">7d</button>
-          <button class="periodo-btn" data-dias="15">15d</button>
-          <button class="periodo-btn active" data-dias="30">30d</button>
-          <button class="periodo-btn" data-dias="60">60d</button>
-          <button class="periodo-btn" data-dias="90">90d</button>
+    <div class="page-shell">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Histórico de Preços e Sincronizações</h1>
+          <p class="page-subtitle">Acompanhe mudanças de preço e saúde da integração Tiny.</p>
         </div>
       </div>
-    </div>
 
-    <div class="hist-chart-wrap" id="hist-chart-wrap">
-      <canvas id="hist-chart"></canvas>
+      <div class="hist-filtros">
+        <div class="field">
+          <label>Buscar produto</label>
+          <input type="text" id="hist-busca" placeholder="Nome, SKU ou EAN..." />
+        </div>
+
+        <div class="field">
+          <label>Produto</label>
+          <select id="hist-produto"></select>
+        </div>
+
+        <div class="field">
+          <label>Canal</label>
+          <select id="hist-canal">
+            <option value="todos">Todos</option>
+            ${CANAIS.map(c => `<option value="${c.key}">${c.label}</option>`).join("")}
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Período</label>
+          <div class="periodo-grupo" id="hist-periodos">
+            <button class="periodo-btn" data-dias="7">7d</button>
+            <button class="periodo-btn" data-dias="15">15d</button>
+            <button class="periodo-btn active" data-dias="30">30d</button>
+            <button class="periodo-btn" data-dias="60">60d</button>
+            <button class="periodo-btn" data-dias="90">90d</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="history-layout">
+        <div class="hist-chart-wrap" id="hist-chart-wrap">
+          <canvas id="hist-chart"></canvas>
+        </div>
+
+        <aside class="health-card">
+          <h3 style="margin-bottom:12px;">Saúde da Integração Tiny</h3>
+          <div style="display:grid; gap:10px;">
+            <div class="stat-card">
+              <div class="label">Status</div>
+              <div class="value" id="hist-health-status">...</div>
+              <div class="sub" id="hist-health-last">...</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Taxa de sucesso</div>
+              <div class="value" id="hist-health-success">...</div>
+              <div class="sub">Último ciclo de sync</div>
+            </div>
+            <div class="stat-card">
+              <div class="label">Pendências</div>
+              <div class="value" id="hist-health-pend">...</div>
+              <div class="sub">produtos aguardando ajuste</div>
+            </div>
+          </div>
+        </aside>
+      </div>
     </div>
   `;
 
@@ -2631,6 +3280,38 @@ async function renderTelaHistorico() {
     document.getElementById("hist-canal").value = histCanal;
     carregarHistorico();
   }
+  await carregarSaudeIntegracao();
+}
+
+async function carregarSaudeIntegracao() {
+  const st = document.getElementById("hist-health-status");
+  const last = document.getElementById("hist-health-last");
+  const succ = document.getElementById("hist-health-success");
+  const pend = document.getElementById("hist-health-pend");
+  if (!st || !last || !succ || !pend) {
+    return;
+  }
+
+  try {
+    const res = await api("/integracoes/tiny/status");
+    const data = await res.json().catch(() => ({}));
+    const estado = data.estado || {};
+    const totalErros = Number(estado.total_erros || 0);
+    const totalPend = Number(estado.total_pendentes || 0);
+    const totalLidos = Number(estado.total_lidos || 0);
+    const totalOk = Math.max(0, Number(estado.total_sincronizados || 0) - totalErros);
+    const taxa = totalLidos > 0 ? ((totalOk / totalLidos) * 100).toFixed(1) + "%" : "-";
+
+    st.textContent = totalErros > 0 ? "Com falhas" : "Operacional";
+    last.textContent = estado.last_sync_at ? `Último sync: ${formatData(estado.last_sync_at)}` : "Sem sincronização";
+    succ.textContent = taxa;
+    pend.textContent = String(totalPend);
+  } catch (e) {
+    st.textContent = "Indisponível";
+    last.textContent = "Sem conexão";
+    succ.textContent = "-";
+    pend.textContent = "-";
+  }
 }
 
 function preencherSelectHistorico(busca) {
@@ -2652,8 +3333,8 @@ function preencherSelectHistorico(busca) {
       || (p.ean || "").toLowerCase().includes(termo);
   });
 
-  sel.innerHTML = `<option value="">— escolha um produto —</option>` +
-    filtrados.map(p => `<option value="${p.id}">${escapeHtml(p.nome)} (SKU ${escapeHtml(p.sku || "—")})</option>`).join("");
+  sel.innerHTML = `<option value="">- escolha um produto -</option>` +
+    filtrados.map(p => `<option value="${p.id}">${escapeHtml(p.nome)} (SKU ${escapeHtml(p.sku || "-")})</option>`).join("");
 
   if (histProdutoId && filtrados.find(p => p.id === histProdutoId)) {
     sel.value = histProdutoId;
@@ -2765,6 +3446,7 @@ async function sincronizarTinyIncremental() {
     }
     alert(`Sync finalizado. Sincronizados: ${data.total_sincronizados || 0} | Pendentes: ${data.total_pendentes || 0}`);
     await carregarProdutos();
+    await atualizarWidgetTinySync();
   } catch (err) {
     alert("Erro de conexão ao sincronizar Tiny");
   }
@@ -2788,6 +3470,7 @@ async function sincronizarTinyFull() {
     }
     alert(`Sync FULL finalizado. Sincronizados: ${data.total_sincronizados || 0} | Pendentes: ${data.total_pendentes || 0}`);
     await carregarProdutos();
+    await atualizarWidgetTinySync();
   } catch (err) {
     alert("Erro de conexão ao sincronizar Tiny");
   }
@@ -2796,30 +3479,59 @@ async function sincronizarTinyFull() {
 async function renderTelaPendentes() {
   const c = document.getElementById("content");
   c.innerHTML = `
-    <div class="table-card full">
-      <div class="table-header">
-        <h3>Pendências de integração</h3>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <div class="page-shell">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Pendentes de Integração</h1>
+          <p class="page-subtitle">Produtos sem base mínima para sugestão de preço.</p>
+        </div>
+        <div class="page-actions">
           <button class="btn-secondary" onclick="sincronizarTinyIncremental()">Sync incremental</button>
           <button class="btn-primary" onclick="sincronizarTinyFull()">Sync full</button>
         </div>
       </div>
-      <div class="table-scroll users-list">
-        <table>
-          <thead>
-            <tr>
-              <th>Produto</th>
-              <th>SKU</th>
-              <th>Custo</th>
-              <th>Pendências</th>
-              <th>Status</th>
-              <th style="text-align:right;">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="tbody-pendencias-produtos">
-            <tr><td colspan="6" class="empty">Carregando...</td></tr>
-          </tbody>
-        </table>
+
+      <div id="pending-kpis" class="stats">
+        <div class="stat-card"><div class="label">Total pendentes</div><div class="value">...</div></div>
+        <div class="stat-card"><div class="label">Sem SKU</div><div class="value">...</div></div>
+        <div class="stat-card"><div class="label">Sem custo</div><div class="value">...</div></div>
+        <div class="stat-card"><div class="label">Bloqueados</div><div class="value">...</div></div>
+        <div class="stat-card"><div class="label">Último sync</div><div class="value">...</div></div>
+      </div>
+
+      <div class="pending-layout">
+        <div class="table-card full">
+          <div class="table-header">
+            <h3>Pendências por produto</h3>
+          </div>
+          <div class="table-scroll users-list">
+            <table>
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>SKU</th>
+                  <th>Custo</th>
+                  <th>Pendências</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbody-pendencias-produtos">
+                <tr><td colspan="6" class="empty">Carregando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <aside class="pending-side">
+          <h3 style="margin-bottom:10px;">Regras de bloqueio</h3>
+          <p class="muted">Produtos com pendência crítica não recebem sugestão até regularização.</p>
+          <div style="margin-top:12px; display:grid; gap:8px;">
+            <div><span class="badge pending">sem_sku</span> SKU ausente no cadastro.</div>
+            <div><span class="badge pending">sem_custo</span> Custo não informado.</div>
+            <div><span class="badge rejected">bloqueado</span> Produto sem base para simulação.</div>
+          </div>
+        </aside>
       </div>
     </div>
   `;
@@ -2838,15 +3550,39 @@ async function renderTelaPendentes() {
 
   if (!pendentesProdutos.length) {
     tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma pendência encontrada</td></tr>';
+    const kpis = document.getElementById("pending-kpis");
+    if (kpis) {
+      kpis.innerHTML = `
+        <div class="stat-card"><div class="label">Total pendentes</div><div class="value">0</div></div>
+        <div class="stat-card"><div class="label">Sem SKU</div><div class="value">0</div></div>
+        <div class="stat-card"><div class="label">Sem custo</div><div class="value">0</div></div>
+        <div class="stat-card"><div class="label">Bloqueados</div><div class="value">0</div></div>
+        <div class="stat-card"><div class="label">Último sync</div><div class="value">${escapeHtml(document.getElementById("tiny-sync-when")?.textContent || "-")}</div></div>
+      `;
+    }
     return;
+  }
+
+  const totalSemSku = pendentesProdutos.filter(p => (p.pendencias || []).includes("sem_sku")).length;
+  const totalSemCusto = pendentesProdutos.filter(p => (p.pendencias || []).includes("sem_custo")).length;
+  const totalBloqueados = pendentesProdutos.filter(p => (p.pendencias || []).length >= 2).length;
+  const kpis = document.getElementById("pending-kpis");
+  if (kpis) {
+    kpis.innerHTML = `
+      <div class="stat-card"><div class="label">Total pendentes</div><div class="value">${pendentesProdutos.length}</div></div>
+      <div class="stat-card"><div class="label">Sem SKU</div><div class="value">${totalSemSku}</div></div>
+      <div class="stat-card"><div class="label">Sem custo</div><div class="value">${totalSemCusto}</div></div>
+      <div class="stat-card"><div class="label">Bloqueados</div><div class="value">${totalBloqueados}</div></div>
+      <div class="stat-card"><div class="label">Último sync</div><div class="value">${escapeHtml(document.getElementById("tiny-sync-when")?.textContent || "-")}</div></div>
+    `;
   }
 
   tbody.innerHTML = pendentesProdutos.map(p => `
     <tr>
-      <td><strong>${escapeHtml(p.nome || "—")}</strong></td>
-      <td>${escapeHtml(p.sku || "—")}</td>
+      <td><strong>${escapeHtml(p.nome || "-")}</strong></td>
+      <td>${escapeHtml(p.sku || "-")}</td>
       <td>${formatBRL(p.custo_unitario)}</td>
-      <td>${(p.pendencias || []).map(x => `<span class="badge pending">${escapeHtml(x)}</span>`).join(" ") || "—"}</td>
+      <td>${(p.pendencias || []).map(x => `<span class="badge pending">${escapeHtml(x)}</span>`).join(" ") || "-"}</td>
       <td>${statusIntegracaoBadge(p.status_integracao, p.pendencias)}</td>
       <td class="actions-cell">
         <button class="btn-edit" onclick="abrirModalProduto('${p.id}')">Editar</button>
@@ -2860,50 +3596,104 @@ async function renderTelaPendentes() {
 async function renderTelaSimulador() {
   const c = document.getElementById("content");
   c.innerHTML = `
-    <div class="table-card full">
-      <div class="table-header">
-        <h3>Simular regras de precificação</h3>
+    <div class="page-shell">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Simular Regras de Precificação</h1>
+          <p class="page-subtitle">Valide as regras antes de publicar para toda a curva.</p>
+        </div>
       </div>
-      <div class="panel-body">
-        <div class="filters" style="margin-bottom:16px;">
-          <div class="field">
-            <label>Produto</label>
-            <select id="sim-produto"></select>
-          </div>
-          <div class="field">
-            <label>Grupo</label>
-            <select id="sim-grupo">
-              <option value=\"A\">A</option>
-              <option value=\"B\">B</option>
-              <option value=\"C\" selected>C</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>&nbsp;</label>
-            <button class="btn-primary" onclick="executarSimulacaoPreco()">Simular</button>
+
+      <div class="sim-layout">
+        <div class="panel">
+          <div class="panel-head"><h3>Configuração da Simulação</h3></div>
+          <div class="panel-body">
+            <div class="field">
+              <label>Produto</label>
+              <select id="sim-produto"></select>
+            </div>
+            <div class="field">
+              <label>Curva ABC</label>
+              <select id="sim-grupo">
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="C">C</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Estratégia base</label>
+              <select id="sim-base">
+                <option value="">Automático do grupo</option>
+                <option value="menor_preco">Menor preço</option>
+                <option value="preco_medio">Preço médio</option>
+              </select>
+            </div>
+            <div class="field"><label>Ajuste %</label><input id="sim-ajuste" type="number" step="0.01" /></div>
+            <div class="field"><label>Margem mínima %</label><input id="sim-margem" type="number" step="0.01" /></div>
+            <div class="field"><label>Preço mínimo do grupo</label><input id="sim-pmin-grupo" type="number" step="0.01" /></div>
+            <div class="field"><label>Preço mínimo do produto</label><input id="sim-pmin-prod" type="number" step="0.01" /></div>
+            <div class="field"><label>Preço máximo do produto</label><input id="sim-pmax-prod" type="number" step="0.01" /></div>
+            <div style="display:flex; gap:8px; margin-top:12px;">
+              <button class="btn-primary" onclick="executarSimulacaoPreco()">Simular</button>
+              <button class="btn-secondary" onclick="renderTelaSimulador()">Limpar</button>
+            </div>
           </div>
         </div>
-        <div id="sim-resultado" class="empty">Selecione um produto e clique em Simular.</div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Resultado da Simulação</h3></div>
+          <div class="panel-body" id="sim-resultado">
+            <div class="empty">Selecione um produto e clique em Simular.</div>
+          </div>
+        </div>
       </div>
     </div>
   `;
 
   let lista = [];
+  let grupos = [];
   try {
     const res = await api("/produtos");
     lista = await res.json();
+    simProdutosCache = lista;
+    const rg = await api("/pricing/grupos");
+    grupos = await rg.json();
   } catch (err) {}
 
+  pricingGrupos = Array.isArray(grupos) ? grupos : pricingGrupos;
   const sel = document.getElementById("sim-produto");
   if (sel) {
-    sel.innerHTML = `<option value=\"\">— escolha um produto —</option>` +
-      lista.map(p => `<option value=\"${p.id}\">${escapeHtml(p.nome)} (SKU ${escapeHtml(p.sku || "—")})</option>`).join("");
+    sel.innerHTML = `<option value="">- escolha um produto -</option>` +
+      lista.map(p => `<option value="${p.id}">${escapeHtml(p.nome)} (SKU ${escapeHtml(p.sku || "-")})</option>`).join("");
+    sel.addEventListener("change", preencherDefaultsSimulador);
   }
+  document.getElementById("sim-grupo")?.addEventListener("change", preencherDefaultsSimulador);
+  preencherDefaultsSimulador();
+}
+
+function preencherDefaultsSimulador() {
+  const produtoId = document.getElementById("sim-produto")?.value || "";
+  const grupoSel = document.getElementById("sim-grupo");
+  const produto = simProdutosCache.find(p => p.id === produtoId);
+
+  if (produto && grupoSel && !grupoSel.value) {
+    grupoSel.value = produto.curva_abc || "C";
+  }
+
+  const grupo = document.getElementById("sim-grupo")?.value || produto?.curva_abc || "C";
+  const cfg = (pricingGrupos || []).find(g => g.grupo === grupo) || {};
+  document.getElementById("sim-ajuste").value = cfg.ajuste_percentual ?? 0;
+  document.getElementById("sim-margem").value = cfg.margem_minima_percentual ?? 0;
+  document.getElementById("sim-pmin-grupo").value = cfg.preco_minimo_grupo ?? 0;
+  document.getElementById("sim-base").value = "";
+  document.getElementById("sim-pmin-prod").value = produto?.preco_minimo_produto ?? "";
+  document.getElementById("sim-pmax-prod").value = produto?.preco_maximo_produto ?? "";
 }
 
 async function executarSimulacaoPreco() {
   const produtoId = document.getElementById("sim-produto")?.value || "";
   const grupo = document.getElementById("sim-grupo")?.value || "C";
+  const produto = simProdutosCache.find(p => p.id === produtoId);
   const out = document.getElementById("sim-resultado");
 
   if (!produtoId) {
@@ -2914,7 +3704,14 @@ async function executarSimulacaoPreco() {
   try {
     const res = await api("/pricing/simular", {
       method: "POST",
-      body: JSON.stringify({ produto_id: produtoId, grupo }),
+      body: JSON.stringify({
+        produto_id: produtoId,
+        grupo,
+        estrategia_base: document.getElementById("sim-base")?.value || undefined,
+        ajuste_percentual: parseNum(document.getElementById("sim-ajuste")?.value),
+        margem_minima_percentual: parseNum(document.getElementById("sim-margem")?.value),
+        preco_minimo_grupo: parseNum(document.getElementById("sim-pmin-grupo")?.value),
+      }),
     });
     const data = await res.json().catch(() => ({}));
 
@@ -2927,14 +3724,58 @@ async function executarSimulacaoPreco() {
     const s = data.simulacao || {};
     if (out) {
       out.innerHTML = `
-        <div class="stats" style="margin:0;">
-          <div class="stat-card"><div class="label">Menor mercado</div><div class="value">${formatBRL(m.menor_preco_mercado)}</div></div>
-          <div class="stat-card"><div class="label">Médio mercado</div><div class="value">${formatBRL(m.preco_medio_mercado)}</div></div>
-          <div class="stat-card"><div class="label">Maior mercado</div><div class="value">${formatBRL(m.maior_preco_mercado)}</div></div>
-          <div class="stat-card"><div class="label">Piso final</div><div class="value">${formatBRL(s.piso_final)}</div></div>
-          <div class="stat-card"><div class="label">Preço sugerido</div><div class="value">${formatBRL(s.preco_sugerido)}</div></div>
+        <div class="stats" style="margin:0 0 12px;">
+          <div class="stat-card"><div class="label">Menor Mercado</div><div class="value">${formatBRL(m.menor_preco_mercado)}</div></div>
+          <div class="stat-card"><div class="label">Preço Médio</div><div class="value">${formatBRL(m.preco_medio_mercado)}</div></div>
+          <div class="stat-card"><div class="label">Custo</div><div class="value">${formatBRL(produto?.custo_unitario)}</div></div>
+          <div class="stat-card"><div class="label">Piso Final</div><div class="value">${formatBRL(s.piso_final)}</div></div>
+          <div class="stat-card"><div class="label">Preço Sugerido</div><div class="value">${formatBRL(s.preco_sugerido)}</div></div>
+        </div>
+        <div class="table-card full">
+          <div class="table-header"><h3>Passo a passo do cálculo</h3></div>
+          <div class="table-scroll">
+            <table class="sim-steps">
+              <thead><tr><th>Etapa</th><th>Valor</th></tr></thead>
+              <tbody>
+                <tr><td>Base (${escapeHtml(s.base_estrategia || "menor_preco")})</td><td>${formatBRL(s.base_valor)}</td></tr>
+                <tr><td>Ajuste aplicado (${Number(s.ajuste_percentual || 0).toFixed(2)}%)</td><td>${formatBRL(s.preco_ajustado)}</td></tr>
+                <tr><td>Piso por custo</td><td>${formatBRL(s.piso_custo)}</td></tr>
+                <tr><td>Piso final</td><td>${formatBRL(s.piso_final)}</td></tr>
+                <tr><td>Estoque baixo aplicado</td><td>${s.estoque_baixo_aplicado ? "Sim" : "Não"}</td></tr>
+                <tr><td><strong>Preço sugerido final</strong></td><td><strong>${formatBRL(s.preco_sugerido)}</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:260px; margin-top:12px;">
+          <canvas id="sim-chart"></canvas>
         </div>
       `;
+
+      const ctx = document.getElementById("sim-chart");
+      if (ctx) {
+        if (simChart) {
+          simChart.destroy();
+        }
+        simChart = new Chart(ctx, {
+          type: "bar",
+          data: {
+            labels: ["Menor", "Médio", "Maior", "Sugerido"],
+            datasets: [{
+              label: "Preço",
+              data: [m.menor_preco_mercado, m.preco_medio_mercado, m.maior_preco_mercado, s.preco_sugerido],
+              backgroundColor: ["#9ca3af", "#6b7280", "#4b5563", "#10b981"],
+              borderRadius: 8,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { y: { ticks: { callback: v => "R$ " + Number(v).toFixed(2) } } },
+          },
+        });
+      }
     }
   } catch (err) {
     if (out) out.innerHTML = '<div class="empty">Falha ao simular regra.</div>';
@@ -2946,26 +3787,33 @@ async function executarSimulacaoPreco() {
 async function renderTelaConfigABC() {
   const c = document.getElementById("content");
   c.innerHTML = `
-    <div class="table-card full">
-      <div class="table-header">
-        <h3>Configuração de grupos A/B/C</h3>
+    <div class="page-shell">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Configuração de Precificação por Grupo</h1>
+          <p class="page-subtitle">Defina estratégias para as curvas A, B e C.</p>
+        </div>
       </div>
-      <div class="table-scroll users-list">
-        <table>
-          <thead>
-            <tr>
-              <th>Grupo</th>
-              <th>Estratégia base</th>
-              <th>Ajuste %</th>
-              <th>Margem mínima %</th>
-              <th>Preço mínimo grupo</th>
-              <th>Limite estoque baixo</th>
-              <th>Ajuste estoque baixo %</th>
-              <th style="text-align:right;">Ações</th>
-            </tr>
-          </thead>
-          <tbody id="tbody-config-abc"><tr><td colspan="8" class="empty">Carregando...</td></tr></tbody>
-        </table>
+
+      <div class="group-grid" id="cfg-grid">
+        <div class="group-card"><div class="empty">Carregando...</div></div>
+      </div>
+
+      <div class="table-card full">
+        <div class="table-header"><h3>Matriz comparativa</h3></div>
+        <div class="table-scroll users-list">
+          <table>
+            <thead>
+              <tr>
+                <th>Configuração</th>
+                <th>Grupo A</th>
+                <th>Grupo B</th>
+                <th>Grupo C</th>
+              </tr>
+            </thead>
+            <tbody id="tbody-config-matrix"><tr><td colspan="4" class="empty">Carregando...</td></tr></tbody>
+          </table>
+        </div>
       </div>
     </div>
   `;
@@ -2977,33 +3825,74 @@ async function renderTelaConfigABC() {
     pricingGrupos = [];
   }
 
-  const tbody = document.getElementById("tbody-config-abc");
-  if (!tbody) {
+  const grid = document.getElementById("cfg-grid");
+  const matrix = document.getElementById("tbody-config-matrix");
+  if (!grid || !matrix) {
     return;
   }
 
   if (!pricingGrupos.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty">Sem configurações</td></tr>';
+    grid.innerHTML = '<div class="group-card"><div class="empty">Sem configurações</div></div>';
+    matrix.innerHTML = '<tr><td colspan="4" class="empty">Sem configurações</td></tr>';
     return;
   }
 
-  tbody.innerHTML = pricingGrupos.map(g => `
-    <tr>
-      <td><strong>${escapeHtml(g.grupo)}</strong></td>
-      <td>
+  const mapa = Object.fromEntries(pricingGrupos.map(g => [g.grupo, g]));
+  const get = (grp, key) => mapa[grp]?.[key] ?? "-";
+
+  grid.innerHTML = pricingGrupos.map(g => `
+    <div class="group-card">
+      <h3 style="margin-bottom:10px;">Grupo ${escapeHtml(g.grupo)}</h3>
+      <div class="field">
+        <label>Estratégia base</label>
         <select id="cfg-base-${g.grupo}">
-          <option value="menor_preco" ${(g.estrategia_base === "menor_preco") ? "selected" : ""}>menor_preco</option>
-          <option value="preco_medio" ${(g.estrategia_base === "preco_medio") ? "selected" : ""}>preco_medio</option>
+          <option value="menor_preco" ${(g.estrategia_base === "menor_preco") ? "selected" : ""}>Competitivo (menor preço)</option>
+          <option value="preco_medio" ${(g.estrategia_base === "preco_medio") ? "selected" : ""}>Balanceado (preço médio)</option>
         </select>
-      </td>
-      <td><input type="number" step="0.01" id="cfg-ajuste-${g.grupo}" value="${Number(g.ajuste_percentual ?? 0)}" /></td>
-      <td><input type="number" step="0.01" id="cfg-margem-${g.grupo}" value="${Number(g.margem_minima_percentual ?? 0)}" /></td>
-      <td><input type="number" step="0.01" id="cfg-pmin-${g.grupo}" value="${Number(g.preco_minimo_grupo ?? 0)}" /></td>
-      <td><input type="number" step="0.01" id="cfg-estq-${g.grupo}" value="${Number(g.estoque_baixo_limite ?? 0)}" /></td>
-      <td><input type="number" step="0.01" id="cfg-estq-aj-${g.grupo}" value="${Number(g.estoque_baixo_ajuste_percentual ?? 0)}" /></td>
-      <td class="actions-cell"><button class="btn-primary" onclick="salvarConfigGrupo('${g.grupo}')">Salvar</button></td>
-    </tr>
+      </div>
+      <div class="field"><label>Ajuste %</label><input type="number" step="0.01" id="cfg-ajuste-${g.grupo}" value="${Number(g.ajuste_percentual ?? 0)}" /></div>
+      <div class="field"><label>Margem mínima %</label><input type="number" step="0.01" id="cfg-margem-${g.grupo}" value="${Number(g.margem_minima_percentual ?? 0)}" /></div>
+      <div class="field"><label>Preço mínimo do grupo</label><input type="number" step="0.01" id="cfg-pmin-${g.grupo}" value="${Number(g.preco_minimo_grupo ?? 0)}" /></div>
+      <div class="field"><label>Limite estoque baixo</label><input type="number" step="0.01" id="cfg-estq-${g.grupo}" value="${Number(g.estoque_baixo_limite ?? 0)}" /></div>
+      <div class="field"><label>Ajuste estoque baixo %</label><input type="number" step="0.01" id="cfg-estq-aj-${g.grupo}" value="${Number(g.estoque_baixo_ajuste_percentual ?? 0)}" /></div>
+      <div style="margin-top:12px;">
+        <button class="btn-primary" onclick="salvarConfigGrupo('${g.grupo}')">Salvar configurações</button>
+      </div>
+    </div>
   `).join("");
+
+  matrix.innerHTML = `
+    <tr>
+      <td>Estratégia base</td>
+      <td>${escapeHtml(get("A", "estrategia_base"))}</td>
+      <td>${escapeHtml(get("B", "estrategia_base"))}</td>
+      <td>${escapeHtml(get("C", "estrategia_base"))}</td>
+    </tr>
+    <tr>
+      <td>Ajuste %</td>
+      <td>${Number(get("A", "ajuste_percentual") || 0).toFixed(2)}%</td>
+      <td>${Number(get("B", "ajuste_percentual") || 0).toFixed(2)}%</td>
+      <td>${Number(get("C", "ajuste_percentual") || 0).toFixed(2)}%</td>
+    </tr>
+    <tr>
+      <td>Margem mínima %</td>
+      <td>${Number(get("A", "margem_minima_percentual") || 0).toFixed(2)}%</td>
+      <td>${Number(get("B", "margem_minima_percentual") || 0).toFixed(2)}%</td>
+      <td>${Number(get("C", "margem_minima_percentual") || 0).toFixed(2)}%</td>
+    </tr>
+    <tr>
+      <td>Preço mínimo grupo</td>
+      <td>${formatBRL(get("A", "preco_minimo_grupo"))}</td>
+      <td>${formatBRL(get("B", "preco_minimo_grupo"))}</td>
+      <td>${formatBRL(get("C", "preco_minimo_grupo"))}</td>
+    </tr>
+    <tr>
+      <td>Regra estoque baixo</td>
+      <td>limite ${get("A", "estoque_baixo_limite") ?? "-"} | ajuste ${get("A", "estoque_baixo_ajuste_percentual") ?? "-"}%</td>
+      <td>limite ${get("B", "estoque_baixo_limite") ?? "-"} | ajuste ${get("B", "estoque_baixo_ajuste_percentual") ?? "-"}%</td>
+      <td>limite ${get("C", "estoque_baixo_limite") ?? "-"} | ajuste ${get("C", "estoque_baixo_ajuste_percentual") ?? "-"}%</td>
+    </tr>
+  `;
 }
 
 async function salvarConfigGrupo(grupo) {
@@ -3028,6 +3917,7 @@ async function salvarConfigGrupo(grupo) {
       return;
     }
     alert(`Configuração do grupo ${grupo} salva.`);
+    await renderTelaConfigABC();
   } catch (err) {
     alert("Erro de conexão");
   }
@@ -3163,7 +4053,7 @@ async function carregarUsuarios() {
           </span>
 
           <div class="actions-cell" onclick="event.stopPropagation();">
-            <button class="kebab-btn" onclick="toggleMenuUsuario(event, '${u.id}')">⋯</button>
+            <button class="kebab-btn" onclick="toggleMenuUsuario(event, '${u.id}')">?</button>
 
             <div class="action-menu ${menuUsuarioAbertoId === u.id ? "show" : ""}">
               <button onclick="rejeitarUsuario('${u.id}')">Rejeitar</button>
@@ -3286,13 +4176,13 @@ async function excluirUsuario(id) {
 
 function formatBRL(v) {
   if (v == null || v === "") {
-    return "—";
+    return "-";
   }
 
   const n = Number(v);
 
   if (Number.isNaN(n)) {
-    return "—";
+    return "-";
   }
 
   return n.toLocaleString("pt-BR", {
@@ -3311,7 +4201,7 @@ function formatPercent(v) {
 
 function formatSignedPercent(v) {
   if (v == null || Number.isNaN(Number(v))) {
-    return "—";
+    return "-";
   }
 
   const n = Number(v);
@@ -3322,17 +4212,17 @@ function formatSignedPercent(v) {
 
 function formatVariacao(v) {
   if (v == null || Number.isNaN(Number(v))) {
-    return '<span class="variation-zero">—</span>';
+    return '<span class="variation-zero">-</span>';
   }
 
   const n = Number(v);
 
   if (n > 0) {
-    return `<span class="variation-up">▲ ${n.toFixed(2)}%</span>`;
+    return `<span class="variation-up">? ${n.toFixed(2)}%</span>`;
   }
 
   if (n < 0) {
-    return `<span class="variation-down">▼ ${Math.abs(n).toFixed(2)}%</span>`;
+    return `<span class="variation-down">? ${Math.abs(n).toFixed(2)}%</span>`;
   }
 
   return '<span class="variation-zero">0,00%</span>';
@@ -3357,7 +4247,7 @@ function statusBadge(status) {
     return '<span class="status-badge status-muito-acima">Muito acima</span>';
   }
 
-  return `<span class="status-badge">${escapeHtml(s || "—")}</span>`;
+  return `<span class="status-badge">${escapeHtml(s || "-")}</span>`;
 }
 
 function statusIntegracaoBadge(status, pendencias = []) {
@@ -3369,12 +4259,12 @@ function statusIntegracaoBadge(status, pendencias = []) {
     const txt = pendencias && pendencias.length ? `pendente (${pendencias.length})` : "pendente";
     return `<span class="badge pending">${escapeHtml(txt)}</span>`;
   }
-  return `<span class="badge viewer">${escapeHtml(status || "—")}</span>`;
+  return `<span class="badge viewer">${escapeHtml(status || "-")}</span>`;
 }
 
 function formatData(value) {
   if (!value) {
-    return "—";
+    return "-";
   }
 
   const bruto = String(value).trim();
@@ -3384,7 +4274,7 @@ function formatData(value) {
   const d = new Date(isoSemFuso ? `${bruto}Z` : bruto);
 
   if (Number.isNaN(d.getTime())) {
-    return "—";
+    return "-";
   }
 
   const dataFmt = new Intl.DateTimeFormat("pt-BR", {
