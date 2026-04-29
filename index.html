@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Monitor de PreÃ§os</title>
+<title>Monitor de Preços</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
   :root {
@@ -1180,8 +1180,8 @@
 
 <div id="screen-login" class="auth-bg">
   <div class="auth-card">
-    <h1>Monitor de PreÃ§os</h1>
-    <p class="sub">FaÃ§a login para acessar</p>
+    <h1>Monitor de Preços</h1>
+    <p class="sub">Faça login para acessar</p>
 
     <form id="form-login">
       <label>E-mail</label>
@@ -1195,14 +1195,14 @@
 
     <div id="login-msg"></div>
 
-    <p class="switch">NÃ£o tem acesso? <a onclick="showScreen('register')">Solicitar acesso</a></p>
+    <p class="switch">Não tem acesso? <a onclick="showScreen('register')">Solicitar acesso</a></p>
   </div>
 </div>
 
 <div id="screen-register" class="auth-bg" style="display:none;">
   <div class="auth-card">
     <h1>Solicitar acesso</h1>
-    <p class="sub">Cadastre-se e aguarde aprovaÃ§Ã£o</p>
+    <p class="sub">Cadastre-se e aguarde aprovação</p>
 
     <form id="form-register">
       <label>Nome</label>
@@ -1219,7 +1219,7 @@
 
     <div id="register-msg"></div>
 
-    <p class="switch">JÃ¡ tem acesso? <a onclick="showScreen('login')">Voltar ao login</a></p>
+    <p class="switch">Já tem acesso? <a onclick="showScreen('login')">Voltar ao login</a></p>
   </div>
 </div>
 
@@ -1231,7 +1231,7 @@
     </div>
 
     <button class="toggle" onclick="toggleSidebar()">
-      <span class="toggle-icon">â‰¡</span>
+      <span class="toggle-icon">≡</span>
       <span>Recolher menu</span>
     </button>
 
@@ -1263,23 +1263,23 @@
 
       <button id="nav-historico" onclick="setTab('historico')">
         <span class="icon">H</span>
-        <span class="label">HistÃ³rico</span>
+        <span class="label">Histórico</span>
       </button>
 
       <button id="nav-usuarios" style="display:none;" onclick="setTab('usuarios')">
         <span class="icon">U</span>
-        <span class="label">UsuÃ¡rios</span>
+        <span class="label">Usuários</span>
         <span class="badge" id="badge-pendentes" style="display:none;">0</span>
       </button>
     </nav>
 
     <button class="theme-toggle" onclick="toggleTheme()">
-      <span class="icon" id="theme-icon">â—</span>
+      <span class="icon" id="theme-icon">◐</span>
       <span class="label" id="theme-label">Modo escuro</span>
     </button>
 
     <div class="user-block">
-      <div class="name" id="user-name">UsuÃ¡rio</div>
+      <div class="name" id="user-name">Usuário</div>
       <div class="role" id="user-role">visualizador</div>
       <button class="logout" onclick="logout()">Sair</button>
     </div>
@@ -1302,7 +1302,7 @@
   <div class="modal">
     <div class="modal-head">
       <h3 id="modal-title">Novo produto</h3>
-      <button class="close" onclick="fecharModal()">Ã—</button>
+      <button class="close" onclick="fecharModal()">×</button>
     </div>
 
     <div class="modal-body">
@@ -1354,7 +1354,7 @@
 
         <div class="row-2">
           <div>
-            <label>Custo unitÃ¡rio</label>
+            <label>Custo unitário</label>
             <input type="number" step="0.01" id="p-custo" />
           </div>
 
@@ -1366,17 +1366,17 @@
 
         <div class="row-2">
           <div>
-            <label>PreÃ§o mÃ­nimo do produto</label>
+            <label>Preço mínimo do produto</label>
             <input type="number" step="0.01" id="p-preco-min" />
           </div>
 
           <div>
-            <label>PreÃ§o mÃ¡ximo do produto</label>
+            <label>Preço máximo do produto</label>
             <input type="number" step="0.01" id="p-preco-max" />
           </div>
         </div>
 
-        <div class="section-title">Meus preÃ§os praticados</div>
+        <div class="section-title">Meus preços praticados</div>
 
         <div class="row-2">
           <div>
@@ -1445,7 +1445,7 @@ const APP_TIMEZONE = "America/Sao_Paulo";
 let token = localStorage.getItem("token") || "";
 
 let usuario = {
-  nome: localStorage.getItem("nome") || "UsuÃ¡rio",
+  nome: localStorage.getItem("nome") || "Usuário",
   perfil: localStorage.getItem("perfil") || "visualizador",
 };
 
@@ -1505,7 +1505,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
     token = data.token;
 
     usuario = {
-      nome: data.nome || "UsuÃ¡rio",
+      nome: data.nome || "Usuário",
       perfil: data.perfil || "visualizador",
     };
 
@@ -1515,7 +1515,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
 
     iniciarApp();
   } catch (err) {
-    renderMensagem(msg, "error", "Erro de conexÃ£o");
+    renderMensagem(msg, "error", "Erro de conexão");
   }
 });
 
@@ -1547,7 +1547,7 @@ document.getElementById("form-register").addEventListener("submit", async (e) =>
       token = data.token;
 
       usuario = {
-        nome: data.nome || "UsuÃ¡rio",
+        nome: data.nome || "Usuário",
         perfil: data.perfil || "master",
       };
 
@@ -1559,9 +1559,9 @@ document.getElementById("form-register").addEventListener("submit", async (e) =>
       return;
     }
 
-    renderMensagem(msg, "success", data.mensagem || "SolicitaÃ§Ã£o enviada.");
+    renderMensagem(msg, "success", data.mensagem || "Solicitação enviada.");
   } catch (err) {
-    renderMensagem(msg, "error", "Erro de conexÃ£o");
+    renderMensagem(msg, "error", "Erro de conexão");
   }
 });
 
@@ -1645,7 +1645,7 @@ async function api(path, opts = {}) {
 
   if (res.status === 401) {
     logout();
-    throw new Error("NÃ£o autenticado");
+    throw new Error("Não autenticado");
   }
 
   return res;
@@ -1697,7 +1697,7 @@ function setTab(tab) {
   }
 
   if (tab === "historico") {
-    title.textContent = "HistÃ³rico";
+    title.textContent = "Histórico";
     search.style.display = "none";
     renderTelaHistorico();
   }
@@ -1715,13 +1715,13 @@ function setTab(tab) {
   }
 
   if (tab === "config") {
-    title.textContent = "ConfiguraÃ§Ã£o A/B/C";
+    title.textContent = "Configuração A/B/C";
     search.style.display = "none";
     renderTelaConfigABC();
   }
 
   if (tab === "usuarios") {
-    title.textContent = "UsuÃ¡rios";
+    title.textContent = "Usuários";
     search.style.display = "none";
     renderTelaUsuarios();
   }
@@ -1743,7 +1743,7 @@ function aplicarTemaSalvo() {
 
 function aplicarTema(theme) {
   document.documentElement.dataset.theme = theme;
-  document.getElementById("theme-icon").textContent = theme === "dark" ? "â˜€" : "â—";
+  document.getElementById("theme-icon").textContent = theme === "dark" ? "☀" : "◐";
   document.getElementById("theme-label").textContent = theme === "dark" ? "Modo claro" : "Modo escuro";
 }
 
@@ -1753,7 +1753,7 @@ async function renderTelaDashboard() {
   const c = document.getElementById("content");
 
   c.innerHTML = `
-    <div class="small-meta" id="dash-ultima-coleta">Ãšltima coleta: â€”</div>
+    <div class="small-meta" id="dash-ultima-coleta">Última coleta: —</div>
 
     <div class="filters">
       <div class="field">
@@ -1770,7 +1770,7 @@ async function renderTelaDashboard() {
       </div>
 
       <div class="field">
-        <label>PerÃ­odo</label>
+        <label>Período</label>
         <select id="dash-dias">
           <option value="7">7 dias</option>
           <option value="15">15 dias</option>
@@ -1787,7 +1787,7 @@ async function renderTelaDashboard() {
       <div class="stat-card"><div class="label">Ganhando</div><div class="value">...</div></div>
       <div class="stat-card"><div class="label">Acima do mercado</div><div class="value">...</div></div>
       <div class="stat-card"><div class="label">Muito acima</div><div class="value">...</div></div>
-      <div class="stat-card"><div class="label">Gap mÃ©dio</div><div class="value">...</div></div>
+      <div class="stat-card"><div class="label">Gap médio</div><div class="value">...</div></div>
     </div>
 
     <div class="dashboard-grid">
@@ -1810,9 +1810,9 @@ async function renderTelaDashboard() {
               <tr>
                 <th>Produto</th>
                 <th>Canal</th>
-                <th>Meu preÃ§o</th>
-                <th>Menor preÃ§o no e-commerce</th>
-                <th class="sortable" onclick="toggleDashSort()">Gap ${dashSort === "prioridade" ? "â†“" : "â†‘"}</th>
+                <th>Meu preço</th>
+                <th>Menor preço no e-commerce</th>
+                <th class="sortable" onclick="toggleDashSort()">Gap ${dashSort === "prioridade" ? "↓" : "↑"}</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -1876,7 +1876,7 @@ function renderDashboardDados() {
   }
 
   document.getElementById("dash-ultima-coleta").textContent =
-    `Ãšltima coleta: ${dashData.ultima_coleta ? formatData(dashData.ultima_coleta) : "â€”"}`;
+    `Última coleta: ${dashData.ultima_coleta ? formatData(dashData.ultima_coleta) : "—"}`;
 
   document.getElementById("dash-cards").innerHTML = `
     <div class="stat-card">
@@ -1894,7 +1894,7 @@ function renderDashboardDados() {
     <div class="stat-card">
       <div class="label">Ganhando</div>
       <div class="value">${formatPercent(dashData.percentual_ganhando)}</div>
-      <div class="sub">preÃ§o menor ou igual</div>
+      <div class="sub">preço menor ou igual</div>
     </div>
 
     <div class="stat-card">
@@ -1910,9 +1910,9 @@ function renderDashboardDados() {
     </div>
 
     <div class="stat-card">
-      <div class="label">Gap mÃ©dio</div>
-      <div class="value">${dashData.gap_medio == null ? "â€”" : formatSignedPercent(dashData.gap_medio)}</div>
-      <div class="sub">vs menor preÃ§o</div>
+      <div class="label">Gap médio</div>
+      <div class="value">${dashData.gap_medio == null ? "—" : formatSignedPercent(dashData.gap_medio)}</div>
+      <div class="sub">vs menor preço</div>
     </div>
   `;
 
@@ -1925,7 +1925,7 @@ function renderRankingEcommerce() {
   const ranking = dashData.ranking_ecommerce || [];
 
   if (ranking.length === 0 || ranking.every(x => !x.vitorias)) {
-    cont.innerHTML = '<div class="empty">Sem dados suficientes no perÃ­odo</div>';
+    cont.innerHTML = '<div class="empty">Sem dados suficientes no período</div>';
     return;
   }
 
@@ -1952,7 +1952,7 @@ function renderStatusCompetitivo() {
   });
 
   if (lista.length === 0) {
-    tb.innerHTML = '<tr><td colspan="6" class="empty">Sem comparaÃ§Ãµes com dados suficientes</td></tr>';
+    tb.innerHTML = '<tr><td colspan="6" class="empty">Sem comparações com dados suficientes</td></tr>';
     return;
   }
 
@@ -1989,15 +1989,15 @@ async function renderTelaProdutos() {
         <div class="value">...</div>
       </div>
       <div class="stat-card">
-        <div class="label">PreÃ§o mÃ©dio mercado</div>
+        <div class="label">Preço médio mercado</div>
         <div class="value">...</div>
       </div>
       <div class="stat-card">
-        <div class="label">PreÃ§o sugerido mÃ©dio</div>
+        <div class="label">Preço sugerido médio</div>
         <div class="value">...</div>
       </div>
       <div class="stat-card">
-        <div class="label">Ãšltima coleta</div>
+        <div class="label">Última coleta</div>
         <div class="value">...</div>
       </div>
     </div>
@@ -2023,10 +2023,10 @@ async function renderTelaProdutos() {
               <th>Estoque</th>
               <th>Menor</th>
               <th>Maior</th>
-              <th>MÃ©dio</th>
+              <th>Médio</th>
               <th>Sugerido</th>
               <th>Status</th>
-              <th style="text-align:right;">AÃ§Ãµes</th>
+              <th style="text-align:right;">Ações</th>
             </tr>
           </thead>
           <tbody id="tbody-produtos">
@@ -2099,21 +2099,21 @@ async function carregarEstatisticas() {
       </div>
 
       <div class="stat-card">
-        <div class="label">PreÃ§o mÃ©dio mercado</div>
-        <div class="value">${precoMedioMercado == null ? "â€”" : formatBRL(precoMedioMercado)}</div>
-        <div class="sub">Ãšltimos dados por canal</div>
+        <div class="label">Preço médio mercado</div>
+        <div class="value">${precoMedioMercado == null ? "—" : formatBRL(precoMedioMercado)}</div>
+        <div class="sub">Últimos dados por canal</div>
       </div>
 
       <div class="stat-card">
-        <div class="label">PreÃ§o sugerido mÃ©dio</div>
-        <div class="value">${precoMedioSugerido == null ? "â€”" : formatBRL(precoMedioSugerido)}</div>
+        <div class="label">Preço sugerido médio</div>
+        <div class="value">${precoMedioSugerido == null ? "—" : formatBRL(precoMedioSugerido)}</div>
         <div class="sub">Com regra A/B/C</div>
       </div>
 
       <div class="stat-card">
-        <div class="label">Ãšltima coleta</div>
-        <div class="value" style="font-size:18px;">${data.ultima_coleta ? formatData(data.ultima_coleta) : "â€”"}</div>
-        <div class="sub">Ãšltimo preÃ§o salvo</div>
+        <div class="label">Última coleta</div>
+        <div class="value" style="font-size:18px;">${data.ultima_coleta ? formatData(data.ultima_coleta) : "—"}</div>
+        <div class="sub">Último preço salvo</div>
       </div>
     `;
   } catch (err) {}
@@ -2134,11 +2134,11 @@ function renderTabelaProdutos() {
   tbody.innerHTML = produtos.map(p => `
     <tr class="row-main" onclick="abrirDetalheProduto('${p.id}')">
       <td><strong>${escapeHtml(p.nome)}</strong></td>
-      <td>${escapeHtml(p.sku || "â€”")}</td>
-      <td>${escapeHtml(p.ean || "â€”")}</td>
+      <td>${escapeHtml(p.sku || "—")}</td>
+      <td>${escapeHtml(p.ean || "—")}</td>
       <td>${escapeHtml(p.curva_abc || "C")}</td>
       <td>${formatBRL(p.custo_unitario)}</td>
-      <td>${p.estoque_atual == null ? "â€”" : Number(p.estoque_atual).toFixed(2)}</td>
+      <td>${p.estoque_atual == null ? "—" : Number(p.estoque_atual).toFixed(2)}</td>
       <td>${formatBRL(p.menor_preco_mercado)}</td>
       <td>${formatBRL(p.maior_preco_mercado)}</td>
       <td>${formatBRL(p.preco_medio_mercado)}</td>
@@ -2147,7 +2147,7 @@ function renderTabelaProdutos() {
 
       <td class="actions-cell" onclick="event.stopPropagation();">
         ${podeGerenciarProdutos() ? `
-          <button class="kebab-btn" onclick="toggleMenuProduto(event, '${p.id}')">â‹¯</button>
+          <button class="kebab-btn" onclick="toggleMenuProduto(event, '${p.id}')">⋯</button>
 
           <div class="action-menu ${menuProdutoAbertoId === p.id ? "show" : ""}">
             <button onclick="abrirModalProduto('${p.id}')">Editar</button>
@@ -2203,7 +2203,7 @@ async function renderDetalheProduto() {
   c.innerHTML = `
     <div class="product-detail-page">
       <div class="detail-toolbar">
-        <button class="btn-secondary" onclick="voltarParaProdutos()">â† Voltar</button>
+        <button class="btn-secondary" onclick="voltarParaProdutos()">← Voltar</button>
 
         <div class="channel-filter">
           <button class="${produtoDetalheCanal === "todos" ? "active" : ""}" onclick="filtrarDetalheCanal('todos')">Todos</button>
@@ -2219,14 +2219,14 @@ async function renderDetalheProduto() {
       <div class="detail-title">
         <div>
           <h3>${escapeHtml(produto.nome)}</h3>
-          <p>SKU ${escapeHtml(produto.sku || "â€”")} Â· EAN ${escapeHtml(produto.ean || "â€”")}</p>
-          <p>Curva ${escapeHtml(produto.curva_abc || "C")} Â· Custo ${formatBRL(produto.custo_unitario)} Â· Estoque ${produto.estoque_atual == null ? "â€”" : Number(produto.estoque_atual).toFixed(2)}</p>
-          <p>Palavras-chave: ${[produto.palavra_chave_1, produto.palavra_chave_2].filter(Boolean).map(escapeHtml).join(", ") || "â€”"}</p>
+          <p>SKU ${escapeHtml(produto.sku || "—")} · EAN ${escapeHtml(produto.ean || "—")}</p>
+          <p>Curva ${escapeHtml(produto.curva_abc || "C")} · Custo ${formatBRL(produto.custo_unitario)} · Estoque ${produto.estoque_atual == null ? "—" : Number(produto.estoque_atual).toFixed(2)}</p>
+          <p>Palavras-chave: ${[produto.palavra_chave_1, produto.palavra_chave_2].filter(Boolean).map(escapeHtml).join(", ") || "—"}</p>
         </div>
 
         ${podeGerenciarProdutos() ? `
           <div class="actions-cell" onclick="event.stopPropagation();">
-            <button class="kebab-btn" onclick="toggleMenuProduto(event, '${produto.id}')">â‹¯</button>
+            <button class="kebab-btn" onclick="toggleMenuProduto(event, '${produto.id}')">⋯</button>
 
             <div class="action-menu ${menuProdutoAbertoId === produto.id ? "show" : ""}">
               <button onclick="abrirModalProduto('${produto.id}')">Editar</button>
@@ -2295,9 +2295,9 @@ async function carregarDadosDetalheProduto() {
         <thead>
           <tr>
             <th>E-commerce</th>
-            <th>Meu preÃ§o</th>
-            <th>Menor preÃ§o no e-commerce</th>
-            <th>VariaÃ§Ã£o mÃ©dia 7d</th>
+            <th>Meu preço</th>
+            <th>Menor preço no e-commerce</th>
+            <th>Variação média 7d</th>
             <th>Coletas 7d</th>
           </tr>
         </thead>
@@ -2309,8 +2309,8 @@ async function carregarDadosDetalheProduto() {
             return `
               <tr>
                 <td><strong>${c.label}</strong></td>
-                <td>${pp[c.key] != null ? formatBRL(pp[c.key]) : "â€”"}</td>
-                <td>${dados.menor_preco_atual != null ? formatBRL(dados.menor_preco_atual) : "â€”"}</td>
+                <td>${pp[c.key] != null ? formatBRL(pp[c.key]) : "—"}</td>
+                <td>${dados.menor_preco_atual != null ? formatBRL(dados.menor_preco_atual) : "—"}</td>
                 <td>${formatVariacao(dados.variacao_media_7d)}</td>
                 <td>${dados.registros || 0}</td>
               </tr>
@@ -2365,7 +2365,7 @@ function desenharGraficoDetalhe(historico) {
 
   if (datasets.length === 0) {
     document.getElementById("detail-chart-wrap").innerHTML =
-      '<div class="empty">Sem histÃ³rico para este filtro.</div>';
+      '<div class="empty">Sem histórico para este filtro.</div>';
     return;
   }
 
@@ -2520,14 +2520,14 @@ async function salvarProduto() {
       }
     }
   } catch (err) {
-    renderMensagem(alert, "error", "Erro de conexÃ£o", "alert");
+    renderMensagem(alert, "error", "Erro de conexão", "alert");
   }
 }
 
 async function excluirProduto(id) {
   menuProdutoAbertoId = null;
 
-  if (!confirm("Tem certeza que deseja excluir este produto e todo o histÃ³rico?")) {
+  if (!confirm("Tem certeza que deseja excluir este produto e todo o histórico?")) {
     return;
   }
 
@@ -2543,11 +2543,11 @@ async function excluirProduto(id) {
     produtoDetalheId = null;
     await renderTelaProdutos();
   } catch (err) {
-    alert("Erro de conexÃ£o");
+    alert("Erro de conexão");
   }
 }
 
-/* ================= HISTÃ“RICO ================= */
+/* ================= HISTÓRICO ================= */
 
 async function renderTelaHistorico() {
   try {
@@ -2580,7 +2580,7 @@ async function renderTelaHistorico() {
       </div>
 
       <div class="field">
-        <label>PerÃ­odo</label>
+        <label>Período</label>
         <div class="periodo-grupo" id="hist-periodos">
           <button class="periodo-btn" data-dias="7">7d</button>
           <button class="periodo-btn" data-dias="15">15d</button>
@@ -2652,8 +2652,8 @@ function preencherSelectHistorico(busca) {
       || (p.ean || "").toLowerCase().includes(termo);
   });
 
-  sel.innerHTML = `<option value="">â€” escolha um produto â€”</option>` +
-    filtrados.map(p => `<option value="${p.id}">${escapeHtml(p.nome)} (SKU ${escapeHtml(p.sku || "â€”")})</option>`).join("");
+  sel.innerHTML = `<option value="">— escolha um produto —</option>` +
+    filtrados.map(p => `<option value="${p.id}">${escapeHtml(p.nome)} (SKU ${escapeHtml(p.sku || "—")})</option>`).join("");
 
   if (histProdutoId && filtrados.find(p => p.id === histProdutoId)) {
     sel.value = histProdutoId;
@@ -2667,7 +2667,7 @@ async function carregarHistorico() {
 
   if (!histProdutoId) {
     if (wrap) {
-      wrap.innerHTML = '<div class="empty">Selecione um produto para visualizar o histÃ³rico.</div>';
+      wrap.innerHTML = '<div class="empty">Selecione um produto para visualizar o histórico.</div>';
     }
 
     if (histChart) {
@@ -2730,7 +2730,7 @@ function desenharGraficoHistorico(historico) {
   }).filter(ds => ds.data.some(v => v != null));
 
   if (datasets.length === 0) {
-    wrap.innerHTML = '<div class="empty">Sem histÃ³rico para os filtros selecionados.</div>';
+    wrap.innerHTML = '<div class="empty">Sem histórico para os filtros selecionados.</div>';
     return;
   }
 
@@ -2766,7 +2766,7 @@ async function sincronizarTinyIncremental() {
     alert(`Sync finalizado. Sincronizados: ${data.total_sincronizados || 0} | Pendentes: ${data.total_pendentes || 0}`);
     await carregarProdutos();
   } catch (err) {
-    alert("Erro de conexÃ£o ao sincronizar Tiny");
+    alert("Erro de conexão ao sincronizar Tiny");
   }
 }
 
@@ -2775,7 +2775,7 @@ async function sincronizarTinyFull() {
     return;
   }
 
-  if (!confirm("A sincronizaÃ§Ã£o FULL pode levar mais tempo. Deseja continuar?")) {
+  if (!confirm("A sincronização FULL pode levar mais tempo. Deseja continuar?")) {
     return;
   }
 
@@ -2789,7 +2789,7 @@ async function sincronizarTinyFull() {
     alert(`Sync FULL finalizado. Sincronizados: ${data.total_sincronizados || 0} | Pendentes: ${data.total_pendentes || 0}`);
     await carregarProdutos();
   } catch (err) {
-    alert("Erro de conexÃ£o ao sincronizar Tiny");
+    alert("Erro de conexão ao sincronizar Tiny");
   }
 }
 
@@ -2798,7 +2798,7 @@ async function renderTelaPendentes() {
   c.innerHTML = `
     <div class="table-card full">
       <div class="table-header">
-        <h3>PendÃªncias de integraÃ§Ã£o</h3>
+        <h3>Pendências de integração</h3>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
           <button class="btn-secondary" onclick="sincronizarTinyIncremental()">Sync incremental</button>
           <button class="btn-primary" onclick="sincronizarTinyFull()">Sync full</button>
@@ -2811,9 +2811,9 @@ async function renderTelaPendentes() {
               <th>Produto</th>
               <th>SKU</th>
               <th>Custo</th>
-              <th>PendÃªncias</th>
+              <th>Pendências</th>
               <th>Status</th>
-              <th style="text-align:right;">AÃ§Ãµes</th>
+              <th style="text-align:right;">Ações</th>
             </tr>
           </thead>
           <tbody id="tbody-pendencias-produtos">
@@ -2837,16 +2837,16 @@ async function renderTelaPendentes() {
   }
 
   if (!pendentesProdutos.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma pendÃªncia encontrada</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma pendência encontrada</td></tr>';
     return;
   }
 
   tbody.innerHTML = pendentesProdutos.map(p => `
     <tr>
-      <td><strong>${escapeHtml(p.nome || "â€”")}</strong></td>
-      <td>${escapeHtml(p.sku || "â€”")}</td>
+      <td><strong>${escapeHtml(p.nome || "—")}</strong></td>
+      <td>${escapeHtml(p.sku || "—")}</td>
       <td>${formatBRL(p.custo_unitario)}</td>
-      <td>${(p.pendencias || []).map(x => `<span class="badge pending">${escapeHtml(x)}</span>`).join(" ") || "â€”"}</td>
+      <td>${(p.pendencias || []).map(x => `<span class="badge pending">${escapeHtml(x)}</span>`).join(" ") || "—"}</td>
       <td>${statusIntegracaoBadge(p.status_integracao, p.pendencias)}</td>
       <td class="actions-cell">
         <button class="btn-edit" onclick="abrirModalProduto('${p.id}')">Editar</button>
@@ -2862,7 +2862,7 @@ async function renderTelaSimulador() {
   c.innerHTML = `
     <div class="table-card full">
       <div class="table-header">
-        <h3>Simular regras de precificaÃ§Ã£o</h3>
+        <h3>Simular regras de precificação</h3>
       </div>
       <div class="panel-body">
         <div class="filters" style="margin-bottom:16px;">
@@ -2896,8 +2896,8 @@ async function renderTelaSimulador() {
 
   const sel = document.getElementById("sim-produto");
   if (sel) {
-    sel.innerHTML = `<option value=\"\">â€” escolha um produto â€”</option>` +
-      lista.map(p => `<option value=\"${p.id}\">${escapeHtml(p.nome)} (SKU ${escapeHtml(p.sku || "â€”")})</option>`).join("");
+    sel.innerHTML = `<option value=\"\">— escolha um produto —</option>` +
+      lista.map(p => `<option value=\"${p.id}\">${escapeHtml(p.nome)} (SKU ${escapeHtml(p.sku || "—")})</option>`).join("");
   }
 }
 
@@ -2919,7 +2919,7 @@ async function executarSimulacaoPreco() {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      if (out) out.innerHTML = `<div class="empty">${escapeHtml(data.detail || "Erro na simulaÃ§Ã£o")}</div>`;
+      if (out) out.innerHTML = `<div class="empty">${escapeHtml(data.detail || "Erro na simulação")}</div>`;
       return;
     }
 
@@ -2929,10 +2929,10 @@ async function executarSimulacaoPreco() {
       out.innerHTML = `
         <div class="stats" style="margin:0;">
           <div class="stat-card"><div class="label">Menor mercado</div><div class="value">${formatBRL(m.menor_preco_mercado)}</div></div>
-          <div class="stat-card"><div class="label">MÃ©dio mercado</div><div class="value">${formatBRL(m.preco_medio_mercado)}</div></div>
+          <div class="stat-card"><div class="label">Médio mercado</div><div class="value">${formatBRL(m.preco_medio_mercado)}</div></div>
           <div class="stat-card"><div class="label">Maior mercado</div><div class="value">${formatBRL(m.maior_preco_mercado)}</div></div>
           <div class="stat-card"><div class="label">Piso final</div><div class="value">${formatBRL(s.piso_final)}</div></div>
-          <div class="stat-card"><div class="label">PreÃ§o sugerido</div><div class="value">${formatBRL(s.preco_sugerido)}</div></div>
+          <div class="stat-card"><div class="label">Preço sugerido</div><div class="value">${formatBRL(s.preco_sugerido)}</div></div>
         </div>
       `;
     }
@@ -2948,20 +2948,20 @@ async function renderTelaConfigABC() {
   c.innerHTML = `
     <div class="table-card full">
       <div class="table-header">
-        <h3>ConfiguraÃ§Ã£o de grupos A/B/C</h3>
+        <h3>Configuração de grupos A/B/C</h3>
       </div>
       <div class="table-scroll users-list">
         <table>
           <thead>
             <tr>
               <th>Grupo</th>
-              <th>EstratÃ©gia base</th>
+              <th>Estratégia base</th>
               <th>Ajuste %</th>
-              <th>Margem mÃ­nima %</th>
-              <th>PreÃ§o mÃ­nimo grupo</th>
+              <th>Margem mínima %</th>
+              <th>Preço mínimo grupo</th>
               <th>Limite estoque baixo</th>
               <th>Ajuste estoque baixo %</th>
-              <th style="text-align:right;">AÃ§Ãµes</th>
+              <th style="text-align:right;">Ações</th>
             </tr>
           </thead>
           <tbody id="tbody-config-abc"><tr><td colspan="8" class="empty">Carregando...</td></tr></tbody>
@@ -2983,7 +2983,7 @@ async function renderTelaConfigABC() {
   }
 
   if (!pricingGrupos.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty">Sem configuraÃ§Ãµes</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Sem configurações</td></tr>';
     return;
   }
 
@@ -3024,16 +3024,16 @@ async function salvarConfigGrupo(grupo) {
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      alert(data.detail || "Erro ao salvar configuraÃ§Ã£o");
+      alert(data.detail || "Erro ao salvar configuração");
       return;
     }
-    alert(`ConfiguraÃ§Ã£o do grupo ${grupo} salva.`);
+    alert(`Configuração do grupo ${grupo} salva.`);
   } catch (err) {
-    alert("Erro de conexÃ£o");
+    alert("Erro de conexão");
   }
 }
 
-/* ================= USUÃRIOS ================= */
+/* ================= USUÁRIOS ================= */
 
 async function renderTelaUsuarios() {
   if (!podeGerenciarUsuarios()) {
@@ -3046,7 +3046,7 @@ async function renderTelaUsuarios() {
   c.innerHTML = `
     <div class="table-card full">
       <div class="table-header">
-        <h3>SolicitaÃ§Ãµes pendentes</h3>
+        <h3>Solicitações pendentes</h3>
       </div>
 
       <div class="table-scroll users-list" id="tbody-pendentes">Carregando...</div>
@@ -3056,7 +3056,7 @@ async function renderTelaUsuarios() {
 
     <div class="table-card full">
       <div class="table-header">
-        <h3>UsuÃ¡rios cadastrados</h3>
+        <h3>Usuários cadastrados</h3>
       </div>
 
       <div class="table-scroll users-list" id="tbody-usuarios">Carregando...</div>
@@ -3094,7 +3094,7 @@ async function carregarPendentes() {
     }
 
     if (lista.length === 0) {
-      cont.innerHTML = '<div class="empty">Nenhuma solicitaÃ§Ã£o pendente</div>';
+      cont.innerHTML = '<div class="empty">Nenhuma solicitação pendente</div>';
       return;
     }
 
@@ -3136,7 +3136,7 @@ async function carregarUsuarios() {
     }
 
     if (lista.length === 0) {
-      cont.innerHTML = '<div class="empty">Nenhum usuÃ¡rio cadastrado</div>';
+      cont.innerHTML = '<div class="empty">Nenhum usuário cadastrado</div>';
       return;
     }
 
@@ -3163,7 +3163,7 @@ async function carregarUsuarios() {
           </span>
 
           <div class="actions-cell" onclick="event.stopPropagation();">
-            <button class="kebab-btn" onclick="toggleMenuUsuario(event, '${u.id}')">â‹¯</button>
+            <button class="kebab-btn" onclick="toggleMenuUsuario(event, '${u.id}')">⋯</button>
 
             <div class="action-menu ${menuUsuarioAbertoId === u.id ? "show" : ""}">
               <button onclick="rejeitarUsuario('${u.id}')">Rejeitar</button>
@@ -3201,14 +3201,14 @@ async function aprovarUsuarioSelecionado(id) {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      alert(data.detail || "Erro ao aprovar usuÃ¡rio");
+      alert(data.detail || "Erro ao aprovar usuário");
       return;
     }
 
     await carregarPendentes();
     await carregarUsuarios();
   } catch (e) {
-    alert("Erro de conexÃ£o");
+    alert("Erro de conexão");
   }
 }
 
@@ -3221,7 +3221,7 @@ async function alterarPerfilUsuario(id, perfil) {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      alert(data.detail || "Erro ao alterar funÃ§Ã£o");
+      alert(data.detail || "Erro ao alterar função");
       await carregarUsuarios();
       return;
     }
@@ -3234,7 +3234,7 @@ async function alterarPerfilUsuario(id, perfil) {
       iniciarApp();
     }
   } catch (e) {
-    alert("Erro de conexÃ£o");
+    alert("Erro de conexão");
   }
 }
 
@@ -3247,19 +3247,19 @@ async function rejeitarUsuario(id) {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      alert(data.detail || "Erro ao rejeitar usuÃ¡rio");
+      alert(data.detail || "Erro ao rejeitar usuário");
       return;
     }
 
     await carregarPendentes();
     await carregarUsuarios();
   } catch (e) {
-    alert("Erro de conexÃ£o");
+    alert("Erro de conexão");
   }
 }
 
 async function excluirUsuario(id) {
-  if (!confirm("Tem certeza que deseja excluir este usuÃ¡rio?")) {
+  if (!confirm("Tem certeza que deseja excluir este usuário?")) {
     return;
   }
 
@@ -3271,14 +3271,14 @@ async function excluirUsuario(id) {
     const data = await res.json().catch(() => ({}));
 
     if (!res.ok) {
-      alert(data.detail || "Erro ao excluir usuÃ¡rio");
+      alert(data.detail || "Erro ao excluir usuário");
       return;
     }
 
     await carregarPendentes();
     await carregarUsuarios();
   } catch (e) {
-    alert("Erro de conexÃ£o");
+    alert("Erro de conexão");
   }
 }
 
@@ -3286,13 +3286,13 @@ async function excluirUsuario(id) {
 
 function formatBRL(v) {
   if (v == null || v === "") {
-    return "â€”";
+    return "—";
   }
 
   const n = Number(v);
 
   if (Number.isNaN(n)) {
-    return "â€”";
+    return "—";
   }
 
   return n.toLocaleString("pt-BR", {
@@ -3311,7 +3311,7 @@ function formatPercent(v) {
 
 function formatSignedPercent(v) {
   if (v == null || Number.isNaN(Number(v))) {
-    return "â€”";
+    return "—";
   }
 
   const n = Number(v);
@@ -3322,17 +3322,17 @@ function formatSignedPercent(v) {
 
 function formatVariacao(v) {
   if (v == null || Number.isNaN(Number(v))) {
-    return '<span class="variation-zero">â€”</span>';
+    return '<span class="variation-zero">—</span>';
   }
 
   const n = Number(v);
 
   if (n > 0) {
-    return `<span class="variation-up">â–² ${n.toFixed(2)}%</span>`;
+    return `<span class="variation-up">▲ ${n.toFixed(2)}%</span>`;
   }
 
   if (n < 0) {
-    return `<span class="variation-down">â–¼ ${Math.abs(n).toFixed(2)}%</span>`;
+    return `<span class="variation-down">▼ ${Math.abs(n).toFixed(2)}%</span>`;
   }
 
   return '<span class="variation-zero">0,00%</span>';
@@ -3357,7 +3357,7 @@ function statusBadge(status) {
     return '<span class="status-badge status-muito-acima">Muito acima</span>';
   }
 
-  return `<span class="status-badge">${escapeHtml(s || "â€”")}</span>`;
+  return `<span class="status-badge">${escapeHtml(s || "—")}</span>`;
 }
 
 function statusIntegracaoBadge(status, pendencias = []) {
@@ -3369,12 +3369,12 @@ function statusIntegracaoBadge(status, pendencias = []) {
     const txt = pendencias && pendencias.length ? `pendente (${pendencias.length})` : "pendente";
     return `<span class="badge pending">${escapeHtml(txt)}</span>`;
   }
-  return `<span class="badge viewer">${escapeHtml(status || "â€”")}</span>`;
+  return `<span class="badge viewer">${escapeHtml(status || "—")}</span>`;
 }
 
 function formatData(value) {
   if (!value) {
-    return "â€”";
+    return "—";
   }
 
   const bruto = String(value).trim();
@@ -3384,7 +3384,7 @@ function formatData(value) {
   const d = new Date(isoSemFuso ? `${bruto}Z` : bruto);
 
   if (Number.isNaN(d.getTime())) {
-    return "â€”";
+    return "—";
   }
 
   const dataFmt = new Intl.DateTimeFormat("pt-BR", {
@@ -3458,7 +3458,6 @@ function debounce(fn, delay) {
 </script>
 </body>
 </html>
-
 
 
 
