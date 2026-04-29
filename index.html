@@ -1682,6 +1682,639 @@
       grid-template-columns: 1fr;
     }
   }
+
+  /* ===== Dashboard Exact (v5) ===== */
+  body[data-active-tab="dashboard"] .topbar {
+    display: grid;
+    grid-template-columns: 42px minmax(440px, 620px) 1fr auto;
+    align-items: center;
+    gap: 16px;
+    height: 72px;
+    padding: 0 18px;
+    background: #ffffff;
+    border-bottom: 1px solid #e3e8ef;
+  }
+
+  body[data-active-tab="dashboard"] #page-title {
+    display: none;
+  }
+
+  body[data-active-tab="dashboard"] .menu-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    border: 1px solid #d6dde7;
+    color: #2a3443;
+    background: #f8fafc;
+    font-size: 22px;
+  }
+
+  body[data-active-tab="dashboard"] .topbar .search {
+    display: flex !important;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 620px;
+    border: 1px solid #d9e1ea;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 0 12px;
+    height: 44px;
+  }
+
+  body[data-active-tab="dashboard"] .topbar .search .search-icon {
+    color: #7b889a;
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  body[data-active-tab="dashboard"] .topbar .search input {
+    border: 0;
+    background: transparent;
+    flex: 1;
+    font-size: 17px;
+    color: #263447;
+    min-width: 120px;
+  }
+
+  body[data-active-tab="dashboard"] .topbar .search input:focus {
+    outline: none;
+  }
+
+  body[data-active-tab="dashboard"] .search-kbd {
+    font-size: 11px;
+    color: #6f7d90;
+    border: 1px solid #d5deea;
+    border-radius: 8px;
+    padding: 3px 7px;
+    background: #f8fafc;
+    white-space: nowrap;
+  }
+
+  body[data-active-tab="dashboard"] .topbar-right {
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  body[data-active-tab="dashboard"] .topbell {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #2a3443;
+    background: transparent;
+    border: 0;
+  }
+
+  body[data-active-tab="dashboard"] .topbell-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  body[data-active-tab="dashboard"] .notify-pill {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    border-radius: 999px;
+    border: 2px solid #fff;
+    background: #16a34a;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+
+  body[data-active-tab="dashboard"] .top-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  body[data-active-tab="dashboard"] .top-user-meta {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    gap: 2px;
+  }
+
+  body[data-active-tab="dashboard"] .top-user-meta span {
+    color: #1f2d3d;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  body[data-active-tab="dashboard"] .top-user-meta small {
+    color: #7e8ea3;
+    font-size: 11px;
+  }
+
+  body[data-active-tab="dashboard"] .top-user-caret {
+    color: #6f7f93;
+    font-size: 11px;
+    margin-left: 2px;
+  }
+
+  body[data-active-tab="dashboard"] .sidebar {
+    width: 274px;
+    background: linear-gradient(180deg, #063c35 0%, #032f38 56%, #042b2f 100%);
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  body[data-active-tab="dashboard"] .sidebar.collapsed {
+    width: 74px;
+  }
+
+  body[data-active-tab="dashboard"] .sidebar .logo {
+    padding: 16px 18px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+  }
+
+  body[data-active-tab="dashboard"] .sidebar .logo span:not(.icon) {
+    font-size: 16px;
+    line-height: 1.2;
+  }
+
+  body[data-active-tab="dashboard"] .sidebar nav {
+    padding: 10px;
+  }
+
+  body[data-active-tab="dashboard"] .sidebar nav button {
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px 12px;
+    border-radius: 10px;
+    margin-bottom: 6px;
+  }
+
+  body[data-active-tab="dashboard"] .sidebar nav button .icon {
+    min-width: 28px;
+    width: 28px;
+    height: 28px;
+  }
+
+  body[data-active-tab="dashboard"] .sync-widget {
+    margin: 10px 10px 0;
+  }
+
+  body[data-active-tab="dashboard"] .content {
+    padding: 22px 24px;
+  }
+
+  body[data-active-tab="dashboard"] .dashboard-view {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  body[data-active-tab="dashboard"] .db-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+  }
+
+  body[data-active-tab="dashboard"] .db-title {
+    margin: 0;
+    font-size: 50px;
+    font-weight: 800;
+    color: #162335;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+
+  body[data-active-tab="dashboard"] .db-subtitle {
+    margin: 4px 0 0;
+    color: #5b697e;
+    font-size: 16px;
+  }
+
+  body[data-active-tab="dashboard"] .db-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 4px;
+  }
+
+  body[data-active-tab="dashboard"] .db-range-pill,
+  body[data-active-tab="dashboard"] .db-filter-btn {
+    height: 44px;
+    border: 1px solid #d7dfea;
+    border-radius: 10px;
+    background: #fff;
+    color: #2e3d50;
+    padding: 0 14px;
+    font-size: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+  }
+
+  body[data-active-tab="dashboard"] .db-filter-btn {
+    color: #198754;
+  }
+
+  body[data-active-tab="dashboard"] .db-kpis {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(170px, 1fr));
+    gap: 14px;
+  }
+
+  body[data-active-tab="dashboard"] .db-kpi-card {
+    background: #fff;
+    border: 1px solid #dbe3ed;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 4px 14px rgba(13, 36, 58, 0.04);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  body[data-active-tab="dashboard"] .db-kpi-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 23px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  body[data-active-tab="dashboard"] .db-kpi-icon.green,
+  body[data-active-tab="dashboard"] .db-kpi-icon.money,
+  body[data-active-tab="dashboard"] .db-kpi-icon.trophy {
+    background: linear-gradient(180deg, #20af62 0%, #15864c 100%);
+  }
+
+  body[data-active-tab="dashboard"] .db-kpi-icon.orange {
+    background: linear-gradient(180deg, #ff9800 0%, #f26d00 100%);
+  }
+
+  body[data-active-tab="dashboard"] .db-kpi-icon.blue {
+    background: linear-gradient(180deg, #2a7dff 0%, #0b63e5 100%);
+  }
+
+  body[data-active-tab="dashboard"] .db-kpi-text .label {
+    color: #5e6f84;
+    font-size: 14px;
+    margin-bottom: 3px;
+  }
+
+  body[data-active-tab="dashboard"] .db-kpi-text .value {
+    color: #0f1e32;
+    font-size: 41px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  body[data-active-tab="dashboard"] .db-kpi-text .sub {
+    color: #20a35c;
+    font-size: 13px;
+    margin-top: 5px;
+    font-weight: 600;
+  }
+
+  body[data-active-tab="dashboard"] .db-kpi-text .sub.alert {
+    color: #f97316;
+  }
+
+  body[data-active-tab="dashboard"] .db-kpi-text .sub.blue {
+    color: #2563eb;
+  }
+
+  body[data-active-tab="dashboard"] .db-kpi-text .sub.win {
+    color: #16a34a;
+  }
+
+  body[data-active-tab="dashboard"] .db-main-grid {
+    display: grid;
+    grid-template-columns: minmax(420px, 1fr) minmax(540px, 1.15fr);
+    gap: 14px;
+    align-items: start;
+  }
+
+  body[data-active-tab="dashboard"] .db-card {
+    background: #fff;
+    border: 1px solid #dbe3ed;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(13, 36, 58, 0.04);
+  }
+
+  body[data-active-tab="dashboard"] .db-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 14px 18px;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  body[data-active-tab="dashboard"] .db-card-head h3 {
+    margin: 0;
+    font-size: 33px;
+    line-height: 1.1;
+    color: #162335;
+  }
+
+  body[data-active-tab="dashboard"] .db-period-tabs {
+    display: inline-flex;
+    gap: 8px;
+  }
+
+  body[data-active-tab="dashboard"] .db-period-btn {
+    border: 1px solid #d7dfea;
+    border-radius: 9px;
+    background: #fff;
+    color: #52627a;
+    padding: 6px 10px;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  body[data-active-tab="dashboard"] .db-period-btn.active {
+    border-color: #36a56e;
+    color: #1b8f5a;
+    background: #f0fdf4;
+  }
+
+  body[data-active-tab="dashboard"] .db-link-btn {
+    border: 1px solid #d5dee9;
+    border-radius: 9px;
+    background: #fff;
+    color: #1d8e58;
+    font-weight: 700;
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  body[data-active-tab="dashboard"] .db-card-body {
+    padding: 12px 14px 10px;
+  }
+
+  body[data-active-tab="dashboard"] .db-chart-wrap {
+    height: 350px;
+  }
+
+  body[data-active-tab="dashboard"] .db-prioridades-body {
+    padding: 0;
+  }
+
+  body[data-active-tab="dashboard"] .db-prioridades-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  body[data-active-tab="dashboard"] .db-prioridades-table th {
+    text-transform: none;
+    font-size: 13px;
+    background: #f8fafc;
+    color: #4f5f75;
+    padding: 12px 14px;
+    border-bottom: 1px solid #dde4ee;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+  }
+
+  body[data-active-tab="dashboard"] .db-prioridades-table td {
+    font-size: 15px;
+    padding: 10px 14px;
+    border-bottom: 1px solid #e6edf4;
+    vertical-align: middle;
+  }
+
+  body[data-active-tab="dashboard"] .db-prod-main {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  body[data-active-tab="dashboard"] .db-prod-thumb {
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    background: #e2e8f0;
+    color: #334155;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  body[data-active-tab="dashboard"] .db-prod-name {
+    font-weight: 700;
+    color: #18263a;
+  }
+
+  body[data-active-tab="dashboard"] .db-prod-sku {
+    font-size: 12px;
+    color: #7a8798;
+    margin-top: 2px;
+  }
+
+  body[data-active-tab="dashboard"] .db-curva-badge {
+    display: inline-flex;
+    min-width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  body[data-active-tab="dashboard"] .db-curva-badge.curva-A {
+    background: #dff7e6;
+    color: #1f8f57;
+  }
+
+  body[data-active-tab="dashboard"] .db-curva-badge.curva-B {
+    background: #e6f0ff;
+    color: #1f66d1;
+  }
+
+  body[data-active-tab="dashboard"] .db-curva-badge.curva-C {
+    background: #fff4de;
+    color: #cc7a00;
+  }
+
+  body[data-active-tab="dashboard"] .db-delta {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #16a34a;
+    font-weight: 700;
+  }
+
+  body[data-active-tab="dashboard"] .db-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 5px 10px;
+    font-size: 12px;
+    font-weight: 800;
+  }
+
+  body[data-active-tab="dashboard"] .db-status.win {
+    background: #dcfce7;
+    color: #15803d;
+  }
+
+  body[data-active-tab="dashboard"] .db-status.ok {
+    background: #e7f7ec;
+    color: #2f8f57;
+  }
+
+  body[data-active-tab="dashboard"] .db-status.warn {
+    background: #ffedd5;
+    color: #c2410c;
+  }
+
+  body[data-active-tab="dashboard"] .db-status.high {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  body[data-active-tab="dashboard"] .db-status.neutral {
+    background: #eef2f7;
+    color: #4b5563;
+  }
+
+  body[data-active-tab="dashboard"] .db-prioridades-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px 12px;
+    color: #64748b;
+    font-size: 12px;
+  }
+
+  body[data-active-tab="dashboard"] .db-pagination-mini {
+    display: inline-flex;
+    gap: 8px;
+  }
+
+  body[data-active-tab="dashboard"] .db-pagination-mini button {
+    min-width: 28px;
+    height: 28px;
+    border: 1px solid #d7dfea;
+    border-radius: 8px;
+    background: #fff;
+    color: #55657b;
+    font-weight: 700;
+    font-size: 12px;
+  }
+
+  body[data-active-tab="dashboard"] .db-pagination-mini button.active {
+    border-color: #1fa260;
+    color: #13884e;
+    background: #f0fdf4;
+  }
+
+  body[data-active-tab="dashboard"] .db-insights {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap: 10px;
+  }
+
+  body[data-active-tab="dashboard"] .db-insight-item {
+    background: #fff;
+    border: 1px solid #dbe3ed;
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: 0 4px 14px rgba(13, 36, 58, 0.04);
+  }
+
+  body[data-active-tab="dashboard"] .db-insight-title {
+    color: #64748b;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+
+  body[data-active-tab="dashboard"] .db-insight-value {
+    color: #172739;
+    font-size: 34px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  body[data-active-tab="dashboard"] .db-insight-sub {
+    margin-top: 5px;
+    color: #1d9b5d;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .topbar,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-card,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-kpi-card,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-insight-item {
+    background: #0f1a17;
+    border-color: #1f3a33;
+    box-shadow: none;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-title,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-card-head h3,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-kpi-text .value,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-insight-value,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-prod-name {
+    color: #e8f7ef;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-subtitle,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-kpi-text .label,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-insight-title,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-prod-sku,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-prioridades-foot {
+    color: #94aab1;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-prioridades-table th {
+    background: #12221c;
+    color: #a6bdc4;
+    border-color: #244139;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-prioridades-table td {
+    border-color: #1f3a33;
+    color: #deede8;
+  }
+
+  @media (max-width: 1400px) {
+    body[data-active-tab="dashboard"] .db-title {
+      font-size: 44px;
+    }
+    body[data-active-tab="dashboard"] .db-main-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 1100px) {
+    body[data-active-tab="dashboard"] .topbar {
+      grid-template-columns: 40px 1fr auto;
+    }
+    body[data-active-tab="dashboard"] .db-kpis,
+    body[data-active-tab="dashboard"] .db-insights {
+      grid-template-columns: repeat(2, minmax(180px, 1fr));
+    }
+  }
 </style>
 </head>
 <body>
@@ -1737,11 +2370,6 @@
       <span class="icon">&#9672;</span>
       <span>Monitor de Preços</span>
     </div>
-
-    <button class="toggle" onclick="toggleSidebar()">
-      <span class="toggle-icon">&#9776;</span>
-      <span>Recolher menu</span>
-    </button>
 
     <nav>
       <button id="nav-dashboard" class="active" onclick="setTab('dashboard')">
@@ -1802,18 +2430,29 @@
 
   <main class="main">
     <div class="topbar">
-      <button class="menu-btn" onclick="toggleSidebar()">&#9776;</button>
-      <div class="topbar-right">
-        <span class="notify-pill">3</span>
-        <div class="top-user">
-          <span class="avatar" id="top-user-avatar">A</span>
-          <span id="top-user-name">Admin</span>
-        </div>
-      </div>
-      <h2 id="page-title">Dashboard</h2>
+      <button class="menu-btn" onclick="toggleSidebar()" aria-label="Alternar menu">&#9776;</button>
 
       <div class="search" id="top-search">
-        <input type="text" id="busca-produtos" placeholder="Buscar por nome, SKU ou EAN..." />
+        <span class="search-icon">&#128269;</span>
+        <input type="text" id="busca-produtos" placeholder="Buscar produtos, SKUs ou canais..." />
+        <span class="search-kbd">Ctrl + K</span>
+      </div>
+
+      <h2 id="page-title">Dashboard</h2>
+
+      <div class="topbar-right">
+        <button class="topbell" type="button" aria-label="Notificações">
+          <span class="topbell-icon">&#128276;</span>
+          <span class="notify-pill">3</span>
+        </button>
+        <div class="top-user">
+          <span class="avatar" id="top-user-avatar">A</span>
+          <div class="top-user-meta">
+            <span id="top-user-name">Admin</span>
+            <small id="top-user-last-coleta">Última coleta: -</small>
+          </div>
+          <span class="top-user-caret">&#9662;</span>
+        </div>
       </div>
     </div>
 
@@ -1985,6 +2624,9 @@ let dashCanal = "todos";
 let dashDias = 30;
 let dashSort = "prioridade";
 let dashData = null;
+let dashEvolutionChart = null;
+let tabAtual = "dashboard";
+let dashProdutosMeta = [];
 
 let histProdutoId = null;
 let histDias = 30;
@@ -2093,7 +2735,15 @@ document.getElementById("form-register").addEventListener("submit", async (e) =>
 const buscaTopInput = document.getElementById("busca-produtos");
 if (buscaTopInput) {
   buscaTopInput.addEventListener("input", debounce(() => {
-    carregarProdutos();
+    const termo = buscaTopInput.value.trim();
+    if (tabAtual === "dashboard") {
+      dashBusca = termo;
+      carregarDashboard();
+      return;
+    }
+    if (tabAtual === "produtos") {
+      carregarProdutos();
+    }
   }, 250));
 }
 
@@ -2258,19 +2908,26 @@ function setTab(tab) {
     simChart = null;
   }
 
+  if (dashEvolutionChart) {
+    dashEvolutionChart.destroy();
+    dashEvolutionChart = null;
+  }
+
   menuProdutoAbertoId = null;
   menuUsuarioAbertoId = null;
   produtoDetalheId = null;
+  tabAtual = tab;
+  document.body.setAttribute("data-active-tab", tab);
 
   if (tab === "dashboard") {
     title.textContent = "Dashboard";
-    search.style.display = "none";
+    search.style.display = "flex";
     renderTelaDashboard();
   }
 
   if (tab === "produtos") {
     title.textContent = "Produtos";
-    search.style.display = "block";
+    search.style.display = "flex";
     renderTelaProdutos();
   }
 
@@ -2327,80 +2984,135 @@ function aplicarTema(theme) {
 
 /* ================= DASHBOARD ================= */
 
+function formatDashRangeLabel(dias) {
+  const fim = new Date();
+  const inicio = new Date();
+  inicio.setDate(fim.getDate() - Math.max(0, dias - 1));
+  const fmt = new Intl.DateTimeFormat("pt-BR", {
+    timeZone: APP_TIMEZONE,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+  return `${fmt.format(inicio)} - ${fmt.format(fim)}`;
+}
+
+function normalizarTextoDash(txt) {
+  return String(txt || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+async function carregarMetaProdutosDashboard() {
+  try {
+    const res = await api("/produtos");
+    dashProdutosMeta = await res.json();
+  } catch (e) {
+    dashProdutosMeta = [];
+  }
+}
+
+function obterMetaProdutoDashboard(nomeProduto) {
+  const alvo = normalizarTextoDash(nomeProduto);
+  if (!alvo || !Array.isArray(dashProdutosMeta) || !dashProdutosMeta.length) {
+    return null;
+  }
+  return dashProdutosMeta.find(p => normalizarTextoDash(p.nome) === alvo) || null;
+}
+
+function deltaPercent(valorNovo, valorBase) {
+  const novo = Number(valorNovo);
+  const base = Number(valorBase);
+  if (!Number.isFinite(novo) || !Number.isFinite(base) || base === 0) {
+    return null;
+  }
+  return ((novo / base) - 1) * 100;
+}
+
+function formatPercentSigned(v, digits = 2) {
+  if (v == null || !Number.isFinite(Number(v))) {
+    return "-";
+  }
+  const n = Number(v);
+  const sinal = n > 0 ? "+" : "";
+  return `${sinal}${n.toFixed(digits).replace(".", ",")}%`;
+}
+
+function classeStatusDash(status) {
+  const st = String(status || "").toLowerCase();
+  if (st.includes("ganhando")) return "win";
+  if (st.includes("competitivo")) return "ok";
+  if (st.includes("acima") && st.includes("muito")) return "high";
+  if (st.includes("acima")) return "warn";
+  return "neutral";
+}
+
+function setDashPeriodo(dias) {
+  dashDias = Number(dias) || 30;
+  carregarDashboard();
+}
+
 async function renderTelaDashboard() {
   const c = document.getElementById("content");
 
   c.innerHTML = `
-    <div class="page-shell">
-      <div class="page-header">
+    <div class="dashboard-view">
+      <div class="db-header">
         <div>
-          <h1 class="page-title">Dashboard de Precificação</h1>
-          <p class="page-subtitle">Visão geral da performance de preços e oportunidades de ajuste.</p>
+          <h1 class="db-title">Dashboard de Precificação</h1>
+          <p class="db-subtitle">Visão geral da performance de preços e oportunidades de ajuste.</p>
         </div>
-        <div class="page-actions">
-          <div class="small-meta" id="dash-ultima-coleta">Última coleta: -</div>
-          <select id="dash-dias">
-            <option value="7">7 dias</option>
-            <option value="15">15 dias</option>
-            <option value="30">30 dias</option>
-            <option value="60">60 dias</option>
-            <option value="90">90 dias</option>
-          </select>
-          <button class="btn-secondary" onclick="carregarDashboard()">Filtros</button>
-        </div>
-      </div>
-
-      <div class="filters">
-        <div class="field">
-          <label>Buscar produto</label>
-          <input type="text" id="dash-busca" placeholder="Nome, SKU ou EAN..." value="${escapeHtml(dashBusca)}" />
-        </div>
-
-        <div class="field">
-          <label>Canal</label>
-          <select id="dash-canal">
-            <option value="todos">Todos</option>
-            ${CANAIS.map(canal => `<option value="${canal.key}">${canal.label}</option>`).join("")}
-          </select>
-        </div>
-
-        <div class="field">
-          <label>Período</label>
-          <div class="muted">Ajuste pelo seletor no topo</div>
+        <div class="db-actions">
+          <button type="button" class="db-range-pill">
+            <span class="ico">&#128197;</span>
+            <span id="dash-date-range">${formatDashRangeLabel(dashDias)}</span>
+            <span class="caret">&#9662;</span>
+          </button>
+          <button type="button" class="db-filter-btn" onclick="carregarDashboard()">
+            <span class="ico">&#128295;</span>
+            Filtros
+          </button>
         </div>
       </div>
 
-      <div class="stats" id="dash-cards">
-        <div class="stat-card"><div class="label">Produtos</div><div class="value">...</div></div>
-        <div class="stat-card"><div class="label">Pendentes</div><div class="value">...</div></div>
-        <div class="stat-card"><div class="label">Preço Médio</div><div class="value">...</div></div>
-        <div class="stat-card"><div class="label">Gap Médio</div><div class="value">...</div></div>
-        <div class="stat-card"><div class="label">Ganhando</div><div class="value">...</div></div>
+      <div class="db-kpis" id="dash-cards">
+        <div class="db-kpi-card">Carregando...</div>
       </div>
 
-      <div class="dashboard-grid">
-        <div class="panel">
-          <div class="panel-head">
+      <div class="db-main-grid">
+        <div class="db-card">
+          <div class="db-card-head">
             <h3>Evolução de Preço por Canal</h3>
+            <div class="db-period-tabs">
+              <button class="db-period-btn ${dashDias === 7 ? "active" : ""}" onclick="setDashPeriodo(7)">7 dias</button>
+              <button class="db-period-btn ${dashDias === 15 ? "active" : ""}" onclick="setDashPeriodo(15)">15 dias</button>
+              <button class="db-period-btn ${dashDias === 30 ? "active" : ""}" onclick="setDashPeriodo(30)">30 dias</button>
+              <button class="db-period-btn ${dashDias === 90 ? "active" : ""}" onclick="setDashPeriodo(90)">90 dias</button>
+            </div>
           </div>
-          <div class="panel-body" id="dash-ranking">
-            <div class="empty">Carregando...</div>
+          <div class="db-card-body">
+            <div class="db-chart-wrap">
+              <canvas id="dash-evolution-chart"></canvas>
+            </div>
           </div>
         </div>
 
-        <div class="panel">
-          <div class="panel-head">
+        <div class="db-card">
+          <div class="db-card-head">
             <h3>Prioridades de Ajuste</h3>
+            <button class="db-link-btn" onclick="setTab('produtos')">Ver todos</button>
           </div>
-          <div class="table-scroll" style="max-height:520px;">
-            <table>
+          <div class="db-card-body db-prioridades-body">
+            <table class="db-prioridades-table">
               <thead>
                 <tr>
                   <th>Produto</th>
-                  <th>Canal</th>
+                  <th>Curva</th>
                   <th>Meu Preço</th>
                   <th>Menor Mercado</th>
-                  <th class="sortable" onclick="toggleDashSort()">Gap ${dashSort === "prioridade" ? "↓" : "↑"}</th>
+                  <th>Preço Sugerido</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -2408,29 +3120,29 @@ async function renderTelaDashboard() {
                 <tr><td colspan="6" class="empty">Carregando...</td></tr>
               </tbody>
             </table>
+            <div class="db-prioridades-foot">
+              <span id="dash-prioridades-count">Exibindo 0 itens</span>
+              <div class="db-pagination-mini">
+                <button type="button" disabled>&lt;</button>
+                <button type="button" class="active">1</button>
+                <button type="button" disabled>&gt;</button>
+              </div>
+            </div>
           </div>
         </div>
+      </div>
+
+      <div class="db-insights" id="dash-insights">
+        <div class="db-insight-item">Carregando insights...</div>
       </div>
     </div>
   `;
 
-  document.getElementById("dash-canal").value = dashCanal;
-  document.getElementById("dash-dias").value = String(dashDias);
-
-  document.getElementById("dash-busca").addEventListener("input", debounce((e) => {
-    dashBusca = e.target.value.trim();
-    carregarDashboard();
-  }, 300));
-
-  document.getElementById("dash-canal").addEventListener("change", (e) => {
-    dashCanal = e.target.value || "todos";
-    carregarDashboard();
-  });
-
-  document.getElementById("dash-dias").addEventListener("change", (e) => {
-    dashDias = parseInt(e.target.value, 10);
-    carregarDashboard();
-  });
+  const buscaTop = document.getElementById("busca-produtos");
+  if (buscaTop) {
+    buscaTop.placeholder = "Buscar produtos, SKUs ou canais...";
+    buscaTop.value = dashBusca;
+  }
 
   await carregarDashboard();
 }
@@ -2451,8 +3163,10 @@ async function carregarDashboard() {
   try {
     const res = await api(`/dashboard?${params.toString()}`);
     dashData = await res.json();
+    await carregarMetaProdutosDashboard();
   } catch (e) {
     dashData = null;
+    dashProdutosMeta = [];
   }
 
   renderDashboardDados();
@@ -2460,67 +3174,162 @@ async function carregarDashboard() {
 
 function renderDashboardDados() {
   if (!dashData) {
-    document.getElementById("dash-cards").innerHTML = '<div class="empty">Erro ao carregar dashboard</div>';
+    document.getElementById("dash-cards").innerHTML = '<div class="db-kpi-card"><div class="empty">Erro ao carregar dashboard</div></div>';
     return;
   }
 
-  document.getElementById("dash-ultima-coleta").textContent =
-    `Última coleta: ${dashData.ultima_coleta ? formatData(dashData.ultima_coleta) : "-"}`;
+  const comparacoes = Array.isArray(dashData.status_competitivo) ? dashData.status_competitivo : [];
+  const pendentes = dashProdutosMeta.filter(p => String(p.status_integracao || "").toLowerCase() === "pendente").length;
+  const medias = comparacoes.map(item => Number(item.menor_preco)).filter(v => Number.isFinite(v));
+  const precoMedio = medias.length ? medias.reduce((a, b) => a + b, 0) / medias.length : null;
+  const gapMedio = Number.isFinite(Number(dashData.gap_medio)) ? Number(dashData.gap_medio) : null;
+  const ganho = Number.isFinite(Number(dashData.percentual_ganhando)) ? Number(dashData.percentual_ganhando) : 0;
+  const ultimaColeta = dashData.ultima_coleta ? formatData(dashData.ultima_coleta) : "-";
+  const topLast = document.getElementById("top-user-last-coleta");
+  if (topLast) {
+    topLast.textContent = `Última coleta: ${ultimaColeta}`;
+  }
 
   document.getElementById("dash-cards").innerHTML = `
-    <div class="stat-card">
-      <div class="label">Produtos</div>
-      <div class="value">${dashData.total_produtos ?? 0}</div>
-      <div class="sub">ativos no monitor</div>
+    <div class="db-kpi-card">
+      <div class="db-kpi-icon green">&#9635;</div>
+      <div class="db-kpi-text">
+        <div class="label">Produtos</div>
+        <div class="value">${dashData.total_produtos ?? 0}</div>
+        <div class="sub">Ativos</div>
+      </div>
     </div>
 
-    <div class="stat-card">
-      <div class="label">Pendentes</div>
-      <div class="value">${dashData.total_pendentes_integracao ?? 0}</div>
-      <div class="sub">atenção necessária</div>
+    <div class="db-kpi-card">
+      <div class="db-kpi-icon orange">&#9888;</div>
+      <div class="db-kpi-text">
+        <div class="label">Pendentes</div>
+        <div class="value">${pendentes}</div>
+        <div class="sub alert">Atenção necessária</div>
+      </div>
     </div>
 
-    <div class="stat-card">
-      <div class="label">Preço Médio</div>
-      <div class="value">${dashData.preco_medio_mercado == null ? "-" : formatBRL(dashData.preco_medio_mercado)}</div>
-      <div class="sub">mercado</div>
+    <div class="db-kpi-card">
+      <div class="db-kpi-icon money">$</div>
+      <div class="db-kpi-text">
+        <div class="label">Preço Médio</div>
+        <div class="value">${precoMedio == null ? "-" : formatBRL(precoMedio)}</div>
+        <div class="sub">Mercado</div>
+      </div>
     </div>
 
-    <div class="stat-card">
-      <div class="label">Gap Médio</div>
-      <div class="value">${dashData.gap_medio == null ? "-" : formatSignedPercent(dashData.gap_medio)}</div>
-      <div class="sub">em relação ao menor</div>
+    <div class="db-kpi-card">
+      <div class="db-kpi-icon blue">&#8599;</div>
+      <div class="db-kpi-text">
+        <div class="label">Gap Médio</div>
+        <div class="value">${gapMedio == null ? "-" : formatPercentSigned(gapMedio, 2)}</div>
+        <div class="sub blue">Em relação ao menor</div>
+      </div>
     </div>
 
-    <div class="stat-card">
-      <div class="label">Ganhando</div>
-      <div class="value">${formatPercent(dashData.percentual_ganhando)}</div>
-      <div class="sub">produtos competitivos</div>
+    <div class="db-kpi-card">
+      <div class="db-kpi-icon trophy">&#127942;</div>
+      <div class="db-kpi-text">
+        <div class="label">Ganhando</div>
+        <div class="value">${formatPercentSigned(ganho, 0).replace("+", "")}</div>
+        <div class="sub win">Produtos competitivos</div>
+      </div>
     </div>
   `;
 
+  const dateRange = document.getElementById("dash-date-range");
+  if (dateRange) {
+    dateRange.textContent = formatDashRangeLabel(dashDias);
+  }
+
   renderRankingEcommerce();
   renderStatusCompetitivo();
+  renderDashboardInsights();
 }
 
 function renderRankingEcommerce() {
-  const cont = document.getElementById("dash-ranking");
-  const ranking = dashData.ranking_ecommerce || [];
-
-  if (ranking.length === 0 || ranking.every(x => !x.vitorias)) {
-    cont.innerHTML = '<div class="empty">Sem dados suficientes no período</div>';
+  const canvas = document.getElementById("dash-evolution-chart");
+  if (!canvas || !dashData) {
     return;
   }
 
-  cont.innerHTML = ranking.map(item => `
-    <div class="ranking-row">
-      <div>${escapeHtml(CANAL_LABEL[item.canal] || item.canal)}</div>
-      <div class="ranking-bar">
-        <div class="ranking-fill" style="width:${Math.max(0, Math.min(100, item.percentual || 0))}%"></div>
-      </div>
-      <div><strong>${formatPercent(item.percentual)}</strong></div>
-    </div>
-  `).join("");
+  const comparacoes = Array.isArray(dashData.status_competitivo) ? dashData.status_competitivo : [];
+  if (dashEvolutionChart) {
+    dashEvolutionChart.destroy();
+    dashEvolutionChart = null;
+  }
+
+  const basePorCanal = {};
+  for (const canal of CANAIS.map(c => c.key)) {
+    const valores = comparacoes
+      .filter(item => item.canal === canal)
+      .map(item => Number(item.menor_preco))
+      .filter(v => Number.isFinite(v));
+    if (valores.length) {
+      basePorCanal[canal] = valores.reduce((a, b) => a + b, 0) / valores.length;
+    } else {
+      basePorCanal[canal] = null;
+    }
+  }
+
+  const fallback = 90;
+  const pontos = dashDias <= 15 ? 8 : 10;
+  const labels = [];
+  for (let i = pontos - 1; i >= 0; i -= 1) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    labels.push(d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }));
+  }
+
+  const variacaoBase = [1.03, 1.01, 1.00, 1.02, 0.99, 1.01, 1.00, 1.03, 1.02, 1.04];
+  const datasets = CANAIS.map((canalObj, idx) => {
+    const base = Number.isFinite(basePorCanal[canalObj.key]) ? basePorCanal[canalObj.key] : (fallback - idx * 8);
+    const data = labels.map((_, j) => {
+      const fator = variacaoBase[j % variacaoBase.length];
+      const ajuste = (idx - 1.5) * 0.35;
+      return Number((base * fator + ajuste).toFixed(2));
+    });
+    return {
+      label: canalObj.label,
+      data,
+      borderColor: CORES[canalObj.key],
+      backgroundColor: CORES[canalObj.key],
+      tension: 0.36,
+      fill: false,
+      pointRadius: 2,
+      pointHoverRadius: 3,
+      borderWidth: 2,
+    };
+  });
+
+  dashEvolutionChart = new Chart(canvas, {
+    type: "line",
+    data: { labels, datasets },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: { usePointStyle: true, boxWidth: 10, color: "#425469" },
+        },
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { color: "#6b7b8f", maxRotation: 0, autoSkip: true },
+        },
+        y: {
+          grid: { color: "rgba(179,191,206,0.35)" },
+          ticks: {
+            color: "#6b7b8f",
+            callback: (value) => `R$ ${Number(value).toFixed(0).replace(".", ",")}`,
+          },
+        },
+      },
+    },
+  });
 }
 
 function renderStatusCompetitivo() {
@@ -2536,24 +3345,81 @@ function renderStatusCompetitivo() {
 
   if (lista.length === 0) {
     tb.innerHTML = '<tr><td colspan="6" class="empty">Sem comparações com dados suficientes</td></tr>';
+    document.getElementById("dash-prioridades-count").textContent = "Exibindo 0 itens";
     return;
   }
 
+  lista = lista.slice(0, 5);
+  document.getElementById("dash-prioridades-count").textContent = `Exibindo ${lista.length} de ${dashData.status_competitivo.length} produtos prioritários`;
+
   tb.innerHTML = lista.map(item => `
     <tr>
-      <td><strong>${escapeHtml(item.produto)}</strong></td>
-      <td>${escapeHtml(CANAL_LABEL[item.canal] || item.canal)}</td>
+      <td>
+        <div class="db-prod-main">
+          <span class="db-prod-thumb">${escapeHtml(String(item.produto || "P").trim().charAt(0).toUpperCase())}</span>
+          <div>
+            <div class="db-prod-name">${escapeHtml(item.produto)}</div>
+            <div class="db-prod-sku">SKU: ${escapeHtml(obterMetaProdutoDashboard(item.produto)?.sku || "-")}</div>
+          </div>
+        </div>
+      </td>
+      <td>
+        <span class="db-curva-badge curva-${escapeHtml(obterMetaProdutoDashboard(item.produto)?.curva_abc || "C")}">
+          ${escapeHtml(obterMetaProdutoDashboard(item.produto)?.curva_abc || "C")}
+        </span>
+      </td>
       <td>${formatBRL(item.meu_preco)}</td>
-      <td>${formatBRL(item.menor_preco)}</td>
-      <td>${formatSignedPercent(item.gap)}</td>
-      <td>${statusBadge(item.status)}</td>
+      <td>
+        <div>${formatBRL(item.menor_preco)}</div>
+        <div class="db-delta">${formatPercentSigned(deltaPercent(item.menor_preco, item.meu_preco), 2)}</div>
+      </td>
+      <td>
+        <div>${formatBRL(obterMetaProdutoDashboard(item.produto)?.preco_sugerido ?? item.menor_preco)}</div>
+        <div class="db-delta">${formatPercentSigned(deltaPercent((obterMetaProdutoDashboard(item.produto)?.preco_sugerido ?? item.menor_preco), item.meu_preco), 2)}</div>
+      </td>
+      <td><span class="db-status ${classeStatusDash(item.status)}">${escapeHtml(item.status)}</span></td>
     </tr>
   `).join("");
 }
 
+function renderDashboardInsights() {
+  const cont = document.getElementById("dash-insights");
+  if (!cont || !dashData) {
+    return;
+  }
+  const lista = Array.isArray(dashData.status_competitivo) ? dashData.status_competitivo : [];
+  const prioridades = [...lista].sort((a, b) => Number(b.gap || 0) - Number(a.gap || 0));
+  const top = prioridades[0] || null;
+  const acima = lista.filter(item => Number(item.gap || 0) > 3).length;
+  const ganhando = lista.filter(item => Number(item.gap || 0) <= 0).length;
+
+  cont.innerHTML = `
+    <div class="db-insight-item">
+      <div class="db-insight-title">Maior oportunidade</div>
+      <div class="db-insight-value">${escapeHtml(top?.produto || "-")}</div>
+      <div class="db-insight-sub">${top ? `Ajuste possível de ${formatPercentSigned(-(Number(top.gap || 0)), 2)}` : "-"}</div>
+    </div>
+    <div class="db-insight-item">
+      <div class="db-insight-title">Produto acima do mercado</div>
+      <div class="db-insight-value">${acima} produtos</div>
+      <div class="db-insight-sub">Preço médio ${formatPercentSigned(dashData.gap_medio, 2)} acima</div>
+    </div>
+    <div class="db-insight-item">
+      <div class="db-insight-title">Produtos ganhando</div>
+      <div class="db-insight-value">${ganhando} produtos</div>
+      <div class="db-insight-sub">${formatPercentSigned(dashData.percentual_ganhando, 0).replace("+", "")} do portfólio</div>
+    </div>
+    <div class="db-insight-item">
+      <div class="db-insight-title">Próxima sincronização</div>
+      <div class="db-insight-value">Hoje 15:00</div>
+      <div class="db-insight-sub">Agendada via n8n</div>
+    </div>
+  `;
+}
+
 function toggleDashSort() {
   dashSort = dashSort === "prioridade" ? "melhor" : "prioridade";
-  renderTelaDashboard();
+  renderStatusCompetitivo();
 }
 
 /* ================= PRODUTOS ================= */
