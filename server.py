@@ -5,7 +5,8 @@ import base64
 import hmac
 import secrets
 import json
-from datetime import datetime, timedelta
+import asyncio
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Any, Dict, List
 from urllib.parse import urlencode
 from urllib.request import Request as UrlRequest, urlopen
@@ -149,7 +150,7 @@ def criar_token(user_id: str, perfil: str) -> str:
     payload = {
         "user_id": user_id,
         "perfil": perfil,
-        "exp": datetime.utcnow() + timedelta(days=30),
+        "exp": datetime.now(timezone.utc) + timedelta(days=30),
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALG)
  
@@ -285,8 +286,8 @@ async def garantir_grupos_precificacao() -> None:
         atual = await pricing_groups_col.find_one({"grupo": grupo})
         if not atual:
             doc = obter_grupo_default(grupo)
-            doc["criado_em"] = datetime.utcnow()
-            doc["atualizado_em"] = datetime.utcnow()
+            doc["criado_em"] = datetime.now(timezone.utc)
+            doc["atualizado_em"] = datetime.now(timezone.utc)
             await pricing_groups_col.insert_one(doc)
 
 
@@ -449,10 +450,8 @@ def calcular_preco_sugerido(
     }
 
 
-def tiny_api_post(metodo: str, payload: Dict[str, Any]) -> Dict[str, Any]:
-    if not TINY_API_TOKEN:
-        raise HTTPException(status_code=400, detail="TINY_API_TOKEN não configurado no ambiente")
-
+def _tiny_api_post_sync(metodo: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Chamada síncrona à API Tiny — não usar diretamente em handlers async."""
     body = {
         "token": TINY_API_TOKEN,
         "formato": "JSON",
@@ -468,11 +467,23 @@ def tiny_api_post(metodo: str, payload: Dict[str, Any]) -> Dict[str, Any]:
             return json.loads(resp.read().decode("utf-8"))
     except HTTPError as err:
         detalhe = err.read().decode("utf-8", errors="ignore")
-        raise HTTPException(status_code=502, detail=f"Tiny API HTTP {err.code}: {detalhe[:300]}")
+        raise RuntimeError(f"Tiny API HTTP {err.code}: {detalhe[:300]}")
     except URLError as err:
-        raise HTTPException(status_code=502, detail=f"Falha ao conectar Tiny API: {err.reason}")
+        raise RuntimeError(f"Falha ao conectar Tiny API: {err.reason}")
     except Exception as err:
-        raise HTTPException(status_code=502, detail=f"Erro ao chamar Tiny API: {err}")
+        raise RuntimeError(f"Erro ao chamar Tiny API: {err}")
+
+
+async def tiny_api_post(metodo: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Wrapper async que executa a chamada bloqueante em um thread separado."""
+    if not TINY_API_TOKEN:
+        raise HTTPException(status_code=400, detail="TINY_API_TOKEN não configurado no ambiente")
+
+    loop = asyncio.get_event_loop()
+    try:
+        return await loop.run_in_executor(None, lambda: _tiny_api_post_sync(metodo, payload))
+    except RuntimeError as err:
+        raise HTTPException(status_code=502, detail=str(err))
 
 
 def tiny_get_retorno(resp: Dict[str, Any]) -> Dict[str, Any]:
@@ -571,9 +582,9 @@ async def upsert_produto_tiny(base: Dict[str, Any], detalhe: Dict[str, Any], est
         "tiny_id": tiny_id or doc.get("tiny_id"),
         "custo_unitario": custo if custo is not None else doc.get("custo_unitario"),
         "estoque_atual": estoque if estoque is not None else doc.get("estoque_atual"),
-        "tiny_updated_at": datetime.utcnow(),
+        "tiny_updated_at": datetime.now(timezone.utc),
         "sync_origem": "tiny",
-        "atualizado_em": datetime.utcnow(),
+        "atualizado_em": datetime.now(timezone.utc),
     })
     doc = normalizar_doc_produto(doc)
 
@@ -582,7 +593,7 @@ async def upsert_produto_tiny(base: Dict[str, Any], detalhe: Dict[str, Any], est
         selector,
         {
             "$set": update_doc,
-            "$setOnInsert": {"criado_em": datetime.utcnow()},
+            "$setOnInsert": {"criado_em": datetime.now(timezone.utc)},
         },
         upsert=True,
     )
@@ -591,7 +602,7 @@ async def upsert_produto_tiny(base: Dict[str, Any], detalhe: Dict[str, Any], est
 
 
 async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
-    inicio = datetime.utcnow()
+    inicio = datetime.now(timezone.utc)
     total_lidos = 0
     total_sincronizados = 0
     total_pendentes = 0
@@ -665,7 +676,7 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
         except Exception as err:
             erros.append(str(err)[:300])
 
-    fim = datetime.utcnow()
+    fim = datetime.now(timezone.utc)
     await tiny_sync_state_col.update_one(
         {"_id": "tiny"},
         {
@@ -782,7 +793,7 @@ async def registrar(data: CadastroInput):
         "senha_hash": hash_senha(data.senha),
         "perfil": "master" if primeiro_master else "visualizador",
         "status": "aprovado" if primeiro_master else "pendente",
-        "criado_em": datetime.utcnow(),
+        "criado_em": datetime.now(timezone.utc),
     }
  
     res = await usuarios_col.insert_one(novo)
@@ -987,7 +998,7 @@ async def listar_produtos(busca: Optional[str] = None, user=Depends(get_user)):
     produto_ids = [p["id"] for p in itens if p.get("id")]
     ultimos = await obter_ultimos_precos_por_produto(
         produto_ids,
-        datetime.utcnow() - timedelta(days=30),
+        datetime.now(timezone.utc) - timedelta(days=30),
     )
     grupos = await obter_mapa_grupos_precificacao()
 
@@ -1029,8 +1040,8 @@ async def cadastrar_produto(produto: Produto, user=Depends(product_manager_requi
     doc = normalizar_doc_produto(produto.dict())
     doc["sku"] = sku
     doc["ean"] = ean
-    doc["criado_em"] = datetime.utcnow()
-    doc["atualizado_em"] = datetime.utcnow()
+    doc["criado_em"] = datetime.now(timezone.utc)
+    doc["atualizado_em"] = datetime.now(timezone.utc)
  
     res = await produtos_col.insert_one(doc)
  
@@ -1065,7 +1076,7 @@ async def editar_produto(
     doc = normalizar_doc_produto(produto.dict())
     doc["sku"] = sku
     doc["ean"] = ean
-    doc["atualizado_em"] = datetime.utcnow()
+    doc["atualizado_em"] = datetime.now(timezone.utc)
  
     res = await produtos_col.update_one(
         {"_id": oid},
@@ -1115,7 +1126,7 @@ async def historico_produto(
 ):
     canal = normalizar_canal(canal)
  
-    desde = datetime.utcnow() - timedelta(days=dias)
+    desde = datetime.now(timezone.utc) - timedelta(days=dias)
  
     filtro = {
         "produto_id": produto_id,
@@ -1138,7 +1149,7 @@ async def canais_produto(
 ):
     canal = normalizar_canal(canal)
  
-    desde = datetime.utcnow() - timedelta(days=7)
+    desde = datetime.now(timezone.utc) - timedelta(days=7)
     resultado = {}
  
     canais_consulta = [canal] if canal else CANAIS
@@ -1194,7 +1205,7 @@ async def registrar_preco(data: HistoricoInput, user=Depends(product_manager_req
         "canal": data.canal,
         "preco": float(data.preco),
         "url": data.url or "",
-        "data": datetime.utcnow(),
+        "data": datetime.now(timezone.utc),
     }
  
     res = await historico_col.insert_one(doc)
@@ -1212,7 +1223,7 @@ async def dashboard(
     user=Depends(get_user),
 ):
     canal = normalizar_canal(canal)
-    desde = datetime.utcnow() - timedelta(days=dias)
+    desde = datetime.now(timezone.utc) - timedelta(days=dias)
  
     filtro_produtos = {}
  
@@ -1428,14 +1439,14 @@ async def atualizar_grupo_precificacao(
         "estoque_baixo_limite": to_float(data.estoque_baixo_limite),
         "estoque_baixo_ajuste_percentual": to_float(data.estoque_baixo_ajuste_percentual) or 0.0,
         "ativo": bool(data.ativo),
-        "atualizado_em": datetime.utcnow(),
+        "atualizado_em": datetime.now(timezone.utc),
     }
 
     await pricing_groups_col.update_one(
         {"grupo": grupo},
         {
             "$set": doc,
-            "$setOnInsert": {"criado_em": datetime.utcnow()},
+            "$setOnInsert": {"criado_em": datetime.now(timezone.utc)},
         },
         upsert=True,
     )
@@ -1463,7 +1474,7 @@ async def simular_precificacao(
 
     produto_serial = serial(produto)
     pid = produto_serial.get("id")
-    mapa_ultimos = await obter_ultimos_precos_por_produto([pid], datetime.utcnow() - timedelta(days=30))
+    mapa_ultimos = await obter_ultimos_precos_por_produto([pid], datetime.now(timezone.utc) - timedelta(days=30))
     metricas = consolidar_metricas_mercado(mapa_ultimos.get(pid, {}))
 
     grupo = normalizar_curva_abc(data.grupo or produto_serial.get("curva_abc"))
@@ -1560,4 +1571,3 @@ if __name__ == "__main__":
         port=8080,
         reload=True,
     )
-
