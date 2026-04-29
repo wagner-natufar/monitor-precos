@@ -444,6 +444,19 @@
     gap: 6px;
   }
 
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .field label {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
   .filters label,
   .hist-filtros label {
     font-size: 12px;
@@ -456,12 +469,15 @@
   .filters select,
   .hist-filtros input,
   .hist-filtros select,
+  .field input,
+  .field select,
   .user-row select {
     padding: 10px 12px;
     border: 1px solid var(--input-border);
     border-radius: 8px;
     background: var(--input-bg);
     color: var(--text);
+    width: 100%;
   }
 
   .stats {
@@ -1196,16 +1212,21 @@
       linear-gradient(180deg, #072e2d 0%, #03343a 50%, #0a2a2f 100%);
     border-right: 1px solid rgba(255,255,255,0.09);
     box-shadow: inset -1px 0 0 rgba(255,255,255,0.06);
+    overflow-x: hidden;
   }
 
   .sidebar .logo {
     padding: 18px 20px 14px;
     border-bottom: 1px solid rgba(255,255,255,0.13);
+    align-items: flex-start;
+    white-space: normal;
+    gap: 12px;
   }
 
   .sidebar .logo .icon {
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
     border-radius: 10px;
     background: rgba(255,255,255,0.12);
     display: inline-flex;
@@ -1218,7 +1239,7 @@
     display: flex;
     flex-direction: column;
     line-height: 1.15;
-    font-size: 36px;
+    font-size: 17px;
     font-weight: 800;
     letter-spacing: -0.02em;
   }
@@ -1240,13 +1261,14 @@
 
   .sidebar nav {
     padding: 14px 12px;
+    overflow-x: hidden;
   }
 
   .sidebar nav button {
     margin-bottom: 6px;
     border-radius: 12px;
     color: #e4f8ee;
-    font-size: 30px;
+    font-size: 17px;
     font-weight: 600;
     padding: 11px 12px;
     gap: 10px;
@@ -1276,7 +1298,7 @@
     background: #ff8b00;
     color: #fff;
     border-radius: 999px;
-    font-size: 20px;
+    font-size: 12px;
     font-weight: 700;
     padding: 2px 8px;
   }
@@ -1712,48 +1734,48 @@
 <div id="screen-app" class="app" style="display:none;">
   <aside class="sidebar" id="sidebar">
     <div class="logo">
-      <span class="icon">??</span>
+      <span class="icon">&#9672;</span>
       <span>Monitor de Preços</span>
     </div>
 
     <button class="toggle" onclick="toggleSidebar()">
-      <span class="toggle-icon">?</span>
+      <span class="toggle-icon">&#9776;</span>
       <span>Recolher menu</span>
     </button>
 
     <nav>
       <button id="nav-dashboard" class="active" onclick="setTab('dashboard')">
-        <span class="icon">?</span>
+        <span class="icon">&#8962;</span>
         <span class="label">Dashboard</span>
       </button>
 
       <button id="nav-produtos" onclick="setTab('produtos')">
-        <span class="icon">?</span>
+        <span class="icon">&#9638;</span>
         <span class="label">Produtos</span>
       </button>
 
       <button id="nav-pendentes" style="display:none;" onclick="setTab('pendentes')">
-        <span class="icon">?</span>
+        <span class="icon">&#9888;</span>
         <span class="label">Pendentes</span>
       </button>
 
       <button id="nav-simulador" style="display:none;" onclick="setTab('simulador')">
-        <span class="icon">?</span>
+        <span class="icon">&#9998;</span>
         <span class="label">Simular Regras</span>
       </button>
 
       <button id="nav-config" style="display:none;" onclick="setTab('config')">
-        <span class="icon">?</span>
+        <span class="icon">&#9881;</span>
         <span class="label">Config. A/B/C</span>
       </button>
 
       <button id="nav-historico" onclick="setTab('historico')">
-        <span class="icon">?</span>
+        <span class="icon">&#8635;</span>
         <span class="label">Histórico</span>
       </button>
 
       <button id="nav-usuarios" style="display:none;" onclick="setTab('usuarios')">
-        <span class="icon">??</span>
+        <span class="icon">&#128100;</span>
         <span class="label">Usuários</span>
         <span class="badge" id="badge-pendentes" style="display:none;">0</span>
       </button>
@@ -1767,7 +1789,7 @@
     </div>
 
     <button class="theme-toggle" onclick="toggleTheme()">
-      <span class="icon" id="theme-icon">?</span>
+      <span class="icon" id="theme-icon">&#9680;</span>
       <span class="label" id="theme-label">Modo escuro</span>
     </button>
 
@@ -1780,7 +1802,7 @@
 
   <main class="main">
     <div class="topbar">
-      <button class="menu-btn" onclick="toggleSidebar()">?</button>
+      <button class="menu-btn" onclick="toggleSidebar()">&#9776;</button>
       <div class="topbar-right">
         <span class="notify-pill">3</span>
         <div class="top-user">
@@ -2299,7 +2321,7 @@ function aplicarTemaSalvo() {
 
 function aplicarTema(theme) {
   document.documentElement.dataset.theme = theme;
-  document.getElementById("theme-icon").textContent = theme === "dark" ? "?" : "?";
+  document.getElementById("theme-icon").textContent = theme === "dark" ? "\u2600" : "\u25D0";
   document.getElementById("theme-label").textContent = theme === "dark" ? "Modo claro" : "Modo escuro";
 }
 
@@ -2378,7 +2400,7 @@ async function renderTelaDashboard() {
                   <th>Canal</th>
                   <th>Meu Preço</th>
                   <th>Menor Mercado</th>
-                  <th class="sortable" onclick="toggleDashSort()">Gap ${dashSort === "prioridade" ? "?" : "?"}</th>
+                  <th class="sortable" onclick="toggleDashSort()">Gap ${dashSort === "prioridade" ? "↓" : "↑"}</th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -2764,7 +2786,7 @@ function renderTabelaProdutos() {
 
       <td class="actions-cell" onclick="event.stopPropagation();">
         ${podeGerenciarProdutos() ? `
-          <button class="kebab-btn" onclick="toggleMenuProduto(event, '${p.id}')">?</button>
+            <button class="kebab-btn" onclick="toggleMenuProduto(event, '${p.id}')">⋯</button>
 
           <div class="action-menu ${menuProdutoAbertoId === p.id ? "show" : ""}">
             <button onclick="abrirModalProduto('${p.id}')">Editar</button>
@@ -2820,7 +2842,7 @@ async function renderDetalheProduto() {
   c.innerHTML = `
     <div class="product-detail-page">
       <div class="detail-toolbar">
-        <button class="btn-secondary" onclick="voltarParaProdutos()">? Voltar</button>
+          <button class="btn-secondary" onclick="voltarParaProdutos()">← Voltar</button>
 
         <div class="channel-filter">
           <button class="${produtoDetalheCanal === "todos" ? "active" : ""}" onclick="filtrarDetalheCanal('todos')">Todos</button>
@@ -2843,7 +2865,7 @@ async function renderDetalheProduto() {
 
         ${podeGerenciarProdutos() ? `
           <div class="actions-cell" onclick="event.stopPropagation();">
-            <button class="kebab-btn" onclick="toggleMenuProduto(event, '${produto.id}')">?</button>
+            <button class="kebab-btn" onclick="toggleMenuProduto(event, '${produto.id}')">⋯</button>
 
             <div class="action-menu ${menuProdutoAbertoId === produto.id ? "show" : ""}">
               <button onclick="abrirModalProduto('${produto.id}')">Editar</button>
@@ -4053,7 +4075,7 @@ async function carregarUsuarios() {
           </span>
 
           <div class="actions-cell" onclick="event.stopPropagation();">
-            <button class="kebab-btn" onclick="toggleMenuUsuario(event, '${u.id}')">?</button>
+            <button class="kebab-btn" onclick="toggleMenuUsuario(event, '${u.id}')">⋯</button>
 
             <div class="action-menu ${menuUsuarioAbertoId === u.id ? "show" : ""}">
               <button onclick="rejeitarUsuario('${u.id}')">Rejeitar</button>
@@ -4218,11 +4240,11 @@ function formatVariacao(v) {
   const n = Number(v);
 
   if (n > 0) {
-    return `<span class="variation-up">? ${n.toFixed(2)}%</span>`;
+    return `<span class="variation-up">▲ ${n.toFixed(2)}%</span>`;
   }
 
   if (n < 0) {
-    return `<span class="variation-down">? ${Math.abs(n).toFixed(2)}%</span>`;
+    return `<span class="variation-down">▼ ${Math.abs(n).toFixed(2)}%</span>`;
   }
 
   return '<span class="variation-zero">0,00%</span>';

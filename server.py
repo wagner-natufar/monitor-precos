@@ -1486,7 +1486,7 @@ async def simular_precificacao(
     return {
         "produto": produto_serial,
         "grupo": grupo,
-        "config_aplicada": config,
+        "config_aplicada": serial(config),
         "metricas_mercado": metricas,
         "simulacao": sim,
     }
