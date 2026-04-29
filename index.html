@@ -2228,6 +2228,7 @@
   }
 
   body[data-active-tab="dashboard"] .db-insights {
+    grid-column: 1 / -1;
     display: grid;
     grid-template-columns: repeat(4, minmax(180px, 1fr));
     gap: 10px;
@@ -3051,7 +3052,15 @@ function classeStatusDash(status) {
 
 function setDashPeriodo(dias) {
   dashDias = Number(dias) || 30;
+  atualizarBotoesPeriodoDashboard();
   carregarDashboard();
+}
+
+function atualizarBotoesPeriodoDashboard() {
+  document.querySelectorAll(".db-period-btn").forEach((btn) => {
+    const n = Number(btn.dataset.days || "0");
+    btn.classList.toggle("active", n === dashDias);
+  });
 }
 
 async function renderTelaDashboard() {
@@ -3082,20 +3091,25 @@ async function renderTelaDashboard() {
       </div>
 
       <div class="db-main-grid">
+        <div class="db-insights" id="dash-insights">
+          <div class="db-insight-item">Carregando insights...</div>
+        </div>
+
         <div class="db-card">
           <div class="db-card-head">
             <h3>Evolução de Preço por Canal</h3>
             <div class="db-period-tabs">
-              <button class="db-period-btn ${dashDias === 7 ? "active" : ""}" onclick="setDashPeriodo(7)">7 dias</button>
-              <button class="db-period-btn ${dashDias === 15 ? "active" : ""}" onclick="setDashPeriodo(15)">15 dias</button>
-              <button class="db-period-btn ${dashDias === 30 ? "active" : ""}" onclick="setDashPeriodo(30)">30 dias</button>
-              <button class="db-period-btn ${dashDias === 90 ? "active" : ""}" onclick="setDashPeriodo(90)">90 dias</button>
+              <button class="db-period-btn ${dashDias === 7 ? "active" : ""}" data-days="7" onclick="setDashPeriodo(7)">7 dias</button>
+              <button class="db-period-btn ${dashDias === 15 ? "active" : ""}" data-days="15" onclick="setDashPeriodo(15)">15 dias</button>
+              <button class="db-period-btn ${dashDias === 30 ? "active" : ""}" data-days="30" onclick="setDashPeriodo(30)">30 dias</button>
+              <button class="db-period-btn ${dashDias === 90 ? "active" : ""}" data-days="90" onclick="setDashPeriodo(90)">90 dias</button>
             </div>
           </div>
           <div class="db-card-body">
             <div class="db-chart-wrap">
               <canvas id="dash-evolution-chart"></canvas>
             </div>
+            <div id="dash-evolution-empty" class="empty" style="display:none;padding:10px 0 4px;">Sem coletas no período selecionado.</div>
           </div>
         </div>
 
@@ -3131,10 +3145,6 @@ async function renderTelaDashboard() {
           </div>
         </div>
       </div>
-
-      <div class="db-insights" id="dash-insights">
-        <div class="db-insight-item">Carregando insights...</div>
-      </div>
     </div>
   `;
 
@@ -3143,6 +3153,7 @@ async function renderTelaDashboard() {
     buscaTop.placeholder = "Buscar produtos, SKUs ou canais...";
     buscaTop.value = dashBusca;
   }
+  atualizarBotoesPeriodoDashboard();
 
   await carregarDashboard();
 }
@@ -3241,6 +3252,7 @@ function renderDashboardDados() {
   if (dateRange) {
     dateRange.textContent = formatDashRangeLabel(dashDias);
   }
+  atualizarBotoesPeriodoDashboard();
 
   renderRankingEcommerce();
   renderStatusCompetitivo();
@@ -3249,46 +3261,44 @@ function renderDashboardDados() {
 
 function renderRankingEcommerce() {
   const canvas = document.getElementById("dash-evolution-chart");
+  const emptyEl = document.getElementById("dash-evolution-empty");
   if (!canvas || !dashData) {
     return;
   }
 
-  const comparacoes = Array.isArray(dashData.status_competitivo) ? dashData.status_competitivo : [];
   if (dashEvolutionChart) {
     dashEvolutionChart.destroy();
     dashEvolutionChart = null;
   }
 
-  const basePorCanal = {};
-  for (const canal of CANAIS.map(c => c.key)) {
-    const valores = comparacoes
-      .filter(item => item.canal === canal)
-      .map(item => Number(item.menor_preco))
-      .filter(v => Number.isFinite(v));
-    if (valores.length) {
-      basePorCanal[canal] = valores.reduce((a, b) => a + b, 0) / valores.length;
-    } else {
-      basePorCanal[canal] = null;
+  const evo = dashData.evolucao_por_canal || {};
+  const labelsRaw = Array.isArray(evo.labels) ? evo.labels : [];
+  const seriesRaw = evo.series && typeof evo.series === "object" ? evo.series : {};
+
+  if (!labelsRaw.length) {
+    canvas.style.display = "none";
+    if (emptyEl) {
+      emptyEl.style.display = "block";
     }
+    return;
   }
 
-  const fallback = 90;
-  const pontos = dashDias <= 15 ? 8 : 10;
-  const labels = [];
-  for (let i = pontos - 1; i >= 0; i -= 1) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    labels.push(d.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }));
+  canvas.style.display = "block";
+  if (emptyEl) {
+    emptyEl.style.display = "none";
   }
 
-  const variacaoBase = [1.03, 1.01, 1.00, 1.02, 0.99, 1.01, 1.00, 1.03, 1.02, 1.04];
-  const datasets = CANAIS.map((canalObj, idx) => {
-    const base = Number.isFinite(basePorCanal[canalObj.key]) ? basePorCanal[canalObj.key] : (fallback - idx * 8);
-    const data = labels.map((_, j) => {
-      const fator = variacaoBase[j % variacaoBase.length];
-      const ajuste = (idx - 1.5) * 0.35;
-      return Number((base * fator + ajuste).toFixed(2));
-    });
+  const labels = labelsRaw.map((d) => {
+    if (!d || typeof d !== "string") return "-";
+    const [yyyy, mm, dd] = d.split("-");
+    if (!yyyy || !mm || !dd) return d;
+    return `${dd}/${mm}`;
+  });
+
+  const canaisComDados = CANAIS.filter((c) => Array.isArray(seriesRaw[c.key]));
+  const datasets = canaisComDados.map((canalObj) => {
+    const arr = seriesRaw[canalObj.key];
+    const data = arr.map((v) => (v == null ? null : Number(v)));
     return {
       label: canalObj.label,
       data,
@@ -3301,6 +3311,14 @@ function renderRankingEcommerce() {
       borderWidth: 2,
     };
   });
+
+  if (!datasets.length) {
+    canvas.style.display = "none";
+    if (emptyEl) {
+      emptyEl.style.display = "block";
+    }
+    return;
+  }
 
   dashEvolutionChart = new Chart(canvas, {
     type: "line",
