@@ -629,7 +629,14 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
     if full:
         pagina = 1
         while True:
-            resp = tiny_api_post("produtos.pesquisa", {"pagina": pagina})
+            try:
+                resp = tiny_api_post("produtos.pesquisa", {"pagina": pagina})
+            except HTTPException as exc:
+                raise HTTPException(
+                    status_code=exc.status_code,
+                    detail=f"Falha ao buscar produtos no Tiny (página {pagina}): {exc.detail}. "
+                           f"Verifique o token e a conectividade em GET /integracoes/tiny/testar",
+                )
             itens = tiny_get_produtos_lista(resp)
             if not itens:
                 break
@@ -1645,6 +1652,44 @@ async def simular_precificacao(
         "metricas_mercado": metricas,
         "simulacao": sim,
     }
+
+
+@app.get("/integracoes/tiny/testar")
+async def tiny_testar(user=Depends(product_manager_required)):
+    """Testa a conectividade com a API do Tiny e retorna diagnóstico detalhado."""
+    if not TINY_API_TOKEN:
+        return {
+            "ok": False,
+            "problema": "TINY_API_TOKEN não configurado",
+            "solucao": "Defina a variável de ambiente TINY_API_TOKEN com o token da API do Tiny.",
+        }
+
+    url_teste = f"{TINY_API_BASE_URL.rstrip('/')}/produtos.pesquisa.php"
+
+    try:
+        resp_raw = tiny_api_post("produtos.pesquisa", {"pagina": 1})
+        retorno = resp_raw.get("retorno", {})
+        status = str(retorno.get("status") or "").lower()
+        return {
+            "ok": status == "ok",
+            "url_chamada": url_teste,
+            "token_configurado": True,
+            "status_tiny": status,
+            "retorno_bruto": retorno,
+        }
+    except HTTPException as exc:
+        return {
+            "ok": False,
+            "url_chamada": url_teste,
+            "token_configurado": True,
+            "problema": exc.detail,
+            "dicas": [
+                "Verifique se TINY_API_TOKEN é um token válido da API v2 do Tiny ERP.",
+                "No Tiny, acesse: Configurações → Integrações → API → Gerar token.",
+                f"A URL usada foi: {url_teste}",
+                "Confirme que o servidor tem acesso à internet (curl https://api.tiny.com.br).",
+            ],
+        }
 
 
 # === Tiny integration ===
