@@ -668,8 +668,16 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
                 if pagina > 500:
                     break
         except HTTPException:
-            resp = tiny_api_post("produtos.pesquisa", {"pagina": 1})
-            produtos_brutos = tiny_get_produtos_lista(resp)
+            # Fallback: busca todos os produtos caso alterados falhe
+            try:
+                resp = tiny_api_post("produtos.pesquisa", {"pagina": 1})
+                produtos_brutos = tiny_get_produtos_lista(resp)
+            except HTTPException as exc:
+                raise HTTPException(
+                    status_code=exc.status_code,
+                    detail=f"Falha ao conectar com a API do Tiny: {exc.detail}. "
+                           f"Use GET /integracoes/tiny/testar para diagnosticar.",
+                )
 
     total_lidos = len(produtos_brutos)
 
@@ -1670,12 +1678,48 @@ async def tiny_testar(user=Depends(product_manager_required)):
         resp_raw = tiny_api_post("produtos.pesquisa", {"pagina": 1})
         retorno = resp_raw.get("retorno", {})
         status = str(retorno.get("status") or "").lower()
+
+        if status == "ok":
+            return {
+                "ok": True,
+                "url_chamada": url_teste,
+                "token_configurado": True,
+                "status_tiny": status,
+                "retorno_bruto": retorno,
+            }
+
+        # Extrair mensagem de erro do retorno do Tiny
+        erros_raw = retorno.get("erros") or []
+        mensagens_erro: List[str] = []
+        for item in erros_raw:
+            if isinstance(item, dict):
+                erro = item.get("erro")
+                if isinstance(erro, str):
+                    mensagens_erro.append(erro)
+                elif isinstance(erro, dict):
+                    msg = erro.get("msg") or erro.get("mensagem") or str(erro)
+                    mensagens_erro.append(msg)
+            elif isinstance(item, str):
+                mensagens_erro.append(item)
+
+        codigo_erro = retorno.get("codigo_erro") or retorno.get("codigo") or ""
+        problema = "; ".join(mensagens_erro) if mensagens_erro else f"Tiny retornou status '{status}'"
+        if codigo_erro:
+            problema = f"[Código {codigo_erro}] {problema}"
+
         return {
-            "ok": status == "ok",
+            "ok": False,
             "url_chamada": url_teste,
             "token_configurado": True,
             "status_tiny": status,
+            "problema": problema,
             "retorno_bruto": retorno,
+            "dicas": [
+                "Token inválido ou expirado: acesse Tiny → Configurações → Integrações → API e gere um novo token.",
+                "Confirme que a variável de ambiente TINY_API_TOKEN no servidor contém o token correto.",
+                "O token da API v2 do Tiny é diferente do token OAuth v3 — use o token da aba 'API' do Tiny.",
+                f"URL chamada: {url_teste}",
+            ],
         }
     except HTTPException as exc:
         return {
