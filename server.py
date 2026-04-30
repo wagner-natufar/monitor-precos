@@ -316,6 +316,7 @@ def calcular_pendencias_produto(doc: Dict[str, Any]) -> List[str]:
 def normalizar_doc_produto(doc: Dict[str, Any]) -> Dict[str, Any]:
     out = dict(doc)
     out["nome"] = str(out.get("nome") or "").strip()
+    out["imagem_url"] = str(out.get("imagem_url") or out.get("imagem") or out.get("foto_url") or "").strip()
     out["palavra_chave_1"] = str(out.get("palavra_chave_1") or out.get("nome") or "").strip()
     out["curva_abc"] = normalizar_curva_abc(out.get("curva_abc"))
     out["custo_unitario"] = to_float(out.get("custo_unitario"))
@@ -376,13 +377,19 @@ def consolidar_metricas_mercado(precos_por_canal: Dict[str, float]) -> Dict[str,
             "menor_preco_mercado": None,
             "maior_preco_mercado": None,
             "preco_medio_mercado": None,
+            "menor_canal_mercado": None,
+            "maior_canal_mercado": None,
         }
 
     valores = list(precos_por_canal.values())
+    menor_canal, menor_preco = min(precos_por_canal.items(), key=lambda item: item[1])
+    maior_canal, maior_preco = max(precos_por_canal.items(), key=lambda item: item[1])
     return {
-        "menor_preco_mercado": min(valores),
-        "maior_preco_mercado": max(valores),
+        "menor_preco_mercado": menor_preco,
+        "maior_preco_mercado": maior_preco,
         "preco_medio_mercado": sum(valores) / len(valores),
+        "menor_canal_mercado": menor_canal,
+        "maior_canal_mercado": maior_canal,
     }
 
 
@@ -565,6 +572,7 @@ async def upsert_produto_tiny(base: Dict[str, Any], detalhe: Dict[str, Any], est
         "nome": nome,
         "sku": sku or doc.get("sku") or "",
         "ean": ean or doc.get("ean") or "",
+        "imagem_url": doc.get("imagem_url") or doc.get("imagem") or doc.get("foto_url") or "",
         "palavra_chave_1": doc.get("palavra_chave_1") or nome,
         "palavra_chave_2": doc.get("palavra_chave_2") or "",
         "precos_praticados": doc.get("precos_praticados") or {},
@@ -709,6 +717,7 @@ class PrecosPraticados(BaseModel):
  
 class Produto(BaseModel):
     nome: str
+    imagem_url: Optional[str] = ""
     sku: Optional[str] = ""
     ean: Optional[str] = ""
     palavra_chave_1: Optional[str] = ""
@@ -969,19 +978,53 @@ async def excluir_usuario(user_id: str, user=Depends(master_required)):
 # === Produtos ===
  
 @app.get("/produtos")
-async def listar_produtos(busca: Optional[str] = None, user=Depends(get_user)):
-    filtro = {}
+async def listar_produtos(
+    busca: Optional[str] = None,
+    curva: Optional[str] = None,
+    status: Optional[str] = None,
+    page: Optional[int] = None,
+    limit: Optional[int] = None,
+    user=Depends(get_user),
+):
+    filtros = []
  
     if busca:
-        filtro = {
+        filtros.append({
             "$or": [
                 {"nome": {"$regex": busca, "$options": "i"}},
                 {"ean": {"$regex": busca, "$options": "i"}},
                 {"sku": {"$regex": busca, "$options": "i"}},
             ]
-        }
+        })
+
+    curva_norm = normalizar_curva_abc(curva) if curva and curva != "todos" else None
+    if curva_norm:
+        filtros.append({"curva_abc": curva_norm})
+
+    status_norm = str(status or "todos").strip().lower()
+    if status_norm == "pendente":
+        filtros.append({
+            "$or": [
+                {"status_integracao": "pendente"},
+                {"pendencias.0": {"$exists": True}},
+            ]
+        })
+    elif status_norm == "ok":
+        filtros.append({"status_integracao": "ok"})
+
+    filtro = {"$and": filtros} if filtros else {}
+    paginar = page is not None or limit is not None
+    page_num = max(1, int(page or 1))
+    limit_num = min(100, max(1, int(limit or 9)))
+    skip = (page_num - 1) * limit_num
  
-    docs = await produtos_col.find(filtro).to_list(5000)
+    total = await produtos_col.count_documents(filtro)
+    cursor = produtos_col.find(filtro).sort("nome", 1)
+    if paginar:
+        cursor = cursor.skip(skip).limit(limit_num)
+        docs = await cursor.to_list(limit_num)
+    else:
+        docs = await cursor.to_list(5000)
     itens = [serial(d) for d in docs]
 
     produto_ids = [p["id"] for p in itens if p.get("id")]
@@ -1002,11 +1045,21 @@ async def listar_produtos(busca: Optional[str] = None, user=Depends(get_user)):
         produto["menor_preco_mercado"] = metricas.get("menor_preco_mercado")
         produto["maior_preco_mercado"] = metricas.get("maior_preco_mercado")
         produto["preco_medio_mercado"] = metricas.get("preco_medio_mercado")
+        produto["menor_canal_mercado"] = metricas.get("menor_canal_mercado")
+        produto["maior_canal_mercado"] = metricas.get("maior_canal_mercado")
         produto["preco_sugerido"] = simulacao.get("preco_sugerido")
         produto["pendencias"] = produto.get("pendencias") or []
         produto["status_integracao"] = produto.get("status_integracao") or ("pendente" if produto["pendencias"] else "ok")
 
-    return itens
+    if not paginar:
+        return itens
+
+    return {
+        "items": itens,
+        "total": total,
+        "page": page_num,
+        "limit": limit_num,
+    }
  
  
 @app.post("/produtos")
