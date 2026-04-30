@@ -1209,10 +1209,22 @@ async def dashboard(
     busca: Optional[str] = None,
     canal: Optional[str] = None,
     dias: int = 7,
+    data_inicio: Optional[str] = None,
+    data_fim: Optional[str] = None,
     user=Depends(get_user),
 ):
     canal = normalizar_canal(canal)
-    desde = datetime.utcnow() - timedelta(days=dias)
+    if data_inicio and data_fim:
+        try:
+            desde = datetime.strptime(data_inicio, "%Y-%m-%d")
+            ate = datetime.strptime(data_fim, "%Y-%m-%d") + timedelta(days=1)
+            if desde >= ate:
+                desde, ate = ate - timedelta(days=1), desde + timedelta(days=1)
+        except ValueError:
+            raise HTTPException(status_code=400, detail="Datas inv lidas. Use o formato AAAA-MM-DD.")
+    else:
+        ate = datetime.utcnow() + timedelta(days=1)
+        desde = datetime.utcnow() - timedelta(days=dias)
  
     filtro_produtos = {}
  
@@ -1228,7 +1240,7 @@ async def dashboard(
     produtos = await produtos_col.find(filtro_produtos).to_list(5000)
     produto_ids = [str(p["_id"]) for p in produtos]
  
-    filtro_hist = {}
+    filtro_hist = {"data": {"$gte": desde, "$lt": ate}}
  
     if produto_ids:
         filtro_hist["produto_id"] = {"$in": produto_ids}
@@ -1253,7 +1265,7 @@ async def dashboard(
             {
                 "$match": {
                     "produto_id": {"$in": produto_ids},
-                    "data": {"$gte": desde},
+                    "data": {"$gte": desde, "$lt": ate},
                     "canal": {"$in": CANAIS},
                 }
             },
@@ -1357,7 +1369,7 @@ async def dashboard(
 
     # Evolução real por canal (somente dias com coleta)
     evolucao_match = {
-        "data": {"$gte": desde},
+        "data": {"$gte": desde, "$lt": ate},
         "canal": {"$in": canais_consulta},
     }
     if produto_ids:
@@ -1613,4 +1625,3 @@ if __name__ == "__main__":
         port=8080,
         reload=True,
     )
-
