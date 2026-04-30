@@ -2703,6 +2703,344 @@
       grid-template-columns: repeat(2, minmax(180px, 1fr));
     }
   }
+
+  body[data-active-tab="produtos"] .content {
+    background: #f3f7f1;
+    padding: 28px 30px;
+  }
+
+  body[data-active-tab="produtos"] .page-title {
+    font-size: 30px;
+    line-height: 1.15;
+    letter-spacing: 0;
+  }
+
+  body[data-active-tab="produtos"] .page-subtitle {
+    font-size: 16px;
+    color: #5b697e;
+  }
+
+  .produtos-toolbar {
+    display: grid;
+    grid-template-columns: minmax(320px, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    margin-top: 4px;
+  }
+
+  .produtos-search {
+    position: relative;
+    max-width: 520px;
+  }
+
+  .produtos-search .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #68778a;
+    font-size: 15px;
+  }
+
+  .produtos-search input {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px 0 42px;
+    border: 1px solid #d3ddcf;
+    border-radius: 8px;
+    background: #fbfcf7;
+    color: #1f2937;
+    font-size: 14px;
+  }
+
+  .produtos-toolbar-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .produtos-curve-filter {
+    display: inline-flex;
+    align-items: center;
+    height: 44px;
+    border: 1px solid #d3ddcf;
+    border-radius: 8px;
+    background: #fbfcf7;
+    overflow: hidden;
+  }
+
+  .produtos-curve-filter span {
+    padding: 0 14px;
+    color: #536172;
+    font-size: 14px;
+    border-right: 1px solid #d3ddcf;
+  }
+
+  .produtos-curve-filter select {
+    min-width: 108px;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    color: #273242;
+    padding: 0 12px;
+    font-size: 14px;
+  }
+
+  .produtos-toolbar .btn-primary,
+  .produtos-toolbar .btn-secondary {
+    height: 44px;
+    border-radius: 8px;
+    padding: 0 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .produtos-table-card {
+    background: #fbfcf7;
+    border: 1px solid #dbe4d7;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(5, 28, 45, 0.05);
+    overflow: hidden;
+  }
+
+  .produtos-table-card .table-scroll {
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  .produtos-table {
+    min-width: 1180px;
+  }
+
+  .produtos-table th {
+    position: static;
+    background: #f7faf6;
+    color: #2f3b4a;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 13px 16px;
+    text-transform: none;
+  }
+
+  .produtos-table td {
+    font-size: 14px;
+    padding: 12px 16px;
+    color: #223044;
+    vertical-align: middle;
+  }
+
+  .produto-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 210px;
+  }
+
+  .produto-thumb {
+    width: 38px;
+    height: 38px;
+    min-width: 38px;
+    border: 1px solid #dbe4d7;
+    border-radius: 7px;
+    background: #edf7f0;
+    color: #128653;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .produto-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .produto-thumb:not(.fallback) span {
+    display: none;
+  }
+
+  .produto-thumb.fallback img {
+    display: none;
+  }
+
+  .produto-name {
+    font-weight: 700;
+    line-height: 1.3;
+    color: #1f2937;
+  }
+
+  .price-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    white-space: nowrap;
+  }
+
+  .price-stack small {
+    color: #0b8b57;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .price-stack .muted {
+    color: #677589;
+    font-weight: 500;
+  }
+
+  .produtos-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .icon-action {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #dbe4d7;
+    background: #fbfcf7;
+    color: #334155;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .icon-action:hover,
+  .produtos-actions .kebab-btn:hover {
+    background: #eef5eb;
+  }
+
+  .produtos-actions .kebab-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid #dbe4d7;
+    background: #fbfcf7;
+    color: #334155;
+    font-size: 18px;
+  }
+
+  .produtos-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 12px 16px;
+    border-top: 1px solid #dbe4d7;
+    color: #637083;
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+
+  .produtos-footer-right,
+  .produtos-page-size,
+  .produtos-pagination {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .produtos-page-size select {
+    height: 34px;
+    border: 1px solid #d3ddcf;
+    border-radius: 8px;
+    background: #fbfcf7;
+    color: #263447;
+    padding: 0 10px;
+  }
+
+  .produtos-pagination button {
+    min-width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: 1px solid #d3ddcf;
+    background: #fbfcf7;
+    color: #334155;
+    font-weight: 700;
+  }
+
+  .produtos-pagination button.active {
+    border-color: #0f9f58;
+    color: #0b8b57;
+    box-shadow: inset 0 0 0 1px rgba(15, 159, 88, 0.2);
+  }
+
+  .produtos-pagination button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .produtos-pagination .ellipsis {
+    padding: 0 4px;
+    color: #7b8795;
+  }
+
+  [data-theme="dark"] body[data-active-tab="produtos"] .content {
+    background: #07110e;
+  }
+
+  [data-theme="dark"] .produtos-search input,
+  [data-theme="dark"] .produtos-curve-filter,
+  [data-theme="dark"] .produtos-table-card,
+  [data-theme="dark"] .produtos-page-size select,
+  [data-theme="dark"] .produtos-pagination button,
+  [data-theme="dark"] .icon-action,
+  [data-theme="dark"] .produtos-actions .kebab-btn {
+    background: #101f1a;
+    border-color: #254139;
+    color: #dceee8;
+  }
+
+  [data-theme="dark"] .produtos-table th {
+    background: #14231f;
+    color: #a9c0ba;
+    border-color: #263f38;
+  }
+
+  [data-theme="dark"] .produtos-table td,
+  [data-theme="dark"] .produto-name {
+    color: #e5f3ee;
+    border-color: #203a33;
+  }
+
+  [data-theme="dark"] .produtos-footer,
+  [data-theme="dark"] .produtos-curve-filter span {
+    border-color: #254139;
+    color: #95aaa4;
+  }
+
+  [data-theme="dark"] .produto-thumb {
+    background: #172823;
+    border-color: #254139;
+    color: #74e6a2;
+  }
+
+  [data-theme="dark"] .price-stack .muted {
+    color: #95aaa4;
+  }
+
+  @media (max-width: 900px) {
+    .produtos-toolbar {
+      grid-template-columns: 1fr;
+    }
+
+    .produtos-search {
+      max-width: none;
+    }
+
+    .produtos-toolbar-actions {
+      justify-content: flex-start;
+    }
+  }
 </style>
 </head>
 <body>
@@ -2862,6 +3200,9 @@
         <label>Nome</label>
         <input type="text" id="p-nome" />
 
+        <label>URL da imagem</label>
+        <input type="url" id="p-imagem-url" placeholder="https://..." />
+
         <div class="row-2">
           <div>
             <label>SKU</label>
@@ -3000,6 +3341,9 @@ let usuario = {
 };
 
 let produtos = [];
+let produtosTotal = 0;
+let produtosPagina = 1;
+let produtosPorPagina = 9;
 let produtoEditandoId = null;
 let produtoDetalheId = null;
 let produtoDetalheCanal = "todos";
@@ -3322,7 +3666,7 @@ function setTab(tab) {
 
   if (tab === "produtos") {
     title.textContent = "Produtos";
-    search.style.display = "flex";
+    search.style.display = "none";
     renderTelaProdutos();
   }
 
@@ -4179,37 +4523,29 @@ async function renderTelaProdutos() {
           <h1 class="page-title">Produtos</h1>
           <p class="page-subtitle">Gerencie e acompanhe todos os produtos monitorados.</p>
         </div>
-        <div class="page-actions">
-          ${podeGerenciarProdutos() ? '<button class="btn-secondary" onclick="sincronizarTinyIncremental()">Sincronizar Tiny</button>' : ""}
-          ${podeGerenciarProdutos() ? '<button class="btn-primary" onclick="abrirModalProduto()">Novo produto</button>' : ""}
-        </div>
       </div>
 
-      <div class="filters">
-        <div class="field">
-          <label>Buscar</label>
+      <div class="produtos-toolbar">
+        <div class="produtos-search">
+          <span class="search-icon">⌕</span>
           <input type="text" id="produtos-busca" placeholder="Buscar por nome, SKU ou EAN..." />
         </div>
-        <div class="field">
-          <label>Curva</label>
-          <select id="produtos-curva">
-            <option value="todos">Todas</option>
-            <option value="A">A</option>
-            <option value="B">B</option>
-            <option value="C">C</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>Status</label>
-          <select id="produtos-status">
-            <option value="todos">Todos</option>
-            <option value="ok">OK</option>
-            <option value="pendente">Pendente</option>
-          </select>
+        <div class="produtos-toolbar-actions">
+          <div class="produtos-curve-filter">
+            <span>Filtrar por curva</span>
+            <select id="produtos-curva">
+              <option value="todos">Todas</option>
+              <option value="A">A</option>
+              <option value="B">B</option>
+              <option value="C">C</option>
+            </select>
+          </div>
+          ${podeGerenciarProdutos() ? '<button class="btn-primary" onclick="abrirModalProduto()"><span>+</span> Novo produto</button>' : ""}
+          ${podeGerenciarProdutos() ? '<button class="btn-secondary" onclick="sincronizarTinyIncremental()"><span>↻</span> Sincronizar Tiny</button>' : ""}
         </div>
       </div>
 
-      <div class="stats" id="stats">
+      <div class="stats" id="stats" style="display:none">
         <div class="stat-card">
           <div class="label">Produtos</div>
           <div class="value">...</div>
@@ -4232,13 +4568,13 @@ async function renderTelaProdutos() {
         </div>
       </div>
 
-      <div class="table-card full">
-        <div class="table-header">
+      <div class="produtos-table-card">
+        <div class="table-header" style="display:none">
           <h3>Catélogo monitorado</h3>
         </div>
 
         <div class="table-scroll users-list">
-          <table>
+          <table class="produtos-table">
             <thead>
               <tr>
                 <th>Produto</th>
@@ -4262,40 +4598,59 @@ async function renderTelaProdutos() {
             </tbody>
           </table>
         </div>
+        <div class="produtos-footer" id="produtos-footer"></div>
       </div>
     </div>
   `;
 
   const busca = document.getElementById("produtos-busca");
   const filtroCurva = document.getElementById("produtos-curva");
-  const filtroStatus = document.getElementById("produtos-status");
   if (busca) {
-    busca.addEventListener("input", debounce(() => carregarProdutos(), 250));
+    busca.addEventListener("input", debounce(() => carregarProdutos(true), 250));
   }
   if (filtroCurva) {
-    filtroCurva.addEventListener("change", () => renderTabelaProdutos());
-  }
-  if (filtroStatus) {
-    filtroStatus.addEventListener("change", () => renderTabelaProdutos());
+    filtroCurva.addEventListener("change", () => carregarProdutos(true));
   }
 
-  await carregarProdutos();
+  await carregarProdutos(true);
 }
 
-async function carregarProdutos() {
+async function carregarProdutos(resetPage = false) {
   const busca = document.getElementById("produtos-busca")?.value.trim()
     || document.getElementById("busca-produtos")?.value.trim()
     || "";
+  const curva = document.getElementById("produtos-curva")?.value || "todos";
 
-  try {
-    const res = await api(`/produtos${busca ? `?busca=${encodeURIComponent(busca)}` : ""}`);
-    produtos = await res.json();
-  } catch (err) {
-    produtos = [];
+  if (resetPage) {
+    produtosPagina = 1;
   }
 
-  await carregarEstatisticas();
+  const params = new URLSearchParams();
+  if (busca) params.set("busca", busca);
+  if (curva !== "todos") params.set("curva", curva);
+  params.set("page", String(produtosPagina));
+  params.set("limit", String(produtosPorPagina));
+
+  try {
+    const res = await api(`/produtos?${params.toString()}`);
+    const data = await res.json();
+
+    if (Array.isArray(data)) {
+      produtos = data;
+      produtosTotal = data.length;
+    } else {
+      produtos = Array.isArray(data.items) ? data.items : [];
+      produtosTotal = Number(data.total ?? produtos.length);
+      produtosPagina = Number(data.page ?? produtosPagina) || 1;
+      produtosPorPagina = Number(data.limit ?? produtosPorPagina) || produtosPorPagina;
+    }
+  } catch (err) {
+    produtos = [];
+    produtosTotal = 0;
+  }
+
   renderTabelaProdutos();
+  renderPaginacaoProdutos();
 }
 
 async function carregarEstatisticas() {
@@ -4364,7 +4719,6 @@ async function carregarEstatisticas() {
 function renderTabelaProdutos() {
   const tbody = document.getElementById("tbody-produtos");
   const curvaFiltro = document.getElementById("produtos-curva")?.value || "todos";
-  const statusFiltro = document.getElementById("produtos-status")?.value || "todos";
 
   if (!tbody) {
     return;
@@ -4372,8 +4726,7 @@ function renderTabelaProdutos() {
 
   const lista = produtos.filter(p => {
     const okCurva = curvaFiltro === "todos" || String(p.curva_abc || "C") === curvaFiltro;
-    const okStatus = statusFiltro === "todos" || String((p.status_integracao || "ok")).toLowerCase() === statusFiltro;
-    return okCurva && okStatus;
+    return okCurva;
   });
 
   if (lista.length === 0) {
@@ -4383,30 +4736,146 @@ function renderTabelaProdutos() {
 
   tbody.innerHTML = lista.map(p => `
     <tr class="row-main ${String(p.status_integracao || "").toLowerCase() === "pendente" ? "row-pendente" : ""}" onclick="abrirDetalheProduto('${p.id}')">
-      <td><strong>${escapeHtml(p.nome)}</strong></td>
+      <td>
+        <div class="produto-cell">
+          ${renderProdutoThumb(p)}
+          <div class="produto-name">${escapeHtml(p.nome)}</div>
+        </div>
+      </td>
       <td>${escapeHtml(p.sku || "-")}</td>
       <td>${escapeHtml(p.ean || "-")}</td>
       <td><span class="badge ${String(p.curva_abc || "C") === "A" ? "approved" : String(p.curva_abc || "C") === "B" ? "admin" : "pending"}">${escapeHtml(p.curva_abc || "C")}</span></td>
       <td>${formatBRL(p.custo_unitario)}</td>
-      <td>${p.estoque_atual == null ? "-" : Number(p.estoque_atual).toFixed(2)}</td>
-      <td>${formatBRL(p.menor_preco_mercado)}</td>
-      <td>${formatBRL(p.maior_preco_mercado)}</td>
+      <td>${p.estoque_atual == null ? "-" : Number(p.estoque_atual).toFixed(0)}</td>
+      <td>${renderPriceStack(p.menor_preco_mercado, CANAIS_LABELS[p.menor_canal_mercado])}</td>
+      <td>${renderPriceStack(p.maior_preco_mercado, CANAIS_LABELS[p.maior_canal_mercado])}</td>
       <td>${formatBRL(p.preco_medio_mercado)}</td>
-      <td><strong>${formatBRL(p.preco_sugerido)}</strong></td>
+      <td>${renderSuggestedPrice(p)}</td>
       <td>${statusIntegracaoBadge(p.status_integracao, p.pendencias)}</td>
 
       <td class="actions-cell" onclick="event.stopPropagation();">
         ${podeGerenciarProdutos() ? `
-            <button class="kebab-btn" onclick="toggleMenuProduto(event, '${p.id}')">⋯</button>
+          <div class="produtos-actions">
+            <button class="icon-action" title="Editar produto" onclick="abrirModalProduto('${p.id}')">&#9998;</button>
+            <button class="kebab-btn" title="Mais acoes" onclick="toggleMenuProduto(event, '${p.id}')">&#8942;</button>
+          </div>
 
           <div class="action-menu ${menuProdutoAbertoId === p.id ? "show" : ""}">
-            <button onclick="abrirModalProduto('${p.id}')">Editar</button>
             <button class="danger" onclick="excluirProduto('${p.id}')">Excluir</button>
           </div>
         ` : ""}
       </td>
     </tr>
   `).join("");
+}
+
+function renderProdutoThumb(p) {
+  const nome = String(p.nome || "P").trim();
+  const initial = escapeHtml((nome.charAt(0) || "P").toUpperCase());
+  const url = p.imagem_url || p.imagem || p.foto_url || p.thumbnail_url || "";
+
+  if (!url) {
+    return `<span class="produto-thumb fallback"><span>${initial}</span></span>`;
+  }
+
+  return `<span class="produto-thumb"><img src="${escapeHtml(url)}" alt="" onerror="this.parentElement.classList.add('fallback')" /><span>${initial}</span></span>`;
+}
+
+function renderPriceStack(valor, canal) {
+  return `
+    <div class="price-stack">
+      <strong>${formatBRL(valor)}</strong>
+      ${canal ? `<small class="muted">${escapeHtml(canal)}</small>` : ""}
+    </div>
+  `;
+}
+
+function renderSuggestedPrice(p) {
+  const delta = calcularDeltaPercentual(p.preco_sugerido, p.preco_medio_mercado);
+
+  return `
+    <div class="price-stack">
+      <strong>${formatBRL(p.preco_sugerido)}</strong>
+      ${delta ? `<small>${delta}</small>` : ""}
+    </div>
+  `;
+}
+
+function calcularDeltaPercentual(valor, base) {
+  const n = Number(valor);
+  const b = Number(base);
+
+  if (!Number.isFinite(n) || !Number.isFinite(b) || b === 0) {
+    return "";
+  }
+
+  const pct = ((n - b) / b) * 100;
+  const sinal = pct > 0 ? "+" : "";
+  return `${sinal}${pct.toFixed(2).replace(".", ",")}%`;
+}
+
+function renderPaginacaoProdutos() {
+  const footer = document.getElementById("produtos-footer");
+  if (!footer) {
+    return;
+  }
+
+  const total = Number(produtosTotal || produtos.length || 0);
+  const totalPages = Math.max(1, Math.ceil(total / produtosPorPagina));
+  const start = total === 0 ? 0 : ((produtosPagina - 1) * produtosPorPagina) + 1;
+  const end = total === 0 ? 0 : Math.min(total, start + produtos.length - 1);
+  const pages = getProdutosPaginationPages(totalPages);
+
+  footer.innerHTML = `
+    <div>Mostrando ${start} a ${end} de ${total} produtos</div>
+    <div class="produtos-footer-right">
+      <label class="produtos-page-size">
+        <span>Linhas por pagina</span>
+        <select onchange="alterarProdutosPorPagina(this.value)">
+          ${[9, 25, 50, 100].map(v => `<option value="${v}" ${produtosPorPagina === v ? "selected" : ""}>${v}</option>`).join("")}
+        </select>
+      </label>
+      <div class="produtos-pagination">
+        <button type="button" onclick="mudarPaginaProdutos(${produtosPagina - 1})" ${produtosPagina <= 1 ? "disabled" : ""}>&lt;</button>
+        ${pages.map(p => p === "..." ? '<span class="ellipsis">...</span>' : `<button type="button" class="${p === produtosPagina ? "active" : ""}" onclick="mudarPaginaProdutos(${p})">${p}</button>`).join("")}
+        <button type="button" onclick="mudarPaginaProdutos(${produtosPagina + 1})" ${produtosPagina >= totalPages ? "disabled" : ""}>&gt;</button>
+      </div>
+    </div>
+  `;
+}
+
+function getProdutosPaginationPages(totalPages) {
+  if (totalPages <= 6) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+
+  const pages = [1];
+  const start = Math.max(2, produtosPagina - 1);
+  const end = Math.min(totalPages - 1, produtosPagina + 1);
+
+  if (start > 2) pages.push("...");
+  for (let i = start; i <= end; i += 1) pages.push(i);
+  if (end < totalPages - 1) pages.push("...");
+  pages.push(totalPages);
+  return pages;
+}
+
+function mudarPaginaProdutos(page) {
+  const totalPages = Math.max(1, Math.ceil((produtosTotal || produtos.length || 0) / produtosPorPagina));
+  const next = Math.min(Math.max(1, Number(page) || 1), totalPages);
+
+  if (next === produtosPagina) {
+    return;
+  }
+
+  produtosPagina = next;
+  carregarProdutos();
+}
+
+function alterarProdutosPorPagina(value) {
+  produtosPorPagina = Number(value) || 9;
+  produtosPagina = 1;
+  carregarProdutos();
 }
 
 function toggleMenuProduto(event, id) {
@@ -4650,6 +5119,7 @@ function abrirModalProduto(id = null) {
 
     if (p) {
       document.getElementById("p-nome").value = p.nome || "";
+      document.getElementById("p-imagem-url").value = p.imagem_url || p.imagem || p.foto_url || "";
       document.getElementById("p-sku").value = p.sku || "";
       document.getElementById("p-ean").value = p.ean || "";
       document.getElementById("p-pc1").value = p.palavra_chave_1 || "";
@@ -4671,6 +5141,7 @@ function abrirModalProduto(id = null) {
   } else {
     [
       "p-nome",
+      "p-imagem-url",
       "p-sku",
       "p-ean",
       "p-pc1",
@@ -4719,6 +5190,7 @@ async function salvarProduto() {
     ean,
     palavra_chave_1: pc1 || nome,
     palavra_chave_2: pc2,
+    imagem_url: document.getElementById("p-imagem-url").value.trim(),
     curva_abc: curva,
     estoque_atual: parseNum(document.getElementById("p-estoque").value),
     custo_unitario: parseNum(document.getElementById("p-custo").value),
