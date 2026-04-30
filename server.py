@@ -462,7 +462,7 @@ TINY_RATE_LIMIT_RETRY_WAIT = int(os.getenv("TINY_RATE_LIMIT_RETRY_WAIT", "20")) 
 TINY_INTER_REQUEST_DELAY = float(os.getenv("TINY_INTER_REQUEST_DELAY", "0.4"))   # delay entre chamadas
 
 
-def tiny_api_post(metodo: str, payload: Dict[str, Any], _retries: int = 3) -> Dict[str, Any]:
+async def tiny_api_post(metodo: str, payload: Dict[str, Any], _retries: int = 3) -> Dict[str, Any]:
     if not TINY_API_TOKEN:
         raise HTTPException(status_code=400, detail="TINY_API_TOKEN não configurado no ambiente")
 
@@ -474,12 +474,13 @@ def tiny_api_post(metodo: str, payload: Dict[str, Any], _retries: int = 3) -> Di
 
     url = f"{TINY_API_BASE_URL.rstrip('/')}/{metodo}.php"
     encoded = urlencode(body).encode("utf-8")
-    req = UrlRequest(url, data=encoded, headers={"Content-Type": "application/x-www-form-urlencoded"})
 
     for tentativa in range(max(1, _retries)):
+        req = UrlRequest(url, data=encoded, headers={"Content-Type": "application/x-www-form-urlencoded"})
         try:
-            with urlopen(req, timeout=30) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
+            loop = asyncio.get_event_loop()
+            raw_resp = await loop.run_in_executor(None, lambda: urlopen(req, timeout=30).read())
+            data = json.loads(raw_resp.decode("utf-8"))
 
             # Detectar código 6 (rate limit) no corpo da resposta e fazer retry
             retorno = data.get("retorno") or {}
@@ -488,7 +489,7 @@ def tiny_api_post(metodo: str, payload: Dict[str, Any], _retries: int = 3) -> Di
             if status_resp == "erro" and codigo_erro == "6":
                 if tentativa < _retries - 1:
                     wait = TINY_RATE_LIMIT_RETRY_WAIT * (tentativa + 1)
-                    time.sleep(wait)
+                    await asyncio.sleep(wait)
                     continue
                 raise HTTPException(
                     status_code=429,
@@ -658,8 +659,10 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
     if full:
         pagina = 1
         while True:
+            if pagina > 1:
+                await asyncio.sleep(TINY_INTER_REQUEST_DELAY * 3)  # delay maior entre páginas
             try:
-                resp = tiny_api_post("produtos.pesquisa", {"pagina": pagina})
+                resp = await tiny_api_post("produtos.pesquisa", {"pagina": pagina})
             except HTTPException as exc:
                 raise HTTPException(
                     status_code=exc.status_code,
@@ -686,7 +689,7 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
             while True:
                 params_pagina = dict(params)
                 params_pagina["pagina"] = pagina
-                resp = tiny_api_post("produtos.alterados", params_pagina)
+                resp = await tiny_api_post("produtos.alterados", params_pagina)
                 itens = tiny_get_produtos_lista(resp)
                 if not itens:
                     break
@@ -699,7 +702,7 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
         except HTTPException:
             # Fallback: busca todos os produtos caso alterados falhe
             try:
-                resp = tiny_api_post("produtos.pesquisa", {"pagina": 1})
+                resp = await tiny_api_post("produtos.pesquisa", {"pagina": 1})
                 produtos_brutos = tiny_get_produtos_lista(resp)
             except HTTPException as exc:
                 raise HTTPException(
@@ -727,7 +730,7 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
                 continue
 
             params = {"id": pid} if pid else {"codigo": codigo}
-            detalhe_resp = tiny_api_post("produto.obter", params)
+            detalhe_resp = await tiny_api_post("produto.obter", params)
             detalhe = tiny_get_produto_obj(detalhe_resp)
 
             # Verificar situação no detalhe (mais preciso que na lista)
@@ -745,7 +748,7 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
 
             estoque = None
             try:
-                estoque_resp = tiny_api_post("produto.obter.estoque", params)
+                estoque_resp = await tiny_api_post("produto.obter.estoque", params)
                 estoque = tiny_get_estoque(estoque_resp)
             except HTTPException:
                 estoque = None
@@ -1707,7 +1710,7 @@ async def tiny_testar(user=Depends(product_manager_required)):
     url_teste = f"{TINY_API_BASE_URL.rstrip('/')}/produtos.pesquisa.php"
 
     try:
-        resp_raw = tiny_api_post("produtos.pesquisa", {"pagina": 1})
+        resp_raw = await tiny_api_post("produtos.pesquisa", {"pagina": 1})
         retorno = resp_raw.get("retorno", {})
         status = str(retorno.get("status") or "").lower()
 
