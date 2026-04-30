@@ -5553,10 +5553,10 @@ async function sincronizarTinyIncremental() {
     const res = await api("/integracoes/tiny/sync/incremental", { method: "POST" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      alert(data.detail || "Falha ao sincronizar Tiny");
+      alert(`❌ Falha ao sincronizar Tiny\n\n${data.detail || "Erro desconhecido"}\n\nDica: use o botão "Testar conexão Tiny" para diagnosticar.`);
       return;
     }
-    alert(`Sync finalizado. Sincronizados: ${data.total_sincronizados || 0} | Pendentes: ${data.total_pendentes || 0}`);
+    alert(`✅ Sync finalizado.\nSincronizados: ${data.total_sincronizados || 0} | Pendentes: ${data.total_pendentes || 0} | Erros: ${data.total_erros || 0}`);
     await carregarProdutos();
     await atualizarWidgetTinySync();
   } catch (err) {
@@ -5577,14 +5577,30 @@ async function sincronizarTinyFull() {
     const res = await api("/integracoes/tiny/sync/full", { method: "POST" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-      alert(data.detail || "Falha ao sincronizar Tiny (FULL)");
+      alert(`❌ Falha ao sincronizar Tiny (FULL)\n\n${data.detail || "Erro desconhecido"}\n\nDica: use o botão "Testar conexão Tiny" para diagnosticar.`);
       return;
     }
-    alert(`Sync FULL finalizado. Sincronizados: ${data.total_sincronizados || 0} | Pendentes: ${data.total_pendentes || 0}`);
+    alert(`✅ Sync FULL finalizado.\nSincronizados: ${data.total_sincronizados || 0} | Pendentes: ${data.total_pendentes || 0} | Erros: ${data.total_erros || 0}`);
     await carregarProdutos();
     await atualizarWidgetTinySync();
   } catch (err) {
     alert("Erro de conexão ao sincronizar Tiny");
+  }
+}
+
+async function testarConexaoTiny() {
+  if (!podeGerenciarProdutos()) return;
+  try {
+    const res = await api("/integracoes/tiny/testar");
+    const data = await res.json().catch(() => ({}));
+    if (data.ok) {
+      alert(`✅ Conexão com Tiny OK!\nStatus retornado: ${data.status_tiny}\nURL: ${data.url_chamada}`);
+    } else {
+      const dicas = (data.dicas || []).map((d, i) => `${i + 1}. ${d}`).join("\n");
+      alert(`❌ Falha na conexão com Tiny\n\nProblema: ${data.problema || "Desconhecido"}\nURL: ${data.url_chamada || "-"}\n\n${dicas ? "Dicas:\n" + dicas : ""}`);
+    }
+  } catch (err) {
+    alert("Erro ao testar conexão com Tiny");
   }
 }
 
@@ -5600,6 +5616,7 @@ async function renderTelaPendentes() {
         <div class="page-actions">
           <button class="btn-secondary" onclick="sincronizarTinyIncremental()">Sync incremental</button>
           <button class="btn-primary" onclick="sincronizarTinyFull()">Sync full</button>
+          <button class="btn-secondary" onclick="testarConexaoTiny()" title="Diagnosticar conexão com Tiny">🔍 Testar Tiny</button>
         </div>
       </div>
 
