@@ -568,11 +568,30 @@ async def upsert_produto_tiny(base: Dict[str, Any], detalhe: Dict[str, Any], est
 
     atual = await produtos_col.find_one(selector) or {}
     doc = dict(atual)
+
+    # Extrair a URL do primeiro anexo como imagem do produto
+    imagem_url = ""
+    anexos = detalhe.get("anexos") or []
+    if isinstance(anexos, list):
+        for anexo_item in anexos:
+            if isinstance(anexo_item, dict):
+                url = str(anexo_item.get("anexo") or "").strip()
+            elif isinstance(anexo_item, str):
+                url = anexo_item.strip()
+            else:
+                url = ""
+            if url:
+                imagem_url = url
+                break
+    # Fallback para imagem já salva no banco ou campos alternativos
+    if not imagem_url:
+        imagem_url = doc.get("imagem_url") or doc.get("imagem") or doc.get("foto_url") or ""
+
     doc.update({
         "nome": nome,
         "sku": sku or doc.get("sku") or "",
         "ean": ean or doc.get("ean") or "",
-        "imagem_url": doc.get("imagem_url") or doc.get("imagem") or doc.get("foto_url") or "",
+        "imagem_url": imagem_url,
         "palavra_chave_1": doc.get("palavra_chave_1") or nome,
         "palavra_chave_2": doc.get("palavra_chave_2") or "",
         "precos_praticados": doc.get("precos_praticados") or {},
@@ -649,6 +668,11 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
 
     for base in produtos_brutos:
         try:
+            # Filtrar apenas produtos ativos
+            situacao = str(base.get("situacao") or "").strip().upper()
+            if situacao and situacao != "A":
+                continue
+
             pid = str(base.get("id") or "").strip()
             codigo = str(base.get("codigo") or "").strip()
             if not pid and not codigo:
@@ -658,6 +682,19 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
             params = {"id": pid} if pid else {"codigo": codigo}
             detalhe_resp = tiny_api_post("produto.obter", params)
             detalhe = tiny_get_produto_obj(detalhe_resp)
+
+            # Verificar situação no detalhe (mais preciso que na lista)
+            situacao_detalhe = str(detalhe.get("situacao") or situacao or "").strip().upper()
+            if situacao_detalhe and situacao_detalhe != "A":
+                continue
+
+            # Exigir EAN/GTIN para sincronizar
+            ean_check = str(
+                detalhe.get("gtin") or detalhe.get("ean")
+                or base.get("gtin") or base.get("ean") or ""
+            ).strip()
+            if not ean_check:
+                continue
 
             estoque = None
             try:
