@@ -1208,7 +1208,7 @@ async def registrar_preco(data: HistoricoInput, user=Depends(product_manager_req
 async def dashboard(
     busca: Optional[str] = None,
     canal: Optional[str] = None,
-    dias: int = 30,
+    dias: int = 7,
     user=Depends(get_user),
 ):
     canal = normalizar_canal(canal)
