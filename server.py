@@ -5,6 +5,8 @@ import base64
 import hmac
 import secrets
 import json
+import asyncio
+import time
 from datetime import datetime, timedelta
 from typing import Optional, Any, Dict, List
 from urllib.parse import urlencode
@@ -456,7 +458,11 @@ def calcular_preco_sugerido(
     }
 
 
-def tiny_api_post(metodo: str, payload: Dict[str, Any]) -> Dict[str, Any]:
+TINY_RATE_LIMIT_RETRY_WAIT = int(os.getenv("TINY_RATE_LIMIT_RETRY_WAIT", "20"))  # segundos de espera no rate limit
+TINY_INTER_REQUEST_DELAY = float(os.getenv("TINY_INTER_REQUEST_DELAY", "0.4"))   # delay entre chamadas
+
+
+def tiny_api_post(metodo: str, payload: Dict[str, Any], _retries: int = 3) -> Dict[str, Any]:
     if not TINY_API_TOKEN:
         raise HTTPException(status_code=400, detail="TINY_API_TOKEN não configurado no ambiente")
 
@@ -470,16 +476,39 @@ def tiny_api_post(metodo: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     encoded = urlencode(body).encode("utf-8")
     req = UrlRequest(url, data=encoded, headers={"Content-Type": "application/x-www-form-urlencoded"})
 
-    try:
-        with urlopen(req, timeout=30) as resp:
-            return json.loads(resp.read().decode("utf-8"))
-    except HTTPError as err:
-        detalhe = err.read().decode("utf-8", errors="ignore")
-        raise HTTPException(status_code=502, detail=f"Tiny API HTTP {err.code}: {detalhe[:300]}")
-    except URLError as err:
-        raise HTTPException(status_code=502, detail=f"Falha ao conectar Tiny API: {err.reason}")
-    except Exception as err:
-        raise HTTPException(status_code=502, detail=f"Erro ao chamar Tiny API: {err}")
+    for tentativa in range(max(1, _retries)):
+        try:
+            with urlopen(req, timeout=30) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+
+            # Detectar código 6 (rate limit) no corpo da resposta e fazer retry
+            retorno = data.get("retorno") or {}
+            codigo_erro = str(retorno.get("codigo_erro") or retorno.get("codigo") or "").strip()
+            status_resp = str(retorno.get("status") or "").strip().lower()
+            if status_resp == "erro" and codigo_erro == "6":
+                if tentativa < _retries - 1:
+                    wait = TINY_RATE_LIMIT_RETRY_WAIT * (tentativa + 1)
+                    time.sleep(wait)
+                    continue
+                raise HTTPException(
+                    status_code=429,
+                    detail=f"[Código 6] API do Tiny bloqueada por excesso de requisições. "
+                           f"Aguarde alguns minutos e tente novamente.",
+                )
+
+            return data
+
+        except HTTPError as err:
+            detalhe = err.read().decode("utf-8", errors="ignore")
+            raise HTTPException(status_code=502, detail=f"Tiny API HTTP {err.code}: {detalhe[:300]}")
+        except URLError as err:
+            raise HTTPException(status_code=502, detail=f"Falha ao conectar Tiny API: {err.reason}")
+        except HTTPException:
+            raise
+        except Exception as err:
+            raise HTTPException(status_code=502, detail=f"Erro ao chamar Tiny API: {err}")
+
+    raise HTTPException(status_code=429, detail="Tiny API: limite de requisições atingido após múltiplas tentativas.")
 
 
 def tiny_get_retorno(resp: Dict[str, Any]) -> Dict[str, Any]:
@@ -683,6 +712,9 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
 
     for base in produtos_brutos:
         try:
+            # Respeitar rate limit: pequeno delay entre cada produto
+            await asyncio.sleep(TINY_INTER_REQUEST_DELAY)
+
             # Filtrar apenas produtos ativos
             situacao = str(base.get("situacao") or "").strip().upper()
             if situacao and situacao != "A":
