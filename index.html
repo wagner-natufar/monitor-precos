@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
@@ -1391,7 +1391,8 @@
   }
 
   .topbar-right {
-    display: flex;
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr);
     align-items: center;
     gap: 14px;
   }
@@ -1884,11 +1885,11 @@
 
   body[data-active-tab="dashboard"] .db-title {
     margin: 0;
-    font-size: 50px;
+    font-size: 30px;
     font-weight: 800;
     color: #162335;
-    line-height: 1.08;
-    letter-spacing: -0.02em;
+    line-height: 1.15;
+    letter-spacing: 0;
   }
 
   body[data-active-tab="dashboard"] .db-subtitle {
@@ -1933,21 +1934,22 @@
     background: #fff;
     border: 1px solid #dbe3ed;
     border-radius: 12px;
-    padding: 14px 16px;
+    min-height: 112px;
+    padding: 18px 20px;
     box-shadow: 0 4px 14px rgba(13, 36, 58, 0.04);
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 18px;
   }
 
   body[data-active-tab="dashboard"] .db-kpi-icon {
-    width: 46px;
-    height: 46px;
+    width: 62px;
+    height: 62px;
     border-radius: 999px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 23px;
+    font-size: 27px;
     font-weight: 700;
     color: #fff;
     flex-shrink: 0;
@@ -1975,9 +1977,9 @@
 
   body[data-active-tab="dashboard"] .db-kpi-text .value {
     color: #0f1e32;
-    font-size: 41px;
+    font-size: 24px;
     font-weight: 800;
-    line-height: 1;
+    line-height: 1.15;
   }
 
   body[data-active-tab="dashboard"] .db-kpi-text .sub {
@@ -2025,8 +2027,8 @@
 
   body[data-active-tab="dashboard"] .db-card-head h3 {
     margin: 0;
-    font-size: 33px;
-    line-height: 1.1;
+    font-size: 18px;
+    line-height: 1.2;
     color: #162335;
   }
 
@@ -2238,8 +2240,38 @@
     background: #fff;
     border: 1px solid #dbe3ed;
     border-radius: 12px;
-    padding: 14px 16px;
+    min-height: 86px;
+    padding: 16px 18px;
     box-shadow: 0 4px 14px rgba(13, 36, 58, 0.04);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  body[data-active-tab="dashboard"] .db-insight-icon {
+    width: 54px;
+    height: 54px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    color: #fff;
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  body[data-active-tab="dashboard"] .db-insight-icon.green {
+    background: linear-gradient(180deg, #20af62 0%, #15864c 100%);
+  }
+
+  body[data-active-tab="dashboard"] .db-insight-icon.yellow {
+    background: linear-gradient(180deg, #fee36b 0%, #facc15 100%);
+    color: #172739;
+  }
+
+  body[data-active-tab="dashboard"] .db-insight-icon.blue {
+    background: linear-gradient(180deg, #2a7dff 0%, #0b63e5 100%);
   }
 
   body[data-active-tab="dashboard"] .db-insight-title {
@@ -2250,16 +2282,57 @@
 
   body[data-active-tab="dashboard"] .db-insight-value {
     color: #172739;
-    font-size: 34px;
+    font-size: 18px;
     font-weight: 800;
-    line-height: 1.1;
+    line-height: 1.2;
   }
 
   body[data-active-tab="dashboard"] .db-insight-sub {
     margin-top: 5px;
     color: #1d9b5d;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
+  }
+
+  body[data-active-tab="dashboard"] .db-insight-item::before {
+    content: "";
+    grid-row: 1 / 4;
+    width: 54px;
+    height: 54px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 24px;
+    font-weight: 800;
+    background: linear-gradient(180deg, #20af62 0%, #15864c 100%);
+  }
+
+  body[data-active-tab="dashboard"] .db-insight-item:nth-child(1)::before {
+    content: "\1F3F7";
+  }
+
+  body[data-active-tab="dashboard"] .db-insight-item:nth-child(2)::before {
+    content: "\2197";
+    background: linear-gradient(180deg, #fee36b 0%, #facc15 100%);
+    color: #172739;
+  }
+
+  body[data-active-tab="dashboard"] .db-insight-item:nth-child(3)::before {
+    content: "\1F3C6";
+  }
+
+  body[data-active-tab="dashboard"] .db-insight-item:nth-child(4)::before {
+    content: "\1F550";
+    background: linear-gradient(180deg, #2a7dff 0%, #0b63e5 100%);
+  }
+
+  body[data-active-tab="dashboard"] .db-insight-title,
+  body[data-active-tab="dashboard"] .db-insight-value,
+  body[data-active-tab="dashboard"] .db-insight-sub {
+    grid-column: 2;
+    min-width: 0;
   }
 
   [data-theme="dark"] body[data-active-tab="dashboard"] .topbar,
@@ -2598,8 +2671,8 @@ const CANAL_LABEL = {
 
 const CORES = {
   mercado_livre: "#facc15",
-  amazon: "#fb923c",
-  shopee: "#f43f5e",
+  amazon: "#111827",
+  shopee: "#f97316",
   droga_raia: "#3b82f6",
 };
 
@@ -2622,7 +2695,7 @@ let detailChart = null;
 
 let dashBusca = "";
 let dashCanal = "todos";
-let dashDias = 30;
+let dashDias = 7;
 let dashSort = "prioridade";
 let dashData = null;
 let dashEvolutionChart = null;
@@ -5254,7 +5327,3 @@ function debounce(fn, delay) {
 </script>
 </body>
 </html>
-
-
-
-
