@@ -1756,6 +1756,7 @@
     display: inline-flex;
     align-items: center;
     gap: 14px;
+    position: relative;
   }
 
   body[data-active-tab="dashboard"] .topbell {
@@ -1769,6 +1770,49 @@
     color: #2a3443;
     background: transparent;
     border: 0;
+  }
+
+  body[data-active-tab="dashboard"] .topbell:hover {
+    background: #eef4ea;
+  }
+
+  body[data-active-tab="dashboard"] .notif-popover {
+    position: absolute;
+    top: 48px;
+    right: 82px;
+    width: 300px;
+    background: #fbfcf7;
+    border: 1px solid #d8e2d4;
+    border-radius: 12px;
+    box-shadow: 0 18px 42px rgba(15, 35, 28, 0.18);
+    padding: 12px;
+    z-index: 50;
+    display: none;
+  }
+
+  body[data-active-tab="dashboard"] .notif-popover.show {
+    display: block;
+  }
+
+  body[data-active-tab="dashboard"] .notif-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #172739;
+    margin-bottom: 8px;
+  }
+
+  body[data-active-tab="dashboard"] .notif-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-top: 1px solid #dfe8db;
+    color: #52627a;
+    font-size: 13px;
+  }
+
+  body[data-active-tab="dashboard"] .notif-row strong {
+    color: #172739;
   }
 
   body[data-active-tab="dashboard"] .topbell-icon {
@@ -1924,6 +1968,68 @@
     color: #198754;
   }
 
+  body[data-active-tab="dashboard"] .db-date-range {
+    height: 44px;
+    border: 1px solid #d3ddcf;
+    border-radius: 10px;
+    background: #fbfcf7;
+    color: #2e3d50;
+    padding: 0 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+  }
+
+  body[data-active-tab="dashboard"] .db-date-range input {
+    width: 132px;
+    border: 0;
+    background: transparent;
+    color: #2e3d50;
+    font-size: 14px;
+    font-weight: 600;
+    outline: none;
+  }
+
+  body[data-active-tab="dashboard"] .db-filter-panel {
+    display: none;
+    grid-template-columns: repeat(3, minmax(180px, 1fr)) auto;
+    gap: 12px;
+    align-items: end;
+    background: #fbfcf7;
+    border: 1px solid #d8e2d4;
+    border-radius: 12px;
+    padding: 14px;
+    box-shadow: 0 4px 14px rgba(13, 36, 58, 0.04);
+  }
+
+  body[data-active-tab="dashboard"] .db-filter-panel.show {
+    display: grid;
+  }
+
+  body[data-active-tab="dashboard"] .db-filter-panel label,
+  body[data-active-tab="dashboard"] .db-priority-filters label {
+    display: block;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  body[data-active-tab="dashboard"] .db-filter-panel input,
+  body[data-active-tab="dashboard"] .db-filter-panel select,
+  body[data-active-tab="dashboard"] .db-priority-filters input,
+  body[data-active-tab="dashboard"] .db-priority-filters select {
+    width: 100%;
+    height: 38px;
+    border: 1px solid #d3ddcf;
+    border-radius: 9px;
+    background: #f7faf4;
+    color: #263447;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
   body[data-active-tab="dashboard"] .db-kpis {
     display: grid;
     grid-template-columns: repeat(5, minmax(170px, 1fr));
@@ -2073,6 +2179,21 @@
 
   body[data-active-tab="dashboard"] .db-prioridades-body {
     padding: 0;
+  }
+
+  body[data-active-tab="dashboard"] .db-priority-filters {
+    display: grid;
+    grid-template-columns: minmax(180px, 1fr) 130px auto;
+    gap: 10px;
+    align-items: end;
+    padding: 12px 14px;
+    border-bottom: 1px solid #dce6d8;
+  }
+
+  body[data-active-tab="dashboard"] .db-priority-modal-body {
+    padding: 0 18px 18px;
+    max-height: 70vh;
+    overflow: auto;
   }
 
   body[data-active-tab="dashboard"] .db-prioridades-table {
@@ -2431,6 +2552,9 @@
 
   [data-theme="dark"] body[data-active-tab="dashboard"] .menu-btn,
   [data-theme="dark"] body[data-active-tab="dashboard"] .topbar .search,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-date-range,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-filter-panel,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .notif-popover,
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-range-pill,
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-filter-btn,
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-period-btn,
@@ -2442,6 +2566,16 @@
   }
 
   [data-theme="dark"] body[data-active-tab="dashboard"] .topbar .search input {
+    color: #e5f3ee;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-date-range input,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-filter-panel input,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-filter-panel select,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-priority-filters input,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-priority-filters select {
+    background: #101f1a;
+    border-color: #254139;
     color: #e5f3ee;
   }
 
@@ -2482,7 +2616,14 @@
     border-bottom-color: #203a33;
   }
 
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-priority-filters,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .notif-row {
+    border-color: #203a33;
+  }
+
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-title,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .notif-title,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .notif-row strong,
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-card-head h3,
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-kpi-text .value,
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-insight-value,
@@ -2491,6 +2632,9 @@
   }
 
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-subtitle,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .notif-row,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-filter-panel label,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-priority-filters label,
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-kpi-text .label,
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-insight-title,
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-prod-sku,
@@ -2687,7 +2831,7 @@
       <div class="topbar-right">
         <button class="topbell" type="button" aria-label="Notificações">
           <span class="topbell-icon">&#128276;</span>
-          <span class="notify-pill">3</span>
+          <span class="notify-pill" id="notify-count">0</span>
         </button>
         <div class="top-user">
           <span class="avatar" id="top-user-avatar">A</span>
@@ -2871,6 +3015,12 @@ let dashData = null;
 let dashEvolutionChart = null;
 let tabAtual = "dashboard";
 let dashProdutosMeta = [];
+let dashDataInicio = "";
+let dashDataFim = "";
+let dashFiltrosAbertos = false;
+let dashPrioridadeBusca = "";
+let dashPrioridadeCurva = "todos";
+let dashPrioridadeStatus = "todos";
 
 let histProdutoId = null;
 let histDias = 30;
@@ -2882,6 +3032,7 @@ let pendentesProdutos = [];
 let pricingGrupos = [];
 let simProdutosCache = [];
 
+setDashRangePorDias(dashDias);
 aplicarTemaSalvo();
 
 if (token) {
@@ -3234,6 +3385,60 @@ function temaEscuroAtivo() {
   return document.documentElement.dataset.theme === "dark";
 }
 
+function configurarSinoDashboard() {
+  const bell = document.querySelector(".topbell");
+  if (!bell) {
+    return;
+  }
+  bell.onclick = toggleNotificacoes;
+  const badge = bell.querySelector(".notify-pill");
+  if (badge) {
+    badge.id = "notify-count";
+    if (badge.textContent === "3") {
+      badge.textContent = "0";
+    }
+  }
+  if (!document.getElementById("notif-popover")) {
+    bell.insertAdjacentHTML("afterend", `
+      <div class="notif-popover" id="notif-popover">
+        <div class="notif-title">Notificações</div>
+        <div id="notif-content">
+          <div class="notif-row"><span>Carregando</span><strong>-</strong></div>
+        </div>
+      </div>
+    `);
+  }
+}
+
+function toggleNotificacoes() {
+  configurarSinoDashboard();
+  renderNotificacoesDashboard();
+  document.getElementById("notif-popover")?.classList.toggle("show");
+}
+
+function renderNotificacoesDashboard() {
+  const cont = document.getElementById("notif-content");
+  const badge = document.getElementById("notify-count");
+  if (!cont) {
+    return;
+  }
+  const lista = Array.isArray(dashData?.status_competitivo) ? dashData.status_competitivo : [];
+  const pendentes = dashProdutosMeta.filter(p => String(p.status_integracao || "").toLowerCase() === "pendente").length;
+  const acima = lista.filter(item => Number(item.gap || 0) > 3).length;
+  const semColeta = !(dashData?.evolucao_por_canal?.labels || []).length;
+  const total = pendentes + acima + (semColeta ? 1 : 0);
+  if (badge) {
+    badge.textContent = total;
+    badge.style.display = total > 0 ? "inline-flex" : "none";
+  }
+  cont.innerHTML = `
+    <div class="notif-row"><span>Pendências de integração</span><strong>${pendentes}</strong></div>
+    <div class="notif-row"><span>Produtos acima do mercado</span><strong>${acima}</strong></div>
+    <div class="notif-row"><span>Coletas no período</span><strong>${semColeta ? "0" : "OK"}</strong></div>
+    <div class="notif-row"><span>Última coleta</span><strong>${dashData?.ultima_coleta ? formatData(dashData.ultima_coleta) : "-"}</strong></div>
+  `;
+}
+
 /* ================= DASHBOARD ================= */
 
 function formatDashRangeLabel(dias) {
@@ -3247,6 +3452,34 @@ function formatDashRangeLabel(dias) {
     year: "numeric",
   });
   return `${fmt.format(inicio)} - ${fmt.format(fim)}`;
+}
+
+function formatInputDate(d) {
+  const date = d instanceof Date ? d : new Date(d);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function diasEntreDatas(inicio, fim) {
+  const a = new Date(`${inicio}T00:00:00`);
+  const b = new Date(`${fim}T00:00:00`);
+  if (Number.isNaN(a.getTime()) || Number.isNaN(b.getTime())) {
+    return dashDias;
+  }
+  return Math.max(1, Math.round((b - a) / 86400000) + 1);
+}
+
+function setDashRangePorDias(dias) {
+  const fim = new Date();
+  const inicio = new Date();
+  inicio.setDate(fim.getDate() - Math.max(0, Number(dias || 7) - 1));
+  dashDataInicio = formatInputDate(inicio);
+  dashDataFim = formatInputDate(fim);
 }
 
 function normalizarTextoDash(txt) {
@@ -3303,7 +3536,46 @@ function classeStatusDash(status) {
 
 function setDashPeriodo(dias) {
   dashDias = Number(dias) || 30;
+  setDashRangePorDias(dashDias);
   atualizarBotoesPeriodoDashboard();
+  carregarDashboard();
+}
+
+function aplicarDatasDashboard() {
+  let ini = document.getElementById("dash-date-start")?.value || "";
+  let fim = document.getElementById("dash-date-end")?.value || "";
+  if (!ini || !fim) {
+    return;
+  }
+  if (ini > fim) {
+    [ini, fim] = [fim, ini];
+    document.getElementById("dash-date-start").value = ini;
+    document.getElementById("dash-date-end").value = fim;
+  }
+  dashDataInicio = ini;
+  dashDataFim = fim;
+  dashDias = diasEntreDatas(ini, fim);
+  atualizarBotoesPeriodoDashboard();
+  carregarDashboard();
+}
+
+function toggleDashFiltros() {
+  dashFiltrosAbertos = !dashFiltrosAbertos;
+  document.getElementById("dash-filter-panel")?.classList.toggle("show", dashFiltrosAbertos);
+}
+
+function aplicarFiltrosDashboard() {
+  dashCanal = document.getElementById("dash-filter-canal")?.value || "todos";
+  carregarDashboard();
+}
+
+function limparFiltrosDashboard() {
+  dashCanal = "todos";
+  dashBusca = "";
+  const buscaTop = document.getElementById("busca-produtos");
+  const canal = document.getElementById("dash-filter-canal");
+  if (buscaTop) buscaTop.value = "";
+  if (canal) canal.value = "todos";
   carregarDashboard();
 }
 
@@ -3316,6 +3588,7 @@ function atualizarBotoesPeriodoDashboard() {
 
 async function renderTelaDashboard() {
   const c = document.getElementById("content");
+  configurarSinoDashboard();
 
   c.innerHTML = `
     <div class="dashboard-view">
@@ -3325,15 +3598,41 @@ async function renderTelaDashboard() {
           <p class="db-subtitle">Visão geral da performance de preços e oportunidades de ajuste.</p>
         </div>
         <div class="db-actions">
-          <button type="button" class="db-range-pill">
+          <div class="db-date-range">
             <span class="ico">&#128197;</span>
-            <span id="dash-date-range">${formatDashRangeLabel(dashDias)}</span>
-            <span class="caret">&#9662;</span>
-          </button>
-          <button type="button" class="db-filter-btn" onclick="carregarDashboard()">
+            <input type="date" id="dash-date-start" value="${dashDataInicio}" onchange="aplicarDatasDashboard()" />
+            <span>-</span>
+            <input type="date" id="dash-date-end" value="${dashDataFim}" onchange="aplicarDatasDashboard()" />
+          </div>
+          <button type="button" class="db-filter-btn" onclick="toggleDashFiltros()">
             <span class="ico">&#128295;</span>
             Filtros
           </button>
+        </div>
+      </div>
+
+      <div class="db-filter-panel ${dashFiltrosAbertos ? "show" : ""}" id="dash-filter-panel">
+        <div>
+          <label>Canal</label>
+          <select id="dash-filter-canal">
+            <option value="todos" ${dashCanal === "todos" ? "selected" : ""}>Todos os canais</option>
+            <option value="mercado_livre" ${dashCanal === "mercado_livre" ? "selected" : ""}>Mercado Livre</option>
+            <option value="amazon" ${dashCanal === "amazon" ? "selected" : ""}>Amazon</option>
+            <option value="shopee" ${dashCanal === "shopee" ? "selected" : ""}>Shopee</option>
+            <option value="droga_raia" ${dashCanal === "droga_raia" ? "selected" : ""}>Droga Raia</option>
+          </select>
+        </div>
+        <div>
+          <label>Busca global</label>
+          <input type="text" id="dash-filter-busca" value="${escapeHtml(dashBusca)}" placeholder="Produto, SKU ou EAN" oninput="dashBusca = this.value" />
+        </div>
+        <div>
+          <label>Período atual</label>
+          <input type="text" value="${formatDashRangeLabel(dashDias)}" disabled />
+        </div>
+        <div>
+          <button type="button" class="db-link-btn" onclick="aplicarFiltrosDashboard()">Aplicar</button>
+          <button type="button" class="db-link-btn" onclick="limparFiltrosDashboard()">Limpar</button>
         </div>
       </div>
 
@@ -3367,9 +3666,25 @@ async function renderTelaDashboard() {
         <div class="db-card">
           <div class="db-card-head">
             <h3>Prioridades de Ajuste</h3>
-            <button class="db-link-btn" onclick="setTab('produtos')">Ver todos</button>
+            <button class="db-link-btn" onclick="abrirDetalhePrioridades()">Ver todos</button>
           </div>
           <div class="db-card-body db-prioridades-body">
+            <div class="db-priority-filters">
+              <div>
+                <label>Produto</label>
+                <input type="text" id="dash-priority-product" value="${escapeHtml(dashPrioridadeBusca)}" placeholder="Filtrar produto..." oninput="dashPrioridadeBusca = this.value; renderStatusCompetitivo();" />
+              </div>
+              <div>
+                <label>Curva</label>
+                <select id="dash-priority-curve" onchange="dashPrioridadeCurva = this.value; renderStatusCompetitivo();">
+                  <option value="todos" ${dashPrioridadeCurva === "todos" ? "selected" : ""}>Todas</option>
+                  <option value="A" ${dashPrioridadeCurva === "A" ? "selected" : ""}>A</option>
+                  <option value="B" ${dashPrioridadeCurva === "B" ? "selected" : ""}>B</option>
+                  <option value="C" ${dashPrioridadeCurva === "C" ? "selected" : ""}>C</option>
+                </select>
+              </div>
+              <button type="button" class="db-link-btn" onclick="limparFiltrosPrioridade()">Limpar</button>
+            </div>
             <table class="db-prioridades-table">
               <thead>
                 <tr>
@@ -3421,6 +3736,12 @@ async function carregarDashboard() {
   }
 
   params.set("dias", String(dashDias));
+  if (dashDataInicio) {
+    params.set("data_inicio", dashDataInicio);
+  }
+  if (dashDataFim) {
+    params.set("data_fim", dashDataFim);
+  }
 
   try {
     const res = await api(`/dashboard?${params.toString()}`);
@@ -3508,6 +3829,7 @@ function renderDashboardDados() {
   renderRankingEcommerce();
   renderStatusCompetitivo();
   renderDashboardInsights();
+  renderNotificacoesDashboard();
 }
 
 function renderRankingEcommerce() {
@@ -3608,23 +3930,16 @@ function renderRankingEcommerce() {
 
 function renderStatusCompetitivo() {
   const tb = document.getElementById("dash-status");
-  let lista = [...(dashData.status_competitivo || [])];
+  const listaFiltrada = obterPrioridadesFiltradas();
+  let lista = listaFiltrada.slice(0, 5);
 
-  lista.sort((a, b) => {
-    if (dashSort === "prioridade") {
-      return b.gap - a.gap;
-    }
-    return a.gap - b.gap;
-  });
-
-  if (lista.length === 0) {
+  if (listaFiltrada.length === 0) {
     tb.innerHTML = '<tr><td colspan="6" class="empty">Sem comparações com dados suficientes</td></tr>';
     document.getElementById("dash-prioridades-count").textContent = "Exibindo 0 itens";
     return;
   }
 
-  lista = lista.slice(0, 5);
-  document.getElementById("dash-prioridades-count").textContent = `Exibindo ${lista.length} de ${dashData.status_competitivo.length} produtos prioritários`;
+  document.getElementById("dash-prioridades-count").textContent = `Exibindo ${lista.length} de ${listaFiltrada.length} produtos prioritários`;
 
   tb.innerHTML = lista.map(item => `
     <tr>
@@ -3651,6 +3966,162 @@ function renderStatusCompetitivo() {
         <div>${formatBRL(obterMetaProdutoDashboard(item.produto)?.preco_sugerido ?? item.menor_preco)}</div>
         <div class="db-delta">${formatPercentSigned(deltaPercent((obterMetaProdutoDashboard(item.produto)?.preco_sugerido ?? item.menor_preco), item.meu_preco), 2)}</div>
       </td>
+      <td><span class="db-status ${classeStatusDash(item.status)}">${escapeHtml(item.status)}</span></td>
+    </tr>
+  `).join("");
+}
+
+function obterPrioridadesFiltradas() {
+  let lista = [...(dashData?.status_competitivo || [])];
+  const termo = normalizarTextoDash(dashPrioridadeBusca);
+
+  if (termo) {
+    lista = lista.filter(item => normalizarTextoDash(item.produto).includes(termo));
+  }
+
+  if (dashPrioridadeCurva !== "todos") {
+    lista = lista.filter(item => (obterMetaProdutoDashboard(item.produto)?.curva_abc || "C") === dashPrioridadeCurva);
+  }
+
+  if (dashPrioridadeStatus !== "todos") {
+    lista = lista.filter(item => classeStatusDash(item.status) === dashPrioridadeStatus);
+  }
+
+  lista.sort((a, b) => {
+    if (dashSort === "prioridade") {
+      return Number(b.gap || 0) - Number(a.gap || 0);
+    }
+    return Number(a.gap || 0) - Number(b.gap || 0);
+  });
+
+  return lista;
+}
+
+function limparFiltrosPrioridade() {
+  dashPrioridadeBusca = "";
+  dashPrioridadeCurva = "todos";
+  dashPrioridadeStatus = "todos";
+  const produto = document.getElementById("dash-priority-product");
+  const curva = document.getElementById("dash-priority-curve");
+  if (produto) produto.value = "";
+  if (curva) curva.value = "todos";
+  renderStatusCompetitivo();
+}
+
+function abrirDetalhePrioridades() {
+  let modal = document.getElementById("modal-prioridades");
+  if (!modal) {
+    document.body.insertAdjacentHTML("beforeend", `
+      <div class="modal-bg" id="modal-prioridades">
+        <div class="modal" style="max-width:1120px;">
+          <div class="modal-head">
+            <h3>Detalhamento de Prioridades de Ajuste</h3>
+            <button class="close" onclick="fecharDetalhePrioridades()">&times;</button>
+          </div>
+          <div class="db-priority-modal-body">
+            <div class="db-priority-filters" style="padding-left:0;padding-right:0;">
+              <div>
+                <label>Produto</label>
+                <input type="text" id="modal-priority-product" placeholder="Filtrar produto..." />
+              </div>
+              <div>
+                <label>Curva</label>
+                <select id="modal-priority-curve">
+                  <option value="todos">Todas</option>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                  <option value="C">C</option>
+                </select>
+              </div>
+              <div>
+                <label>Status</label>
+                <select id="modal-priority-status">
+                  <option value="todos">Todos</option>
+                  <option value="high">Muito acima</option>
+                  <option value="warn">Acima</option>
+                  <option value="win">Ganhando</option>
+                </select>
+              </div>
+              <button type="button" class="db-link-btn" onclick="limparFiltrosPrioridadeModal()">Limpar</button>
+            </div>
+            <table class="db-prioridades-table">
+              <thead>
+                <tr>
+                  <th>Produto</th>
+                  <th>Curva</th>
+                  <th>Meu Preço</th>
+                  <th>Menor Mercado</th>
+                  <th>Preço Sugerido</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="modal-prioridades-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    `);
+    document.getElementById("modal-priority-product").addEventListener("input", (e) => {
+      dashPrioridadeBusca = e.target.value;
+      renderDetalhePrioridades();
+      renderStatusCompetitivo();
+    });
+    document.getElementById("modal-priority-curve").addEventListener("change", (e) => {
+      dashPrioridadeCurva = e.target.value;
+      renderDetalhePrioridades();
+      renderStatusCompetitivo();
+    });
+    document.getElementById("modal-priority-status").addEventListener("change", (e) => {
+      dashPrioridadeStatus = e.target.value;
+      renderDetalhePrioridades();
+    });
+    modal = document.getElementById("modal-prioridades");
+  }
+  document.getElementById("modal-priority-product").value = dashPrioridadeBusca;
+  document.getElementById("modal-priority-curve").value = dashPrioridadeCurva;
+  document.getElementById("modal-priority-status").value = dashPrioridadeStatus;
+  renderDetalhePrioridades();
+  modal.classList.add("show");
+}
+
+function fecharDetalhePrioridades() {
+  document.getElementById("modal-prioridades")?.classList.remove("show");
+}
+
+function limparFiltrosPrioridadeModal() {
+  dashPrioridadeBusca = "";
+  dashPrioridadeCurva = "todos";
+  dashPrioridadeStatus = "todos";
+  document.getElementById("modal-priority-product").value = "";
+  document.getElementById("modal-priority-curve").value = "todos";
+  document.getElementById("modal-priority-status").value = "todos";
+  renderDetalhePrioridades();
+  renderStatusCompetitivo();
+}
+
+function renderDetalhePrioridades() {
+  const tb = document.getElementById("modal-prioridades-body");
+  if (!tb) return;
+  const lista = obterPrioridadesFiltradas();
+  if (!lista.length) {
+    tb.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma prioridade encontrada</td></tr>';
+    return;
+  }
+  tb.innerHTML = lista.map(item => `
+    <tr>
+      <td>
+        <div class="db-prod-main">
+          <span class="db-prod-thumb">${escapeHtml(String(item.produto || "P").trim().charAt(0).toUpperCase())}</span>
+          <div>
+            <div class="db-prod-name">${escapeHtml(item.produto)}</div>
+            <div class="db-prod-sku">SKU: ${escapeHtml(obterMetaProdutoDashboard(item.produto)?.sku || "-")}</div>
+          </div>
+        </div>
+      </td>
+      <td><span class="db-curva-badge curva-${escapeHtml(obterMetaProdutoDashboard(item.produto)?.curva_abc || "C")}">${escapeHtml(obterMetaProdutoDashboard(item.produto)?.curva_abc || "C")}</span></td>
+      <td>${formatBRL(item.meu_preco)}</td>
+      <td><div>${formatBRL(item.menor_preco)}</div><div class="db-delta">${formatPercentSigned(deltaPercent(item.menor_preco, item.meu_preco), 2)}</div></td>
+      <td><div>${formatBRL(obterMetaProdutoDashboard(item.produto)?.preco_sugerido ?? item.menor_preco)}</div><div class="db-delta">${formatPercentSigned(deltaPercent((obterMetaProdutoDashboard(item.produto)?.preco_sugerido ?? item.menor_preco), item.meu_preco), 2)}</div></td>
       <td><span class="db-status ${classeStatusDash(item.status)}">${escapeHtml(item.status)}</span></td>
     </tr>
   `).join("");
