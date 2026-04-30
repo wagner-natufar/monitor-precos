@@ -1391,8 +1391,7 @@
   }
 
   .topbar-right {
-    display: grid;
-    grid-template-columns: 54px minmax(0, 1fr);
+    display: flex;
     align-items: center;
     gap: 14px;
   }
@@ -1692,8 +1691,8 @@
     gap: 16px;
     height: 72px;
     padding: 0 18px;
-    background: #ffffff;
-    border-bottom: 1px solid #e3e8ef;
+    background: #fbfcf8;
+    border-bottom: 1px solid #dce5dc;
   }
 
   body[data-active-tab="dashboard"] #page-title {
@@ -1704,9 +1703,9 @@
     width: 40px;
     height: 40px;
     border-radius: 10px;
-    border: 1px solid #d6dde7;
+    border: 1px solid #d3ddcf;
     color: #2a3443;
-    background: #f8fafc;
+    background: #f3f7ef;
     font-size: 22px;
   }
 
@@ -1716,8 +1715,8 @@
     gap: 10px;
     width: 100%;
     max-width: 620px;
-    border: 1px solid #d9e1ea;
-    background: #ffffff;
+    border: 1px solid #d3ddcf;
+    background: #f6f9f2;
     border-radius: 10px;
     padding: 0 12px;
     height: 44px;
@@ -1745,10 +1744,10 @@
   body[data-active-tab="dashboard"] .search-kbd {
     font-size: 11px;
     color: #6f7d90;
-    border: 1px solid #d5deea;
+    border: 1px solid #d3ddcf;
     border-radius: 8px;
     padding: 3px 7px;
-    background: #f8fafc;
+    background: #eef4ea;
     white-space: nowrap;
   }
 
@@ -1868,6 +1867,7 @@
 
   body[data-active-tab="dashboard"] .content {
     padding: 22px 24px;
+    background: #f3f7f1;
   }
 
   body[data-active-tab="dashboard"] .dashboard-view {
@@ -1908,9 +1908,9 @@
   body[data-active-tab="dashboard"] .db-range-pill,
   body[data-active-tab="dashboard"] .db-filter-btn {
     height: 44px;
-    border: 1px solid #d7dfea;
+    border: 1px solid #d3ddcf;
     border-radius: 10px;
-    background: #fff;
+    background: #fbfcf7;
     color: #2e3d50;
     padding: 0 14px;
     font-size: 15px;
@@ -1931,8 +1931,8 @@
   }
 
   body[data-active-tab="dashboard"] .db-kpi-card {
-    background: #fff;
-    border: 1px solid #dbe3ed;
+    background: #fbfcf7;
+    border: 1px solid #d8e2d4;
     border-radius: 12px;
     min-height: 112px;
     padding: 18px 20px;
@@ -2009,8 +2009,8 @@
   }
 
   body[data-active-tab="dashboard"] .db-card {
-    background: #fff;
-    border: 1px solid #dbe3ed;
+    background: #fbfcf7;
+    border: 1px solid #d8e2d4;
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 4px 14px rgba(13, 36, 58, 0.04);
@@ -2022,7 +2022,7 @@
     justify-content: space-between;
     gap: 8px;
     padding: 14px 18px;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid #dce6d8;
   }
 
   body[data-active-tab="dashboard"] .db-card-head h3 {
@@ -2038,9 +2038,9 @@
   }
 
   body[data-active-tab="dashboard"] .db-period-btn {
-    border: 1px solid #d7dfea;
+    border: 1px solid #d3ddcf;
     border-radius: 9px;
-    background: #fff;
+    background: #f7faf4;
     color: #52627a;
     padding: 6px 10px;
     font-size: 13px;
@@ -2054,9 +2054,9 @@
   }
 
   body[data-active-tab="dashboard"] .db-link-btn {
-    border: 1px solid #d5dee9;
+    border: 1px solid #d3ddcf;
     border-radius: 9px;
-    background: #fff;
+    background: #f7faf4;
     color: #1d8e58;
     font-weight: 700;
     font-size: 13px;
@@ -2083,10 +2083,10 @@
   body[data-active-tab="dashboard"] .db-prioridades-table th {
     text-transform: none;
     font-size: 13px;
-    background: #f8fafc;
+    background: #f0f5ec;
     color: #4f5f75;
     padding: 12px 14px;
-    border-bottom: 1px solid #dde4ee;
+    border-bottom: 1px solid #d8e2d4;
     position: sticky;
     top: 0;
     z-index: 1;
@@ -2095,7 +2095,7 @@
   body[data-active-tab="dashboard"] .db-prioridades-table td {
     font-size: 15px;
     padding: 10px 14px;
-    border-bottom: 1px solid #e6edf4;
+    border-bottom: 1px solid #dde7d9;
     vertical-align: middle;
   }
 
@@ -2215,9 +2215,9 @@
   body[data-active-tab="dashboard"] .db-pagination-mini button {
     min-width: 28px;
     height: 28px;
-    border: 1px solid #d7dfea;
+    border: 1px solid #d3ddcf;
     border-radius: 8px;
-    background: #fff;
+    background: #f7faf4;
     color: #55657b;
     font-weight: 700;
     font-size: 12px;
@@ -2237,13 +2237,14 @@
   }
 
   body[data-active-tab="dashboard"] .db-insight-item {
-    background: #fff;
-    border: 1px solid #dbe3ed;
+    background: #fbfcf7;
+    border: 1px solid #d8e2d4;
     border-radius: 12px;
     min-height: 86px;
     padding: 16px 18px;
     box-shadow: 0 4px 14px rgba(13, 36, 58, 0.04);
-    display: flex;
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr);
     align-items: center;
     gap: 14px;
   }
@@ -2335,13 +2336,150 @@
     min-width: 0;
   }
 
-  [data-theme="dark"] body[data-active-tab="dashboard"] .topbar,
+  [data-theme="dark"] .topbar {
+    background: #0b1613;
+    border-bottom-color: #1c332d;
+  }
+
+  [data-theme="dark"] .content {
+    background: #07110e;
+  }
+
+  [data-theme="dark"] .page-title,
+  [data-theme="dark"] .table-header h3,
+  [data-theme="dark"] .panel-head h3,
+  [data-theme="dark"] .field label {
+    color: #e8f7ef;
+  }
+
+  [data-theme="dark"] .page-subtitle,
+  [data-theme="dark"] .small-meta,
+  [data-theme="dark"] .muted {
+    color: #95aaa4;
+  }
+
+  [data-theme="dark"] .filters,
+  [data-theme="dark"] .hist-filtros,
+  [data-theme="dark"] .table-card,
+  [data-theme="dark"] .panel,
+  [data-theme="dark"] .pending-side,
+  [data-theme="dark"] .group-card,
+  [data-theme="dark"] .health-card,
+  [data-theme="dark"] .channels-table-wrap,
+  [data-theme="dark"] .chart-wrap,
+  [data-theme="dark"] .hist-chart-wrap,
+  [data-theme="dark"] .detail-title,
+  [data-theme="dark"] .stat-card {
+    background: #0f1c18;
+    border-color: #203a33;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24);
+  }
+
+  [data-theme="dark"] .table-header,
+  [data-theme="dark"] .panel-head,
+  [data-theme="dark"] thead th,
+  [data-theme="dark"] table th {
+    background: #14231f;
+    border-color: #263f38;
+    color: #a9c0ba;
+  }
+
+  [data-theme="dark"] tbody td,
+  [data-theme="dark"] .detail-title h3,
+  [data-theme="dark"] .stat-card .value {
+    color: #deede8;
+    border-color: #203a33;
+  }
+
+  [data-theme="dark"] input,
+  [data-theme="dark"] select,
+  [data-theme="dark"] .filters input,
+  [data-theme="dark"] .filters select,
+  [data-theme="dark"] .hist-filtros input,
+  [data-theme="dark"] .hist-filtros select,
+  [data-theme="dark"] .field input,
+  [data-theme="dark"] .field select {
+    background: #101f1a;
+    border-color: #254139;
+    color: #e5f3ee;
+  }
+
+  [data-theme="dark"] input::placeholder {
+    color: #78908a;
+  }
+
+  [data-theme="dark"] body {
+    background: #07110e;
+    color: #e5f3ee;
+  }
+
+  [data-theme="dark"] .app,
+  [data-theme="dark"] .main,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .content {
+    background: #07110e;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .topbar {
+    background: #0b1613;
+    border-bottom-color: #1c332d;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .sidebar {
+    background: linear-gradient(180deg, #021d1c 0%, #031b20 58%, #031719 100%);
+    border-right-color: #17342d;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .menu-btn,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .topbar .search,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-range-pill,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-filter-btn,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-period-btn,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-link-btn,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-pagination-mini button {
+    background: #101f1a;
+    border-color: #254139;
+    color: #dceee8;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .topbar .search input {
+    color: #e5f3ee;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .topbar .search input::placeholder {
+    color: #78908a;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .search-kbd,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-prod-thumb {
+    background: #172823;
+    border-color: #254139;
+    color: #a9c0ba;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .topbell,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .top-user-meta span,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .top-user-caret {
+    color: #e5f3ee;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .top-user-meta small {
+    color: #8fa39e;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .notify-pill {
+    border-color: #0b1613;
+  }
+
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-card,
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-kpi-card,
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-insight-item {
-    background: #0f1a17;
-    border-color: #1f3a33;
-    box-shadow: none;
+    background: #0f1c18;
+    border-color: #203a33;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.24);
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-card-head {
+    border-bottom-color: #203a33;
   }
 
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-title,
@@ -2357,23 +2495,55 @@
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-insight-title,
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-prod-sku,
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-prioridades-foot {
-    color: #94aab1;
+    color: #95aaa4;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-period-btn.active,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-pagination-mini button.active {
+    background: rgba(34, 197, 94, 0.14);
+    border-color: #33b86a;
+    color: #74e6a2;
   }
 
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-prioridades-table th {
-    background: #12221c;
-    color: #a6bdc4;
-    border-color: #244139;
+    background: #14231f;
+    color: #a9c0ba;
+    border-color: #263f38;
   }
 
   [data-theme="dark"] body[data-active-tab="dashboard"] .db-prioridades-table td {
-    border-color: #1f3a33;
+    border-color: #203a33;
     color: #deede8;
   }
 
-  @media (max-width: 1400px) {
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-prioridades-table tbody tr:hover {
+    background: #12241f;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-status.win,
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-status.ok {
+    background: rgba(34, 197, 94, 0.16);
+    color: #82e7a8;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-status.warn {
+    background: rgba(249, 115, 22, 0.18);
+    color: #fdba74;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-status.high {
+    background: rgba(239, 68, 68, 0.18);
+    color: #fca5a5;
+  }
+
+  [data-theme="dark"] body[data-active-tab="dashboard"] .db-status.neutral {
+    background: #1d2d28;
+    color: #b8c8c3;
+  }
+
+  @media (max-width: 1180px) {
     body[data-active-tab="dashboard"] .db-title {
-      font-size: 44px;
+      font-size: 28px;
     }
     body[data-active-tab="dashboard"] .db-main-grid {
       grid-template-columns: 1fr;
@@ -3054,6 +3224,14 @@ function aplicarTema(theme) {
   document.documentElement.dataset.theme = theme;
   document.getElementById("theme-icon").textContent = theme === "dark" ? "\u2600" : "\u25D0";
   document.getElementById("theme-label").textContent = theme === "dark" ? "Modo claro" : "Modo escuro";
+
+  if (tabAtual === "dashboard" && dashData && document.getElementById("dash-evolution-chart")) {
+    renderRankingEcommerce();
+  }
+}
+
+function temaEscuroAtivo() {
+  return document.documentElement.dataset.theme === "dark";
 }
 
 /* ================= DASHBOARD ================= */
@@ -3369,14 +3547,19 @@ function renderRankingEcommerce() {
   });
 
   const canaisComDados = CANAIS.filter((c) => Array.isArray(seriesRaw[c.key]));
+  const isDark = temaEscuroAtivo();
+  const chartText = isDark ? "#a9c0ba" : "#425469";
+  const chartTick = isDark ? "#8da39d" : "#6b7b8f";
+  const chartGrid = isDark ? "rgba(112,139,131,0.22)" : "rgba(179,191,206,0.35)";
   const datasets = canaisComDados.map((canalObj) => {
     const arr = seriesRaw[canalObj.key];
     const data = arr.map((v) => (v == null ? null : Number(v)));
+    const color = isDark && canalObj.key === "amazon" ? "#e5e7eb" : CORES[canalObj.key];
     return {
       label: canalObj.label,
       data,
-      borderColor: CORES[canalObj.key],
-      backgroundColor: CORES[canalObj.key],
+      borderColor: color,
+      backgroundColor: color,
       tension: 0.36,
       fill: false,
       pointRadius: 2,
@@ -3403,18 +3586,18 @@ function renderRankingEcommerce() {
       plugins: {
         legend: {
           position: "bottom",
-          labels: { usePointStyle: true, boxWidth: 10, color: "#425469" },
+          labels: { usePointStyle: true, boxWidth: 10, color: chartText },
         },
       },
       scales: {
         x: {
           grid: { display: false },
-          ticks: { color: "#6b7b8f", maxRotation: 0, autoSkip: true },
+          ticks: { color: chartTick, maxRotation: 0, autoSkip: true },
         },
         y: {
-          grid: { color: "rgba(179,191,206,0.35)" },
+          grid: { color: chartGrid },
           ticks: {
-            color: "#6b7b8f",
+            color: chartTick,
             callback: (value) => `R$ ${Number(value).toFixed(0).replace(".", ",")}`,
           },
         },
