@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Monitor de Preços</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   :root {
     --bg: #f7faf7;
@@ -1628,14 +1629,6 @@
     gap: 14px;
   }
 
-  .pending-side {
-    background: #fff;
-    border: 1px solid #dbe2eb;
-    border-radius: 14px;
-    padding: 16px;
-    box-shadow: 0 6px 20px rgba(5, 28, 45, 0.05);
-  }
-
   .group-grid {
     display: grid;
     grid-template-columns: repeat(3, minmax(220px, 1fr));
@@ -2673,7 +2666,6 @@
   [data-theme="dark"] .hist-filtros,
   [data-theme="dark"] .table-card,
   [data-theme="dark"] .panel,
-  [data-theme="dark"] .pending-side,
   [data-theme="dark"] .group-card,
   [data-theme="dark"] .health-card,
   [data-theme="dark"] .channels-table-wrap,
@@ -3483,13 +3475,6 @@
     pointer-events: none;
   }
 
-  body[data-active-tab="pendentes"] .pending-filter-btn {
-    height: 36px;
-    border-radius: 8px;
-    padding: 0 14px;
-    white-space: nowrap;
-  }
-
   body[data-active-tab="pendentes"] .pending-table {
     min-width: 900px;
   }
@@ -3644,6 +3629,178 @@
     .topbar-right {
       grid-column: 3;
     }
+  }
+
+  /* ===== Pendentes compact v2 ===== */
+  .topbar {
+    padding-right: 38px !important;
+  }
+
+  .topbar-right {
+    margin-right: 8px;
+  }
+
+  body[data-active-tab="dashboard"] .topbar {
+    padding-right: 38px !important;
+  }
+
+  body[data-active-tab="pendentes"] .page-actions {
+    position: relative;
+  }
+
+  body[data-active-tab="pendentes"] .pending-layout {
+    display: block;
+  }
+
+  body[data-active-tab="pendentes"] .pending-tabs {
+    overflow: visible;
+    flex-wrap: wrap;
+  }
+
+  body[data-active-tab="pendentes"] .pending-card {
+    min-height: 74px;
+    grid-template-columns: 42px minmax(0, 1fr);
+    gap: 12px;
+    padding: 13px 14px;
+  }
+
+  body[data-active-tab="pendentes"] .pending-card .pending-stat-icon {
+    width: 38px;
+    height: 38px;
+    grid-row: 1 / 4;
+    align-self: center;
+    font-size: 16px;
+  }
+
+  body[data-active-tab="pendentes"] .pending-card .label {
+    font-size: 12px;
+  }
+
+  body[data-active-tab="pendentes"] .pending-card .value {
+    font-size: 22px;
+    line-height: 1.05;
+  }
+
+  body[data-active-tab="pendentes"] .pending-card .sub {
+    font-size: 11px;
+  }
+
+  body[data-active-tab="pendentes"] .pending-card.total .label {
+    color: #2563eb;
+  }
+
+  body[data-active-tab="pendentes"] .pending-card.sku .label {
+    color: #ea580c;
+  }
+
+  body[data-active-tab="pendentes"] .pending-card.cost .label {
+    color: #ca8a04;
+  }
+
+  body[data-active-tab="pendentes"] .pending-card.blocked .label {
+    color: #dc2626;
+  }
+
+  body[data-active-tab="pendentes"] #pending-kpis .stat-card:nth-child(4) .label {
+    color: #dc2626;
+  }
+
+  body[data-active-tab="pendentes"] #pending-kpis .stat-card:nth-child(4)::before {
+    display: none !important;
+  }
+
+  body[data-active-tab="pendentes"] #pending-kpis .stat-card:nth-child(4):not(.pending-card)::before {
+    display: inline-flex !important;
+  }
+
+  .pending-rules-popover {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 330px;
+    max-width: calc(100vw - 48px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow-lg);
+    padding: 14px;
+    z-index: 90;
+    display: none;
+  }
+
+  .pending-rules-popover.show {
+    display: block;
+  }
+
+  .pending-rules-title {
+    font-size: 14px;
+    font-weight: 800;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+
+  .pending-rule-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 78px;
+    height: 22px;
+    padding: 0 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .pending-rule-chip.sku {
+    background: #ffedd5;
+    color: #c2410c;
+  }
+
+  .pending-rule-chip.cost {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .pending-rule-chip.blocked {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+
+  .pending-rules-popover .pending-rule-item {
+    padding: 10px 0;
+  }
+
+  .pending-rules-popover .pending-rule-title {
+    font-size: 13px;
+    margin: 5px 0 2px;
+  }
+
+  .pending-rules-popover .pending-rule-desc,
+  .pending-rules-popover .pending-rule-action {
+    font-size: 12px;
+  }
+
+  [data-theme="dark"] .pending-rules-popover {
+    background: #0f1c18;
+    border-color: #203a33;
+  }
+
+  [data-theme="dark"] body[data-active-tab="pendentes"] .pending-card.total .label {
+    color: #93c5fd;
+  }
+
+  [data-theme="dark"] body[data-active-tab="pendentes"] .pending-card.sku .label {
+    color: #fdba74;
+  }
+
+  [data-theme="dark"] body[data-active-tab="pendentes"] .pending-card.cost .label {
+    color: #fde68a;
+  }
+
+  [data-theme="dark"] body[data-active-tab="pendentes"] .pending-card.blocked .label {
+    color: #fca5a5;
   }
 </style>
 </head>
@@ -4108,6 +4265,8 @@ document.addEventListener("click", () => {
   if (menuUsuarioAbertoId) {
     fecharMenusUsuario();
   }
+
+  document.getElementById("pending-rules-popover")?.classList.remove("show");
 });
 
 function podeGerenciarProdutos() {
@@ -4178,11 +4337,17 @@ async function atualizarWidgetTinySync() {
     whenEl.textContent = quando;
 
     const erros = Number(estado.total_erros || 0);
+    const avisos = Number(estado.total_avisos || 0);
     const pend = Number(estado.total_pendentes || 0);
-    if (erros > 0) {
+    const sincronizados = Number(estado.total_sincronizados || 0);
+    if (erros > 0 && sincronizados === 0) {
       stEl.textContent = "Com falhas";
       stEl.style.background = "rgba(239,68,68,0.2)";
       stEl.style.color = "#ffd3d3";
+    } else if (erros > 0 || avisos > 0 || estado.status === "parcial") {
+      stEl.textContent = "Com avisos";
+      stEl.style.background = "rgba(245,158,11,0.2)";
+      stEl.style.color = "#ffe6b4";
     } else if (pend > 0) {
       stEl.textContent = "Com pendências";
       stEl.style.background = "rgba(245,158,11,0.2)";
@@ -5234,6 +5399,11 @@ async function renderTelaProdutos() {
     </div>
   `;
 
+  const toolbarActions = c.querySelector(".produtos-toolbar-actions");
+  if (toolbarActions) {
+    toolbarActions.insertAdjacentHTML("beforeend", '<button class="btn-secondary" onclick="exportarProdutos()">Exportar</button>');
+  }
+
   const busca = document.getElementById("produtos-busca");
   const filtroCurva = document.getElementById("produtos-curva");
   if (busca) {
@@ -6177,12 +6347,18 @@ function montarResumoSyncTiny(data, rotulo) {
     `Pendentes: ${data.total_pendentes || 0}`,
     `Ignorados: ${data.total_ignorados || 0}`,
     `Erros: ${data.total_erros || 0}`,
+    `Avisos: ${data.total_avisos || 0}`,
   ];
 
   const erros = Array.isArray(data.erros_recentes) ? data.erros_recentes.slice(0, 5) : [];
+  const avisos = Array.isArray(data.avisos_recentes) ? data.avisos_recentes.slice(0, 3) : [];
   if (erros.length) {
     linhas.push("", "Avisos recentes:");
     erros.forEach((erro, index) => linhas.push(`${index + 1}. ${erro}`));
+  }
+  if (avisos.length) {
+    linhas.push("", "Observacoes:");
+    avisos.forEach((aviso, index) => linhas.push(`${index + 1}. ${aviso}`));
   }
 
   return linhas.join("\n");
@@ -6285,9 +6461,9 @@ function atualizarKpisPendentes() {
   const kpis = document.getElementById("pending-kpis");
   if (kpis) {
     kpis.innerHTML = `
-      <div class="stat-card"><span class="pending-stat-icon blue">&#128196;</span><div class="label">Total pendentes</div><div class="value">${total}</div><div class="sub">100% do total</div></div>
-      <div class="stat-card"><span class="pending-stat-icon orange">&#127991;</span><div class="label">Sem SKU</div><div class="value">${totalSemSku}</div><div class="sub">${fmtPct(totalSemSku)}</div></div>
-      <div class="stat-card"><span class="pending-stat-icon yellow">R$</span><div class="label">Sem custo</div><div class="value">${totalSemCusto}</div><div class="sub">${fmtPct(totalSemCusto)}</div></div>
+      <div class="stat-card pending-card total"><span class="pending-stat-icon blue">&#128196;</span><div class="label">Total pendentes</div><div class="value">${total}</div><div class="sub">100% do total</div></div>
+      <div class="stat-card pending-card sku"><span class="pending-stat-icon orange">&#127991;</span><div class="label">Sem SKU</div><div class="value">${totalSemSku}</div><div class="sub">${fmtPct(totalSemSku)}</div></div>
+      <div class="stat-card pending-card cost"><span class="pending-stat-icon yellow">R$</span><div class="label">Sem custo</div><div class="value">${totalSemCusto}</div><div class="sub">${fmtPct(totalSemCusto)}</div></div>
       <div class="stat-card"><div class="label">Bloqueados para sugestão</div><div class="value">${totalBloqueados}</div><div class="sub">${fmtPct(totalBloqueados)}</div></div>
     `;
   }
@@ -6395,6 +6571,14 @@ function setPendentesTab(tab) {
   renderPendentesTabela();
 }
 
+function toggleRegrasPendentes(event) {
+  event?.stopPropagation();
+  const popover = document.getElementById("pending-rules-popover");
+  if (popover) {
+    popover.classList.toggle("show");
+  }
+}
+
 function ignorarPendente(id) {
   if (!confirm("Deseja ignorar esta pendência? O produto continuará sem sugestão de preço.")) return;
   pendentesProdutos = pendentesProdutos.filter(p => p.id !== id);
@@ -6402,20 +6586,111 @@ function ignorarPendente(id) {
   renderPendentesTabela();
 }
 
-function exportarPendentes() {
-  if (!pendentesProdutos.length) { alert("Sem pendências para exportar."); return; }
-  const header = ["Nome", "Tiny ID", "SKU", "Custo", "Curva", "Pendências", "Status"];
-  const rows = pendentesProdutos.map(p => [
-    p.nome || "", p.tiny_id || "", p.sku || "",
-    p.custo_unitario ?? "", p.curva_abc || "",
-    (p.pendencias || []).join(";"), p.status_integracao || "",
+function baixarXlsx(nomeArquivo, nomeAba, cabecalho, linhas) {
+  if (!window.XLSX) {
+    alert("Biblioteca XLSX nao carregou. Recarregue a pagina e tente novamente.");
+    return;
+  }
+
+  const worksheet = XLSX.utils.aoa_to_sheet([cabecalho, ...linhas]);
+  worksheet["!autofilter"] = {
+    ref: XLSX.utils.encode_range({
+      s: { r: 0, c: 0 },
+      e: { r: linhas.length, c: cabecalho.length - 1 },
+    }),
+  };
+  worksheet["!cols"] = cabecalho.map((titulo, colIndex) => {
+    const maior = Math.max(
+      String(titulo).length,
+      ...linhas.map(linha => String(linha[colIndex] ?? "").length)
+    );
+    return { wch: Math.min(Math.max(maior + 2, 12), 42) };
+  });
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, nomeAba);
+  XLSX.writeFile(workbook, nomeArquivo);
+}
+
+async function exportarProdutos() {
+  const curvaFiltro = document.getElementById("produtos-curva")?.value || "todos";
+  const busca = document.getElementById("produtos-busca")?.value.trim()
+    || document.getElementById("busca-produtos")?.value.trim()
+    || "";
+  let lista = produtos.filter(p => curvaFiltro === "todos" || String(p.curva_abc || "C") === curvaFiltro);
+
+  try {
+    const params = new URLSearchParams();
+    if (busca) params.set("busca", busca);
+    if (curvaFiltro !== "todos") params.set("curva", curvaFiltro);
+    params.set("page", "1");
+    params.set("limit", "10000");
+    const res = await api(`/produtos?${params.toString()}`);
+    const data = await res.json().catch(() => ({}));
+    if (Array.isArray(data)) {
+      lista = data;
+    } else if (Array.isArray(data.items)) {
+      lista = data.items;
+    }
+  } catch (err) {}
+
+  if (!lista.length) {
+    alert("Sem produtos para exportar.");
+    return;
+  }
+
+  const cabecalho = [
+    "Produto", "SKU", "EAN", "Curva", "Custo", "Estoque",
+    "Menor mercado", "Canal menor", "Maior mercado", "Canal maior",
+    "Preco medio", "Preco sugerido", "Variacao sugerida", "Status", "Pendencias"
+  ];
+  const linhas = lista.map(p => [
+    p.nome || "",
+    p.sku || "",
+    p.ean || "",
+    p.curva_abc || "",
+    p.custo_unitario ?? "",
+    p.estoque_atual ?? "",
+    p.menor_preco_mercado ?? "",
+    CANAIS_LABELS[p.menor_canal_mercado] || p.menor_canal_mercado || "",
+    p.maior_preco_mercado ?? "",
+    CANAIS_LABELS[p.maior_canal_mercado] || p.maior_canal_mercado || "",
+    p.preco_medio_mercado ?? "",
+    p.preco_sugerido ?? "",
+    p.variacao_sugerida_percentual ?? "",
+    p.status_integracao || "",
+    (p.pendencias || []).join(", "),
   ]);
-  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = `pendentes_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
-  URL.revokeObjectURL(url);
+  baixarXlsx(`produtos_${new Date().toISOString().slice(0, 10)}.xlsx`, "Produtos", cabecalho, linhas);
+}
+
+function exportarPendentes() {
+  if (!pendentesProdutos.length) {
+    alert("Sem pendencias para exportar.");
+    return;
+  }
+
+  const cabecalho = ["Produto", "Tiny ID", "SKU", "Custo", "Curva", "Pendencias", "Status", "Acao sugerida"];
+  const linhas = pendentesProdutos.map(p => {
+    const grupo = getPendentesGrupo(p);
+    const acao = grupo === "sem_sku"
+      ? "Vincular SKU existente ou criar novo SKU"
+      : grupo === "sem_custo"
+        ? "Informar custo do produto"
+        : "Revisar pendencia critica ou regra de negocio";
+    return [
+      p.nome || "",
+      p.tiny_id || "",
+      p.sku || "",
+      p.custo_unitario ?? "",
+      p.curva_abc || "",
+      (p.pendencias || []).join(", "),
+      p.status_integracao || "",
+      acao,
+    ];
+  });
+
+  baixarXlsx(`pendentes_${new Date().toISOString().slice(0, 10)}.xlsx`, "Pendentes", cabecalho, linhas);
 }
 
 async function renderTelaPendentes() {
@@ -6431,7 +6706,30 @@ async function renderTelaPendentes() {
           <p class="page-subtitle">Produtos que não podem receber sugestão de preço até que as pendências sejam resolvidas.</p>
         </div>
         <div class="page-actions">
-          <button class="btn-secondary" onclick="exportarPendentes()">⬇ Exportar</button>
+          <button class="btn-secondary" onclick="toggleRegrasPendentes(event)">Regras</button>
+          <div class="pending-rules-popover" id="pending-rules-popover" onclick="event.stopPropagation()">
+            <div class="pending-rules-title">Regras de bloqueio</div>
+            <p class="muted" style="margin-bottom:10px;line-height:1.45;">Produtos com pendencia critica nao recebem sugestao de preco para evitar decisoes inconsistentes ou imprecisas.</p>
+            <div class="pending-rule-item">
+              <span class="pending-rule-chip sku">sem_sku</span>
+              <div class="pending-rule-title">Sem SKU</div>
+              <div class="pending-rule-desc">Nao e possivel identificar o produto no catalogo do Tiny.</div>
+              <div class="pending-rule-action">Acao necessaria: vincular um SKU existente ou criar um novo.</div>
+            </div>
+            <div class="pending-rule-item">
+              <span class="pending-rule-chip cost">sem_custo</span>
+              <div class="pending-rule-title">Sem custo</div>
+              <div class="pending-rule-desc">O custo do produto nao foi informado.</div>
+              <div class="pending-rule-action">Acao necessaria: informar o custo para calculo da margem.</div>
+            </div>
+            <div class="pending-rule-item" style="border-bottom:none;">
+              <span class="pending-rule-chip blocked">bloqueado</span>
+              <div class="pending-rule-title">Bloqueado para sugestao</div>
+              <div class="pending-rule-desc">Pendencia critica ou regra de negocio impede a sugestao de preco.</div>
+              <div class="pending-rule-action">Acao necessaria: revisar e corrigir a pendencia.</div>
+            </div>
+          </div>
+          <button class="btn-secondary" onclick="exportarPendentes()">Exportar</button>
         </div>
       </div>
 
@@ -6458,7 +6756,6 @@ async function renderTelaPendentes() {
                   style="width:100%;padding:8px 12px 8px 34px;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:13px;"
                   oninput="pendentesBuscaStr=this.value;renderPendentesTabela()">
               </div>
-              <button class="btn-secondary pending-filter-btn">Filtros</button>
             </div>
           </div>
           <div class="table-scroll">
@@ -6485,40 +6782,7 @@ async function renderTelaPendentes() {
           </div>
         </div>
 
-        <aside class="pending-side">
-          <h3 style="margin-bottom:6px;font-size:15px;">Regras de bloqueio</h3>
-          <p class="muted" style="margin-bottom:12px;line-height:1.5;">Produtos com pendência crítica não recebem sugestão de preço para evitar decisões inconsistentes ou imprecisas.</p>
-
-          <div class="pending-rule-item">
-            <span class="badge pending">sem_sku</span>
-            <div class="pending-rule-title">Sem SKU</div>
-            <div class="pending-rule-desc">Não é possível identificar o produto no catálogo do Tiny.</div>
-            <div class="pending-rule-action">Ação necessária: vincular um SKU existente ou criar um novo.</div>
-          </div>
-
-          <div class="pending-rule-item">
-            <span class="badge" style="background:#fff3cd;color:#856404;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;">sem_custo</span>
-            <div class="pending-rule-title">Sem custo</div>
-            <div class="pending-rule-desc">O custo do produto não foi informado.</div>
-            <div class="pending-rule-action">Ação necessária: informar o custo para cálculo da margem.</div>
-          </div>
-
-          <div class="pending-rule-item" style="border-bottom:none;">
-            <span class="badge rejected">bloqueado</span>
-            <div class="pending-rule-title">Bloqueado para sugestão</div>
-            <div class="pending-rule-desc">Pendência crítica ou regra de negócio impede a sugestão de preço.</div>
-            <div class="pending-rule-action">Ação necessária: revisar e corrigir a pendência.</div>
-          </div>
-
-          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-              <span style="font-size:18px;">❓</span>
-              <strong style="font-size:14px;">Precisa de ajuda?</strong>
-            </div>
-            <p class="muted" style="line-height:1.5;margin-bottom:10px;">Consulte a documentação ou fale com o suporte para entender as pendências e como resolvê-las.</p>
-            <button class="btn-secondary" style="width:100%;font-size:13px;">Abrir documentação ↗</button>
-          </div>
-        </aside>
+        
       </div>
     </div>
   `;
