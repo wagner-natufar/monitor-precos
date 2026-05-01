@@ -496,56 +496,6 @@ def registrar_erro_sync(erros: List[str], mensagem: str) -> None:
         del erros[:-TINY_MAX_RECENT_ERRORS]
 
 
-async def tiny_api_post_legacy(metodo: str, payload: Dict[str, Any], _retries: int = 3) -> Dict[str, Any]:
-    if not TINY_API_TOKEN:
-        raise HTTPException(status_code=400, detail="TINY_API_TOKEN não configurado no ambiente")
-
-    body = {
-        "token": TINY_API_TOKEN,
-        "formato": "JSON",
-    }
-    body.update(payload or {})
-
-    url = f"{TINY_API_BASE_URL.rstrip('/')}/{metodo}.php"
-    encoded = urlencode(body).encode("utf-8")
-
-    for tentativa in range(max(1, _retries)):
-        req = UrlRequest(url, data=encoded, headers={"Content-Type": "application/x-www-form-urlencoded"})
-        try:
-            loop = asyncio.get_event_loop()
-            raw_resp = await loop.run_in_executor(None, lambda: urlopen(req, timeout=30).read())
-            data = json.loads(raw_resp.decode("utf-8"))
-
-            # Detectar código 6 (rate limit) no corpo da resposta e fazer retry
-            retorno = data.get("retorno") or {}
-            codigo_erro = str(retorno.get("codigo_erro") or retorno.get("codigo") or "").strip()
-            status_resp = str(retorno.get("status") or "").strip().lower()
-            if status_resp == "erro" and codigo_erro == "6":
-                if tentativa < _retries - 1:
-                    wait = TINY_RATE_LIMIT_RETRY_WAIT * (tentativa + 1)
-                    await asyncio.sleep(wait)
-                    continue
-                raise HTTPException(
-                    status_code=429,
-                    detail=f"[Código 6] API do Tiny bloqueada por excesso de requisições. "
-                           f"Aguarde alguns minutos e tente novamente.",
-                )
-
-            return data
-
-        except HTTPError as err:
-            detalhe = err.read().decode("utf-8", errors="ignore")
-            raise HTTPException(status_code=502, detail=f"Tiny API HTTP {err.code}: {detalhe[:300]}")
-        except URLError as err:
-            raise HTTPException(status_code=502, detail=f"Falha ao conectar Tiny API: {err.reason}")
-        except HTTPException:
-            raise
-        except Exception as err:
-            raise HTTPException(status_code=502, detail=f"Erro ao chamar Tiny API: {err}")
-
-    raise HTTPException(status_code=429, detail="Tiny API: limite de requisições atingido após múltiplas tentativas.")
-
-
 async def tiny_api_post(metodo: str, payload: Dict[str, Any], _retries: int = 3) -> Dict[str, Any]:
     if not TINY_API_TOKEN:
         raise HTTPException(status_code=400, detail="TINY_API_TOKEN nao configurado no ambiente")
@@ -627,18 +577,6 @@ def tiny_get_retorno(resp: Dict[str, Any]) -> Dict[str, Any]:
     if status == "erro":
         detalhe = tiny_error_message(retorno)
         raise HTTPException(status_code=502, detail=f"Tiny API retornou erro: {detalhe}")
-        erros = retorno.get("erros") or []
-        mensagens: List[str] = []
-        for item in erros:
-            if isinstance(item, dict):
-                if isinstance(item.get("erro"), str):
-                    mensagens.append(item["erro"])
-                elif isinstance(item.get("erro"), dict):
-                    msg = item["erro"].get("msg") or item["erro"].get("mensagem")
-                    if isinstance(msg, str):
-                        mensagens.append(msg)
-        detalhe = "; ".join(mensagens) if mensagens else "Erro sem detalhe"
-        raise HTTPException(status_code=502, detail=f"Tiny API retornou erro: {detalhe}")
 
     return retorno
 
@@ -670,7 +608,9 @@ def tiny_get_produto_obj(resp: Dict[str, Any]) -> Dict[str, Any]:
 
 def tiny_get_estoque(resp: Dict[str, Any]) -> Optional[float]:
     retorno = tiny_get_retorno(resp)
-    produto = tiny_get_produto_obj(resp)
+    produto = retorno.get("produto") or {}
+    if isinstance(produto, dict) and isinstance(produto.get("produto"), dict):
+        produto = produto["produto"]
 
     candidatos = [
         produto.get("saldo"),
