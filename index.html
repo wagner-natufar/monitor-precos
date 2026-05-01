@@ -3233,6 +3233,76 @@
       justify-content: flex-start;
     }
   }
+
+  /* ── Pendentes redesign ── */
+  .pending-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 0;
+  }
+  .pending-tab {
+    padding: 9px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+    border: none;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -2px;
+    background: none;
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pending-tab:hover { color: var(--text); }
+  .pending-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+  .tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: var(--secondary-bg);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    padding: 0 5px;
+  }
+  .pending-tab.active .tab-count { background: var(--primary-soft); color: var(--primary); }
+
+  .curva-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .curva-A { background: #dbeafe; color: #1d4ed8; }
+  .curva-B { background: #fef3c7; color: #b45309; }
+  .curva-C { background: #f1f5f9; color: #475569; }
+
+  .pending-rule-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .pending-rule-title { font-size: 14px; font-weight: 700; color: var(--text); margin: 6px 0 3px; }
+  .pending-rule-desc  { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+  .pending-rule-action { font-size: 12px; color: var(--text-soft); margin-top: 3px; }
+
+  /* ── Topbar overlap fix on small screens ── */
+  @media (max-width: 1000px) {
+    .top-user-meta { display: none !important; }
+    .top-user-caret { display: none !important; }
+  }
+  @media (max-width: 760px) {
+    .topbar { grid-template-columns: 42px 1fr auto !important; }
+  }
 </style>
 </head>
 <body>
@@ -3573,6 +3643,8 @@ let histTodos = [];
 let histChart = null;
 let simChart = null;
 let pendentesProdutos = [];
+let pendentesTabAtiva = "todos";
+let pendentesBuscaStr = "";
 let pricingGrupos = [];
 let simProdutosCache = [];
 
@@ -5898,61 +5970,252 @@ async function testarConexaoTiny() {
   }
 }
 
+function getPendentesGrupo(p) {
+  const pends = p.pendencias || [];
+  if (pends.includes("sem_sku")) return "sem_sku";
+  if (pends.includes("sem_custo")) return "sem_custo";
+  return "bloqueado";
+}
+
+function atualizarKpisPendentes() {
+  const total = pendentesProdutos.length;
+  const totalSemSku = pendentesProdutos.filter(p => getPendentesGrupo(p) === "sem_sku").length;
+  const totalSemCusto = pendentesProdutos.filter(p => getPendentesGrupo(p) === "sem_custo").length;
+  const totalBloqueados = pendentesProdutos.filter(p => getPendentesGrupo(p) === "bloqueado").length;
+  const fmtPct = (n) => total > 0 ? ((n / total) * 100).toFixed(1).replace(".", ",") + "% do total" : "0% do total";
+
+  const kpis = document.getElementById("pending-kpis");
+  if (kpis) {
+    kpis.innerHTML = `
+      <div class="stat-card"><div class="label">Total pendentes</div><div class="value">${total}</div><div class="sub">100% do total</div></div>
+      <div class="stat-card"><div class="label">Sem SKU</div><div class="value">${totalSemSku}</div><div class="sub">${fmtPct(totalSemSku)}</div></div>
+      <div class="stat-card"><div class="label">Sem custo</div><div class="value">${totalSemCusto}</div><div class="sub">${fmtPct(totalSemCusto)}</div></div>
+      <div class="stat-card"><div class="label">Bloqueados para sugestão</div><div class="value">${totalBloqueados}</div><div class="sub">${fmtPct(totalBloqueados)}</div></div>
+    `;
+  }
+  [["todos", total], ["sem_sku", totalSemSku], ["sem_custo", totalSemCusto], ["bloqueado", totalBloqueados]].forEach(([k, n]) => {
+    const el = document.getElementById(`ptab-count-${k}`);
+    if (el) el.textContent = n;
+  });
+}
+
+function renderPendentesTabela() {
+  const tbody = document.getElementById("tbody-pendencias-produtos");
+  const countEl = document.getElementById("pending-count-text");
+  if (!tbody) return;
+
+  let lista = pendentesProdutos;
+  if (pendentesBuscaStr.trim()) {
+    const q = pendentesBuscaStr.toLowerCase();
+    lista = lista.filter(p =>
+      (p.nome || "").toLowerCase().includes(q) ||
+      (p.sku || "").toLowerCase().includes(q) ||
+      (p.tiny_id || "").toLowerCase().includes(q) ||
+      (p.id || "").toLowerCase().includes(q)
+    );
+  }
+  if (pendentesTabAtiva !== "todos") {
+    lista = lista.filter(p => getPendentesGrupo(p) === pendentesTabAtiva);
+  }
+
+  if (countEl) countEl.textContent = `Exibindo 1 a ${lista.length} de ${lista.length} pendência${lista.length !== 1 ? "s" : ""}`;
+
+  if (!lista.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">Nenhuma pendência encontrada</td></tr>';
+    return;
+  }
+
+  const grupos = { sem_sku: [], sem_custo: [], bloqueado: [] };
+  lista.forEach(p => grupos[getPendentesGrupo(p)].push(p));
+  const showGroups = pendentesTabAtiva === "todos";
+
+  const grupoMeta = [
+    { key: "sem_sku",   label: "Sem SKU",                   bg: "#fef9f0", color: "#d97706" },
+    { key: "sem_custo", label: "Sem custo",                  bg: "#fff7ed", color: "#c2410c" },
+    { key: "bloqueado", label: "Bloqueados para sugestão",   bg: "#fef2f2", color: "#dc2626" },
+  ];
+
+  let html = "";
+  for (const gm of grupoMeta) {
+    const items = grupos[gm.key];
+    if (!items.length) continue;
+    if (showGroups) {
+      html += `<tr style="background:${gm.bg};"><td colspan="8" style="padding:8px 14px;font-size:13px;font-weight:700;color:${gm.color};">${gm.label} (${items.length})</td></tr>`;
+    }
+    for (const p of items) {
+      const curva = p.curva_abc || "C";
+      const tinyId = escapeHtml(p.tiny_id || "—");
+      const sku = escapeHtml(p.sku || "—");
+      const custo = p.custo_unitario ? formatBRL(p.custo_unitario) : "—";
+      const pends = p.pendencias || [];
+      const badgesHtml = pends.map(x => {
+        const cls = x === "bloqueado" ? "rejected" : x === "sem_custo" ? "badge-warning" : "pending";
+        return `<span class="badge ${cls}">${escapeHtml(x)}</span>`;
+      }).join(" ") || "-";
+
+      let acaoText = "", extraBtn = "";
+      if (gm.key === "sem_sku") {
+        acaoText = "Vincular SKU existente ou criar novo SKU";
+        extraBtn = `<button class="btn-primary" style="font-size:12px;padding:5px 10px;" onclick="abrirModalProduto('${p.id}')">Vincular SKU</button>`;
+      } else if (gm.key === "sem_custo") {
+        acaoText = "Informar custo do produto";
+        extraBtn = `<button class="btn-secondary" style="font-size:12px;padding:5px 10px;opacity:0.4;cursor:not-allowed;" disabled>—</button>`;
+      } else {
+        acaoText = "Pendência crítica impede sugestão de preço";
+      }
+
+      const imgHtml = p.imagem_url
+        ? `<img src="${escapeHtml(p.imagem_url)}" style="width:30px;height:30px;border-radius:6px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">`
+        : `<span style="display:inline-block;width:30px;height:30px;border-radius:6px;background:var(--secondary-bg);flex-shrink:0;"></span>`;
+
+      html += `<tr>
+        <td><div style="display:flex;align-items:center;gap:8px;">${imgHtml}<strong style="font-size:14px;">${escapeHtml(p.nome || "-")}</strong></div></td>
+        <td style="color:var(--text-muted);font-size:13px;">${tinyId}</td>
+        <td style="color:var(--text-muted);font-size:13px;">${sku}</td>
+        <td style="font-size:13px;">${custo}</td>
+        <td><span class="curva-badge curva-${escapeHtml(curva)}">${escapeHtml(curva)}</span></td>
+        <td>${badgesHtml}</td>
+        <td style="font-size:13px;color:var(--text-muted);">${acaoText}</td>
+        <td style="text-align:right;white-space:nowrap;">
+          <button class="btn-edit" style="font-size:12px;padding:5px 10px;" onclick="abrirModalProduto('${p.id}')">Editar</button>
+          ${extraBtn}
+          <button class="btn-secondary" style="font-size:12px;padding:5px 10px;" onclick="ignorarPendente('${p.id}')">Ignorar</button>
+        </td>
+      </tr>`;
+    }
+  }
+  tbody.innerHTML = html;
+}
+
+function setPendentesTab(tab) {
+  pendentesTabAtiva = tab;
+  document.querySelectorAll(".pending-tab").forEach(b => b.classList.remove("active"));
+  const btn = document.querySelector(`.pending-tab[onclick="setPendentesTab('${tab}')"]`);
+  if (btn) btn.classList.add("active");
+  renderPendentesTabela();
+}
+
+function ignorarPendente(id) {
+  if (!confirm("Deseja ignorar esta pendência? O produto continuará sem sugestão de preço.")) return;
+  pendentesProdutos = pendentesProdutos.filter(p => p.id !== id);
+  atualizarKpisPendentes();
+  renderPendentesTabela();
+}
+
+function exportarPendentes() {
+  if (!pendentesProdutos.length) { alert("Sem pendências para exportar."); return; }
+  const header = ["Nome", "Tiny ID", "SKU", "Custo", "Curva", "Pendências", "Status"];
+  const rows = pendentesProdutos.map(p => [
+    p.nome || "", p.tiny_id || "", p.sku || "",
+    p.custo_unitario ?? "", p.curva_abc || "",
+    (p.pendencias || []).join(";"), p.status_integracao || "",
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `pendentes_${new Date().toISOString().slice(0, 10)}.csv`; a.click();
+  URL.revokeObjectURL(url);
+}
+
 async function renderTelaPendentes() {
+  pendentesTabAtiva = "todos";
+  pendentesBuscaStr = "";
+
   const c = document.getElementById("content");
   c.innerHTML = `
     <div class="page-shell">
       <div class="page-header">
         <div>
           <h1 class="page-title">Pendentes de Integração</h1>
-          <p class="page-subtitle">Produtos sem base mínima para sugestão de preço.</p>
+          <p class="page-subtitle">Produtos que não podem receber sugestão de preço até que as pendências sejam resolvidas.</p>
         </div>
         <div class="page-actions">
-          <button class="btn-secondary" onclick="sincronizarTinyIncremental()">Sync incremental</button>
-          <button class="btn-primary" onclick="sincronizarTinyFull()">Sync full</button>
-          <button class="btn-secondary" onclick="testarConexaoTiny()" title="Diagnosticar conexão com Tiny">🔍 Testar Tiny</button>
+          <button class="btn-secondary" onclick="exportarPendentes()">⬇ Exportar</button>
         </div>
       </div>
 
-      <div id="pending-kpis" class="stats">
-        <div class="stat-card"><div class="label">Total pendentes</div><div class="value">...</div></div>
-        <div class="stat-card"><div class="label">Sem SKU</div><div class="value">...</div></div>
-        <div class="stat-card"><div class="label">Sem custo</div><div class="value">...</div></div>
-        <div class="stat-card"><div class="label">Bloqueados</div><div class="value">...</div></div>
-        <div class="stat-card"><div class="label">Último sync</div><div class="value">...</div></div>
+      <div id="pending-kpis" class="stats" style="grid-template-columns:repeat(4,minmax(160px,1fr));">
+        <div class="stat-card"><div class="label">Total pendentes</div><div class="value">...</div><div class="sub">—</div></div>
+        <div class="stat-card"><div class="label">Sem SKU</div><div class="value">...</div><div class="sub">—</div></div>
+        <div class="stat-card"><div class="label">Sem custo</div><div class="value">...</div><div class="sub">—</div></div>
+        <div class="stat-card"><div class="label">Bloqueados para sugestão</div><div class="value">...</div><div class="sub">—</div></div>
       </div>
 
       <div class="pending-layout">
         <div class="table-card full">
-          <div class="table-header">
-            <h3>Pendências por produto</h3>
+          <div style="padding:14px 18px 0; border-bottom:1px solid var(--border);">
+            <div class="pending-tabs">
+              <button class="pending-tab active" onclick="setPendentesTab('todos')">Todos <span class="tab-count" id="ptab-count-todos">...</span></button>
+              <button class="pending-tab" onclick="setPendentesTab('sem_sku')">Sem SKU <span class="tab-count" id="ptab-count-sem_sku">0</span></button>
+              <button class="pending-tab" onclick="setPendentesTab('sem_custo')">Sem custo <span class="tab-count" id="ptab-count-sem_custo">0</span></button>
+              <button class="pending-tab" onclick="setPendentesTab('bloqueado')">Bloqueados <span class="tab-count" id="ptab-count-bloqueado">0</span></button>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px 0;">
+              <div style="flex:1;position:relative;">
+                <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af;pointer-events:none;">🔍</span>
+                <input type="text" id="pending-busca" placeholder="Buscar produto, SKU ou ID..."
+                  style="width:100%;padding:8px 12px 8px 34px;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:13px;"
+                  oninput="pendentesBuscaStr=this.value;renderPendentesTabela()">
+              </div>
+            </div>
           </div>
-          <div class="table-scroll users-list">
+          <div class="table-scroll">
             <table>
               <thead>
                 <tr>
                   <th>Produto</th>
+                  <th>Tiny ID</th>
                   <th>SKU</th>
                   <th>Custo</th>
-                  <th>Pendências</th>
-                  <th>Status</th>
+                  <th>Curva</th>
+                  <th>Pendência</th>
+                  <th>Ação sugerida</th>
                   <th style="text-align:right;">Ações</th>
                 </tr>
               </thead>
               <tbody id="tbody-pendencias-produtos">
-                <tr><td colspan="6" class="empty">Carregando...</td></tr>
+                <tr><td colspan="8" class="empty">Carregando...</td></tr>
               </tbody>
             </table>
+          </div>
+          <div style="padding:10px 18px;border-top:1px solid var(--border);font-size:13px;color:var(--text-muted);" id="pending-count-text">
+            Exibindo 0 pendências
           </div>
         </div>
 
         <aside class="pending-side">
-          <h3 style="margin-bottom:10px;">Regras de bloqueio</h3>
-          <p class="muted">Produtos com pendência crítica não recebem sugestão até regularização.</p>
-          <div style="margin-top:12px; display:grid; gap:8px;">
-            <div><span class="badge pending">sem_sku</span> SKU ausente no cadastro.</div>
-            <div><span class="badge pending">sem_custo</span> Custo não informado.</div>
-            <div><span class="badge rejected">bloqueado</span> Produto sem base para simulação.</div>
+          <h3 style="margin-bottom:6px;font-size:15px;">Regras de bloqueio</h3>
+          <p class="muted" style="margin-bottom:12px;line-height:1.5;">Produtos com pendência crítica não recebem sugestão de preço para evitar decisões inconsistentes ou imprecisas.</p>
+
+          <div class="pending-rule-item">
+            <span class="badge pending">sem_sku</span>
+            <div class="pending-rule-title">Sem SKU</div>
+            <div class="pending-rule-desc">Não é possível identificar o produto no catálogo do Tiny.</div>
+            <div class="pending-rule-action">Ação necessária: vincular um SKU existente ou criar um novo.</div>
+          </div>
+
+          <div class="pending-rule-item">
+            <span class="badge" style="background:#fff3cd;color:#856404;border-radius:999px;padding:2px 8px;font-size:11px;font-weight:700;">sem_custo</span>
+            <div class="pending-rule-title">Sem custo</div>
+            <div class="pending-rule-desc">O custo do produto não foi informado.</div>
+            <div class="pending-rule-action">Ação necessária: informar o custo para cálculo da margem.</div>
+          </div>
+
+          <div class="pending-rule-item" style="border-bottom:none;">
+            <span class="badge rejected">bloqueado</span>
+            <div class="pending-rule-title">Bloqueado para sugestão</div>
+            <div class="pending-rule-desc">Pendência crítica ou regra de negócio impede a sugestão de preço.</div>
+            <div class="pending-rule-action">Ação necessária: revisar e corrigir a pendência.</div>
+          </div>
+
+          <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <span style="font-size:18px;">❓</span>
+              <strong style="font-size:14px;">Precisa de ajuda?</strong>
+            </div>
+            <p class="muted" style="line-height:1.5;margin-bottom:10px;">Consulte a documentação ou fale com o suporte para entender as pendências e como resolvê-las.</p>
+            <button class="btn-secondary" style="width:100%;font-size:13px;">Abrir documentação ↗</button>
           </div>
         </aside>
       </div>
@@ -5961,57 +6224,14 @@ async function renderTelaPendentes() {
 
   try {
     const res = await api("/produtos/pendentes");
-    pendentesProdutos = await res.json();
+    const data = await res.json();
+    pendentesProdutos = Array.isArray(data) ? data : [];
   } catch (err) {
     pendentesProdutos = [];
   }
 
-  const tbody = document.getElementById("tbody-pendencias-produtos");
-  if (!tbody) {
-    return;
-  }
-
-  if (!pendentesProdutos.length) {
-    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma pendência encontrada</td></tr>';
-    const kpis = document.getElementById("pending-kpis");
-    if (kpis) {
-      kpis.innerHTML = `
-        <div class="stat-card"><div class="label">Total pendentes</div><div class="value">0</div></div>
-        <div class="stat-card"><div class="label">Sem SKU</div><div class="value">0</div></div>
-        <div class="stat-card"><div class="label">Sem custo</div><div class="value">0</div></div>
-        <div class="stat-card"><div class="label">Bloqueados</div><div class="value">0</div></div>
-        <div class="stat-card"><div class="label">Último sync</div><div class="value">${escapeHtml(document.getElementById("tiny-sync-when")?.textContent || "-")}</div></div>
-      `;
-    }
-    return;
-  }
-
-  const totalSemSku = pendentesProdutos.filter(p => (p.pendencias || []).includes("sem_sku")).length;
-  const totalSemCusto = pendentesProdutos.filter(p => (p.pendencias || []).includes("sem_custo")).length;
-  const totalBloqueados = pendentesProdutos.filter(p => (p.pendencias || []).length >= 2).length;
-  const kpis = document.getElementById("pending-kpis");
-  if (kpis) {
-    kpis.innerHTML = `
-      <div class="stat-card"><div class="label">Total pendentes</div><div class="value">${pendentesProdutos.length}</div></div>
-      <div class="stat-card"><div class="label">Sem SKU</div><div class="value">${totalSemSku}</div></div>
-      <div class="stat-card"><div class="label">Sem custo</div><div class="value">${totalSemCusto}</div></div>
-      <div class="stat-card"><div class="label">Bloqueados</div><div class="value">${totalBloqueados}</div></div>
-      <div class="stat-card"><div class="label">Último sync</div><div class="value">${escapeHtml(document.getElementById("tiny-sync-when")?.textContent || "-")}</div></div>
-    `;
-  }
-
-  tbody.innerHTML = pendentesProdutos.map(p => `
-    <tr>
-      <td><strong>${escapeHtml(p.nome || "-")}</strong></td>
-      <td>${escapeHtml(p.sku || "-")}</td>
-      <td>${formatBRL(p.custo_unitario)}</td>
-      <td>${(p.pendencias || []).map(x => `<span class="badge pending">${escapeHtml(x)}</span>`).join(" ") || "-"}</td>
-      <td>${statusIntegracaoBadge(p.status_integracao, p.pendencias)}</td>
-      <td class="actions-cell">
-        <button class="btn-edit" onclick="abrirModalProduto('${p.id}')">Editar</button>
-      </td>
-    </tr>
-  `).join("");
+  atualizarKpisPendentes();
+  renderPendentesTabela();
 }
 
 /* ================= SIMULADOR ================= */
