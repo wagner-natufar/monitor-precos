@@ -6,7 +6,6 @@ import hmac
 import secrets
 import json
 import asyncio
-import time
 from datetime import datetime, timedelta
 from typing import Optional, Any, Dict, List
 from urllib.parse import urlencode
@@ -460,9 +459,44 @@ def calcular_preco_sugerido(
 
 TINY_RATE_LIMIT_RETRY_WAIT = int(os.getenv("TINY_RATE_LIMIT_RETRY_WAIT", "20"))  # segundos de espera no rate limit
 TINY_INTER_REQUEST_DELAY = float(os.getenv("TINY_INTER_REQUEST_DELAY", "0.4"))   # delay entre chamadas
+TINY_HTTP_RETRY_STATUS = {429, 500, 502, 503, 504}
+TINY_MAX_RECENT_ERRORS = 30
 
 
-async def tiny_api_post(metodo: str, payload: Dict[str, Any], _retries: int = 3) -> Dict[str, Any]:
+def tiny_retry_wait(tentativa: int, rate_limit: bool = False) -> float:
+    if rate_limit:
+        return TINY_RATE_LIMIT_RETRY_WAIT * (tentativa + 1)
+    return min(2 ** tentativa, 12)
+
+
+def tiny_error_message(retorno: Dict[str, Any]) -> str:
+    erros = retorno.get("erros") or []
+    mensagens: List[str] = []
+
+    for item in erros:
+        erro = item.get("erro") if isinstance(item, dict) else item
+        if isinstance(erro, str):
+            mensagens.append(erro)
+        elif isinstance(erro, dict):
+            msg = erro.get("msg") or erro.get("mensagem") or erro.get("descricao")
+            if msg:
+                mensagens.append(str(msg))
+
+    codigo = str(retorno.get("codigo_erro") or retorno.get("codigo") or "").strip()
+    detalhe = "; ".join(mensagens) if mensagens else "Erro sem detalhe retornado pelo Tiny"
+    return f"[Codigo {codigo}] {detalhe}" if codigo else detalhe
+
+
+def registrar_erro_sync(erros: List[str], mensagem: str) -> None:
+    texto = " ".join(str(mensagem).split())[:300]
+    if not texto:
+        texto = "Erro desconhecido"
+    erros.append(texto)
+    if len(erros) > TINY_MAX_RECENT_ERRORS:
+        del erros[:-TINY_MAX_RECENT_ERRORS]
+
+
+async def tiny_api_post_legacy(metodo: str, payload: Dict[str, Any], _retries: int = 3) -> Dict[str, Any]:
     if not TINY_API_TOKEN:
         raise HTTPException(status_code=400, detail="TINY_API_TOKEN não configurado no ambiente")
 
@@ -512,6 +546,78 @@ async def tiny_api_post(metodo: str, payload: Dict[str, Any], _retries: int = 3)
     raise HTTPException(status_code=429, detail="Tiny API: limite de requisições atingido após múltiplas tentativas.")
 
 
+async def tiny_api_post(metodo: str, payload: Dict[str, Any], _retries: int = 3) -> Dict[str, Any]:
+    if not TINY_API_TOKEN:
+        raise HTTPException(status_code=400, detail="TINY_API_TOKEN nao configurado no ambiente")
+
+    body = {
+        "token": TINY_API_TOKEN,
+        "formato": "JSON",
+    }
+    body.update(payload or {})
+
+    url = f"{TINY_API_BASE_URL.rstrip('/')}/{metodo}.php"
+    encoded = urlencode(body).encode("utf-8")
+    tentativas = max(1, _retries)
+
+    for tentativa in range(tentativas):
+        req = UrlRequest(url, data=encoded, headers={"Content-Type": "application/x-www-form-urlencoded"})
+        try:
+            loop = asyncio.get_running_loop()
+            raw_resp = await loop.run_in_executor(None, lambda: urlopen(req, timeout=30).read())
+
+            try:
+                data = json.loads(raw_resp.decode("utf-8", errors="ignore"))
+            except json.JSONDecodeError:
+                if tentativa < tentativas - 1:
+                    await asyncio.sleep(tiny_retry_wait(tentativa))
+                    continue
+                raise HTTPException(status_code=502, detail="Tiny API retornou uma resposta invalida ou fora de JSON")
+
+            if not isinstance(data, dict):
+                raise HTTPException(status_code=502, detail="Tiny API retornou um formato inesperado")
+
+            retorno = data.get("retorno") or {}
+            if not isinstance(retorno, dict):
+                raise HTTPException(status_code=502, detail="Resposta invalida da Tiny API")
+
+            status_resp = str(retorno.get("status") or "").strip().lower()
+            codigo_erro = str(retorno.get("codigo_erro") or retorno.get("codigo") or "").strip()
+            if status_resp == "erro":
+                if codigo_erro == "6" and tentativa < tentativas - 1:
+                    await asyncio.sleep(tiny_retry_wait(tentativa, rate_limit=True))
+                    continue
+                status_code = 429 if codigo_erro == "6" else 502
+                raise HTTPException(status_code=status_code, detail=f"Tiny API retornou erro: {tiny_error_message(retorno)}")
+
+            return data
+        except HTTPError as err:
+            detalhe = err.read().decode("utf-8", errors="ignore")
+            if err.code in TINY_HTTP_RETRY_STATUS and tentativa < tentativas - 1:
+                await asyncio.sleep(tiny_retry_wait(tentativa, rate_limit=err.code == 429))
+                continue
+            raise HTTPException(status_code=502, detail=f"Tiny API HTTP {err.code}: {detalhe[:300]}")
+        except URLError as err:
+            if tentativa < tentativas - 1:
+                await asyncio.sleep(tiny_retry_wait(tentativa))
+                continue
+            raise HTTPException(status_code=502, detail=f"Falha ao conectar Tiny API: {err.reason}")
+        except TimeoutError:
+            if tentativa < tentativas - 1:
+                await asyncio.sleep(tiny_retry_wait(tentativa))
+                continue
+            raise HTTPException(status_code=504, detail="Tempo esgotado ao chamar Tiny API")
+        except HTTPException:
+            raise
+        except Exception as err:
+            if tentativa < tentativas - 1:
+                await asyncio.sleep(tiny_retry_wait(tentativa))
+                continue
+            raise HTTPException(status_code=502, detail=f"Erro ao chamar Tiny API: {err}")
+
+    raise HTTPException(status_code=429, detail="Tiny API: limite de requisicoes atingido apos multiplas tentativas.")
+
+
 def tiny_get_retorno(resp: Dict[str, Any]) -> Dict[str, Any]:
     retorno = resp.get("retorno")
     if not isinstance(retorno, dict):
@@ -519,6 +625,8 @@ def tiny_get_retorno(resp: Dict[str, Any]) -> Dict[str, Any]:
 
     status = str(retorno.get("status") or "").strip().lower()
     if status == "erro":
+        detalhe = tiny_error_message(retorno)
+        raise HTTPException(status_code=502, detail=f"Tiny API retornou erro: {detalhe}")
         erros = retorno.get("erros") or []
         mensagens: List[str] = []
         for item in erros:
@@ -652,6 +760,10 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
     total_lidos = 0
     total_sincronizados = 0
     total_pendentes = 0
+    total_inativos = 0
+    total_sem_ean = 0
+    total_sem_identificador = 0
+    total_erros = 0
     erros: List[str] = []
 
     produtos_brutos: List[Dict[str, Any]] = []
@@ -664,6 +776,10 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
             try:
                 resp = await tiny_api_post("produtos.pesquisa", {"pagina": pagina})
             except HTTPException as exc:
+                if pagina > 1 and produtos_brutos:
+                    registrar_erro_sync(erros, f"Falha ao buscar pagina {pagina}: {exc.detail}")
+                    total_erros += 1
+                    break
                 raise HTTPException(
                     status_code=exc.status_code,
                     detail=f"Falha ao buscar produtos no Tiny (página {pagina}): {exc.detail}. "
@@ -699,11 +815,28 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
                 pagina += 1
                 if pagina > 500:
                     break
-        except HTTPException:
+        except HTTPException as exc:
+            registrar_erro_sync(erros, f"produtos.alterados falhou: {exc.detail}. Fallback produtos.pesquisa acionado.")
+            total_erros += 1
             # Fallback: busca todos os produtos caso alterados falhe
             try:
-                resp = await tiny_api_post("produtos.pesquisa", {"pagina": 1})
-                produtos_brutos = tiny_get_produtos_lista(resp)
+                pagina = 1
+                produtos_brutos = []
+                while True:
+                    if pagina > 1:
+                        await asyncio.sleep(TINY_INTER_REQUEST_DELAY * 3)
+                    resp = await tiny_api_post("produtos.pesquisa", {"pagina": pagina})
+                    itens = tiny_get_produtos_lista(resp)
+                    if not itens:
+                        break
+                    produtos_brutos.extend(itens)
+                    if len(itens) < 100:
+                        break
+                    pagina += 1
+                    if pagina > 500:
+                        registrar_erro_sync(erros, "Fallback produtos.pesquisa interrompido no limite de 500 paginas.")
+                        total_erros += 1
+                        break
             except HTTPException as exc:
                 raise HTTPException(
                     status_code=exc.status_code,
@@ -721,12 +854,15 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
             # Filtrar apenas produtos ativos
             situacao = str(base.get("situacao") or "").strip().upper()
             if situacao and situacao != "A":
+                total_inativos += 1
                 continue
 
             pid = str(base.get("id") or "").strip()
             codigo = str(base.get("codigo") or "").strip()
             if not pid and not codigo:
-                erros.append("Item Tiny sem id/codigo")
+                total_sem_identificador += 1
+                registrar_erro_sync(erros, "Item Tiny sem id/codigo")
+                total_erros += 1
                 continue
 
             params = {"id": pid} if pid else {"codigo": codigo}
@@ -736,6 +872,7 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
             # Verificar situação no detalhe (mais preciso que na lista)
             situacao_detalhe = str(detalhe.get("situacao") or situacao or "").strip().upper()
             if situacao_detalhe and situacao_detalhe != "A":
+                total_inativos += 1
                 continue
 
             # Exigir EAN/GTIN para sincronizar
@@ -744,6 +881,7 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
                 or base.get("gtin") or base.get("ean") or ""
             ).strip()
             if not ean_check:
+                total_sem_ean += 1
                 continue
 
             estoque = None
@@ -758,8 +896,12 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
             if doc.get("status_integracao") == "pendente":
                 total_pendentes += 1
         except Exception as err:
-            erros.append(str(err)[:300])
+            ref = str(base.get("id") or base.get("codigo") or base.get("nome") or "sem identificador")
+            registrar_erro_sync(erros, f"Produto {ref}: {err}")
+            total_erros += 1
 
+    total_ignorados = total_inativos + total_sem_ean + total_sem_identificador
+    status_sync = "parcial" if total_erros else "sucesso"
     fim = datetime.utcnow()
     await tiny_sync_state_col.update_one(
         {"_id": "tiny"},
@@ -771,8 +913,13 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
                 "total_lidos": total_lidos,
                 "total_sincronizados": total_sincronizados,
                 "total_pendentes": total_pendentes,
-                "total_erros": len(erros),
-                "erros_recentes": erros[-20:],
+                "total_ignorados": total_ignorados,
+                "total_inativos": total_inativos,
+                "total_sem_ean": total_sem_ean,
+                "total_sem_identificador": total_sem_identificador,
+                "total_erros": total_erros,
+                "status": status_sync,
+                "erros_recentes": erros[-TINY_MAX_RECENT_ERRORS:],
                 "updated_at": fim,
             },
             "$setOnInsert": {"created_at": inicio},
@@ -788,8 +935,13 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
         "total_lidos": total_lidos,
         "total_sincronizados": total_sincronizados,
         "total_pendentes": total_pendentes,
-        "total_erros": len(erros),
-        "erros_recentes": erros[-20:],
+        "total_ignorados": total_ignorados,
+        "total_inativos": total_inativos,
+        "total_sem_ean": total_sem_ean,
+        "total_sem_identificador": total_sem_identificador,
+        "total_erros": total_erros,
+        "status": status_sync,
+        "erros_recentes": erros[-TINY_MAX_RECENT_ERRORS:],
     }
  
  
@@ -1361,7 +1513,7 @@ async def dashboard(
             if desde >= ate:
                 desde, ate = ate - timedelta(days=1), desde + timedelta(days=1)
         except ValueError:
-            raise HTTPException(status_code=400, detail="Datas inv lidas. Use o formato AAAA-MM-DD.")
+            raise HTTPException(status_code=400, detail="Datas inválidas. Use o formato AAAA-MM-DD.")
     else:
         ate = datetime.utcnow() + timedelta(days=1)
         desde = datetime.utcnow() - timedelta(days=dias)
@@ -1464,6 +1616,7 @@ async def dashboard(
             comparacoes.append({
                 "produto_id": produto_id,
                 "produto": produto.get("nome", ""),
+                "imagem_url": produto.get("imagem_url") or produto.get("imagem") or produto.get("foto_url") or "",
                 "sku": produto.get("sku", ""),
                 "ean": produto.get("ean", ""),
                 "canal": c,
