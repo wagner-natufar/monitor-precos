@@ -1867,6 +1867,144 @@
     margin-left: 2px;
   }
 
+  .topbar {
+    display: grid;
+    grid-template-columns: 42px minmax(0, 620px) 1fr auto;
+    align-items: center;
+    gap: 16px;
+    height: 72px;
+    padding: 0 18px;
+    background: #fbfcf8;
+    border-bottom: 1px solid #dce5dc;
+  }
+
+  .topbar h2 {
+    display: none;
+  }
+
+  .topbar-right {
+    justify-self: end;
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    min-width: 0;
+  }
+
+  .topbell {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #2a3443;
+    background: transparent;
+    border: 0;
+    flex: 0 0 auto;
+  }
+
+  .topbell:hover {
+    background: #eef4ea;
+  }
+
+  .topbell-icon {
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .notify-pill {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 18px;
+    height: 18px;
+    font-size: 11px;
+    border-radius: 999px;
+    border: 2px solid #fff;
+    background: #16a34a;
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+
+  .notif-popover {
+    position: absolute;
+    top: 48px;
+    left: 0;
+    width: min(300px, calc(100vw - 28px));
+    background: #fbfcf7;
+    border: 1px solid #d8e2d4;
+    border-radius: 12px;
+    box-shadow: 0 18px 42px rgba(15, 35, 28, 0.18);
+    padding: 12px;
+    z-index: 80;
+    display: none;
+  }
+
+  .notif-popover.show {
+    display: block;
+  }
+
+  .notif-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: #172739;
+    margin-bottom: 8px;
+  }
+
+  .notif-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 9px 0;
+    border-top: 1px solid #dfe8db;
+    color: #52627a;
+    font-size: 13px;
+  }
+
+  .notif-row strong {
+    color: #172739;
+    white-space: nowrap;
+  }
+
+  .top-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .top-user-meta {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .top-user-meta span {
+    color: #1f2d3d;
+    font-size: 16px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .top-user-meta small {
+    color: #7e8ea3;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .top-user-caret {
+    color: #6f7f93;
+    font-size: 11px;
+    margin-left: 2px;
+  }
+
   body[data-active-tab="dashboard"] .sidebar {
     width: 274px;
     background: linear-gradient(180deg, #063c35 0%, #032f38 56%, #042b2f 100%);
@@ -2229,6 +2367,7 @@
   body[data-active-tab="dashboard"] .db-prod-thumb {
     width: 34px;
     height: 34px;
+    min-width: 34px;
     border-radius: 8px;
     background: #e2e8f0;
     color: #334155;
@@ -2238,6 +2377,23 @@
     justify-content: center;
     font-size: 14px;
     flex-shrink: 0;
+    overflow: hidden;
+    border: 1px solid #dbe4d7;
+  }
+
+  body[data-active-tab="dashboard"] .db-prod-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  body[data-active-tab="dashboard"] .db-prod-thumb:not(.fallback) span {
+    display: none;
+  }
+
+  body[data-active-tab="dashboard"] .db-prod-thumb.fallback img {
+    display: none;
   }
 
   body[data-active-tab="dashboard"] .db-prod-name {
@@ -2460,6 +2616,40 @@
   [data-theme="dark"] .topbar {
     background: #0b1613;
     border-bottom-color: #1c332d;
+  }
+
+  [data-theme="dark"] .topbell {
+    color: #e5f3ee;
+  }
+
+  [data-theme="dark"] .topbell:hover {
+    background: #101f1a;
+  }
+
+  [data-theme="dark"] .notify-pill {
+    border-color: #0b1613;
+  }
+
+  [data-theme="dark"] .notif-popover {
+    background: #101f1a;
+    border-color: #254139;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+  }
+
+  [data-theme="dark"] .notif-title,
+  [data-theme="dark"] .notif-row strong,
+  [data-theme="dark"] .top-user-meta span,
+  [data-theme="dark"] .top-user-caret {
+    color: #e5f3ee;
+  }
+
+  [data-theme="dark"] .notif-row {
+    border-top-color: #254139;
+    color: #a9c0ba;
+  }
+
+  [data-theme="dark"] .top-user-meta small {
+    color: #8fa39e;
   }
 
   [data-theme="dark"] .content {
@@ -2817,7 +3007,9 @@
   }
 
   .produtos-table th {
-    position: static;
+    position: sticky;
+    top: 0;
+    z-index: 6;
     background: #f7faf6;
     color: #2f3b4a;
     font-size: 13px;
@@ -3356,6 +3548,7 @@ let produtoDetalheId = null;
 let produtoDetalheCanal = "todos";
 let menuProdutoAbertoId = null;
 let menuUsuarioAbertoId = null;
+let tinySyncEmAndamento = false;
 let detailChart = null;
 
 let dashBusca = "";
@@ -3541,6 +3734,8 @@ async function iniciarApp() {
   document.getElementById("nav-simulador").style.display = podeGerenciarProdutos() ? "flex" : "none";
   document.getElementById("nav-config").style.display = podeGerenciarProdutos() ? "flex" : "none";
   document.getElementById("tiny-sync-widget").style.display = podeGerenciarProdutos() ? "block" : "none";
+  configurarSinoDashboard();
+  renderNotificacoesDashboard();
 
   setTab("dashboard");
   await atualizarWidgetTinySync();
@@ -3664,6 +3859,8 @@ function setTab(tab) {
   produtoDetalheId = null;
   tabAtual = tab;
   document.body.setAttribute("data-active-tab", tab);
+  configurarSinoDashboard();
+  renderNotificacoesDashboard();
 
   if (tab === "dashboard") {
     title.textContent = "Dashboard";
@@ -3856,6 +4053,19 @@ function obterMetaProdutoDashboard(nomeProduto) {
     return null;
   }
   return dashProdutosMeta.find(p => normalizarTextoDash(p.nome) === alvo) || null;
+}
+
+function renderDashboardProdutoThumb(item) {
+  const meta = obterMetaProdutoDashboard(item.produto) || {};
+  const nome = String(item.produto || meta.nome || "P").trim();
+  const initial = escapeHtml((nome.charAt(0) || "P").toUpperCase());
+  const url = item.imagem_url || meta.imagem_url || meta.imagem || meta.foto_url || meta.thumbnail_url || "";
+
+  if (!url) {
+    return `<span class="db-prod-thumb fallback"><span>${initial}</span></span>`;
+  }
+
+  return `<span class="db-prod-thumb"><img src="${escapeHtml(url)}" alt="" onerror="this.parentElement.classList.add('fallback')" /><span>${initial}</span></span>`;
 }
 
 function deltaPercent(valorNovo, valorBase) {
@@ -4296,7 +4506,7 @@ function renderStatusCompetitivo() {
     <tr>
       <td>
         <div class="db-prod-main">
-          <span class="db-prod-thumb">${escapeHtml(String(item.produto || "P").trim().charAt(0).toUpperCase())}</span>
+          ${renderDashboardProdutoThumb(item)}
           <div>
             <div class="db-prod-name">${escapeHtml(item.produto)}</div>
             <div class="db-prod-sku">SKU: ${escapeHtml(obterMetaProdutoDashboard(item.produto)?.sku || "-")}</div>
@@ -4462,7 +4672,7 @@ function renderDetalhePrioridades() {
     <tr>
       <td>
         <div class="db-prod-main">
-          <span class="db-prod-thumb">${escapeHtml(String(item.produto || "P").trim().charAt(0).toUpperCase())}</span>
+          ${renderDashboardProdutoThumb(item)}
           <div>
             <div class="db-prod-name">${escapeHtml(item.produto)}</div>
             <div class="db-prod-sku">SKU: ${escapeHtml(obterMetaProdutoDashboard(item.produto)?.sku || "-")}</div>
@@ -5544,7 +5754,7 @@ function desenharGraficoHistorico(historico) {
 
 /* ================= PENDENTES ================= */
 
-async function sincronizarTinyIncremental() {
+async function sincronizarTinyIncrementalLegacy() {
   if (!podeGerenciarProdutos()) {
     return;
   }
@@ -5564,7 +5774,7 @@ async function sincronizarTinyIncremental() {
   }
 }
 
-async function sincronizarTinyFull() {
+async function sincronizarTinyFullLegacy() {
   if (!podeGerenciarProdutos()) {
     return;
   }
@@ -5585,6 +5795,90 @@ async function sincronizarTinyFull() {
     await atualizarWidgetTinySync();
   } catch (err) {
     alert("Erro de conexão ao sincronizar Tiny");
+  }
+}
+
+function montarResumoSyncTiny(data, rotulo) {
+  const status = data.status === "parcial" ? " com avisos" : "";
+  const linhas = [
+    `${rotulo} finalizada${status}.`,
+    `Lidos: ${data.total_lidos || 0}`,
+    `Sincronizados: ${data.total_sincronizados || 0}`,
+    `Pendentes: ${data.total_pendentes || 0}`,
+    `Ignorados: ${data.total_ignorados || 0}`,
+    `Erros: ${data.total_erros || 0}`,
+  ];
+
+  const erros = Array.isArray(data.erros_recentes) ? data.erros_recentes.slice(0, 5) : [];
+  if (erros.length) {
+    linhas.push("", "Avisos recentes:");
+    erros.forEach((erro, index) => linhas.push(`${index + 1}. ${erro}`));
+  }
+
+  return linhas.join("\n");
+}
+
+function montarFalhaSyncTiny(data, rotulo) {
+  return `${rotulo} falhou\n\n${data.detail || data.problema || "Erro desconhecido"}\n\nDica: use o botao "Testar conexao Tiny" para diagnosticar.`;
+}
+
+async function sincronizarTinyIncremental() {
+  if (!podeGerenciarProdutos()) {
+    return;
+  }
+
+  if (tinySyncEmAndamento) {
+    alert("Sincronizacao Tiny ja esta em andamento.");
+    return;
+  }
+
+  tinySyncEmAndamento = true;
+  try {
+    const res = await api("/integracoes/tiny/sync/incremental", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(montarFalhaSyncTiny(data, "Sync incremental"));
+      return;
+    }
+    alert(montarResumoSyncTiny(data, "Sync incremental"));
+    await carregarProdutos();
+    await atualizarWidgetTinySync();
+  } catch (err) {
+    alert("Erro de conexao ao sincronizar Tiny. Verifique se o servidor esta online.");
+  } finally {
+    tinySyncEmAndamento = false;
+  }
+}
+
+async function sincronizarTinyFull() {
+  if (!podeGerenciarProdutos()) {
+    return;
+  }
+
+  if (tinySyncEmAndamento) {
+    alert("Sincronizacao Tiny ja esta em andamento.");
+    return;
+  }
+
+  if (!confirm("A sincronizacao FULL pode levar mais tempo. Deseja continuar?")) {
+    return;
+  }
+
+  tinySyncEmAndamento = true;
+  try {
+    const res = await api("/integracoes/tiny/sync/full", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(montarFalhaSyncTiny(data, "Sync FULL"));
+      return;
+    }
+    alert(montarResumoSyncTiny(data, "Sync FULL"));
+    await carregarProdutos();
+    await atualizarWidgetTinySync();
+  } catch (err) {
+    alert("Erro de conexao ao sincronizar Tiny. Verifique se o servidor esta online.");
+  } finally {
+    tinySyncEmAndamento = false;
   }
 }
 
