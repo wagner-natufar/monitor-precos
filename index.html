@@ -3303,6 +3303,348 @@
   @media (max-width: 760px) {
     .topbar { grid-template-columns: 42px 1fr auto !important; }
   }
+
+  /* ===== Ajustes finais: topbar, pendentes e produto pendente ===== */
+  .menu-btn {
+    grid-column: 1;
+  }
+
+  .topbar .search {
+    grid-column: 2;
+    min-width: 0;
+  }
+
+  #page-title {
+    grid-column: 3;
+  }
+
+  .topbar-right {
+    grid-column: 4;
+    justify-self: end;
+    max-width: 100%;
+  }
+
+  .top-user-meta {
+    max-width: 190px;
+    overflow: hidden;
+  }
+
+  .top-user-meta span,
+  .top-user-meta small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  body[data-active-tab="dashboard"] .topbar .search {
+    min-width: 0;
+  }
+
+  body[data-active-tab="dashboard"] .topbar-right {
+    grid-column: 4;
+  }
+
+  body[data-active-tab="pendentes"] .content {
+    background: #f7faf7;
+    padding: 26px 30px;
+  }
+
+  body[data-active-tab="pendentes"] .page-title {
+    font-size: 28px;
+    line-height: 1.15;
+    letter-spacing: 0;
+  }
+
+  body[data-active-tab="pendentes"] .page-subtitle {
+    font-size: 14px;
+    color: #64748b;
+  }
+
+  body[data-active-tab="pendentes"] .stats {
+    grid-template-columns: repeat(4, minmax(170px, 1fr)) !important;
+    gap: 14px;
+  }
+
+  body[data-active-tab="pendentes"] .stat-card {
+    min-height: 82px;
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    padding: 15px 16px;
+    border-radius: 8px;
+  }
+
+  body[data-active-tab="pendentes"] .pending-stat-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 800;
+  }
+
+  body[data-active-tab="pendentes"] .pending-stat-icon.blue {
+    background: #dbeafe;
+    color: #2563eb;
+  }
+
+  body[data-active-tab="pendentes"] .pending-stat-icon.orange {
+    background: #ffedd5;
+    color: #ea580c;
+  }
+
+  body[data-active-tab="pendentes"] .pending-stat-icon.yellow {
+    background: #fef3c7;
+    color: #ca8a04;
+  }
+
+  body[data-active-tab="pendentes"] .pending-stat-icon.red {
+    background: #fee2e2;
+    color: #dc2626;
+  }
+
+  body[data-active-tab="pendentes"] #pending-kpis .stat-card:nth-child(4)::before {
+    content: "\1F512";
+    grid-row: 1 / 4;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: #fee2e2;
+    color: #dc2626;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 800;
+  }
+
+  body[data-active-tab="pendentes"] .stat-card .label,
+  body[data-active-tab="pendentes"] .stat-card .value,
+  body[data-active-tab="pendentes"] .stat-card .sub {
+    grid-column: 2;
+  }
+
+  body[data-active-tab="pendentes"] .stat-card .value {
+    font-size: 25px;
+    color: #0f172a;
+  }
+
+  body[data-active-tab="pendentes"] .stat-card .sub {
+    font-size: 12px;
+  }
+
+  body[data-active-tab="pendentes"] .pending-layout {
+    grid-template-columns: minmax(0, 1fr) 300px;
+    align-items: start;
+    gap: 16px;
+  }
+
+  body[data-active-tab="pendentes"] .pending-tabs {
+    overflow-x: auto;
+  }
+
+  body[data-active-tab="pendentes"] .pending-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+  }
+
+  body[data-active-tab="pendentes"] .pending-search-wrap {
+    flex: 1;
+    min-width: 220px;
+    position: relative;
+  }
+
+  body[data-active-tab="pendentes"] .pending-search-wrap::before {
+    content: "\1F50D";
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+    font-size: 13px;
+    z-index: 1;
+  }
+
+  body[data-active-tab="pendentes"] .pending-search-wrap > span[style] {
+    display: none !important;
+  }
+
+  body[data-active-tab="pendentes"] .pending-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9ca3af;
+    pointer-events: none;
+  }
+
+  body[data-active-tab="pendentes"] .pending-filter-btn {
+    height: 36px;
+    border-radius: 8px;
+    padding: 0 14px;
+    white-space: nowrap;
+  }
+
+  body[data-active-tab="pendentes"] .pending-table {
+    min-width: 900px;
+  }
+
+  body[data-active-tab="pendentes"] .pending-table th {
+    font-size: 13px;
+    padding: 10px 14px;
+    background: #f8fafc;
+    color: #334155;
+  }
+
+  body[data-active-tab="pendentes"] .pending-table td {
+    font-size: 13px;
+    padding: 10px 14px;
+    color: #334155;
+  }
+
+  body[data-active-tab="pendentes"] .pending-product-cell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 210px;
+  }
+
+  body[data-active-tab="pendentes"] .pending-product-name {
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.25;
+    color: #1f2937;
+  }
+
+  body[data-active-tab="pendentes"] .pending-group-row td {
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  body[data-active-tab="pendentes"] .pending-group-sem_sku td {
+    background: #fff7ed;
+    color: #c2410c;
+  }
+
+  body[data-active-tab="pendentes"] .pending-group-sem_custo td {
+    background: #fffbeb;
+    color: #b45309;
+  }
+
+  body[data-active-tab="pendentes"] .pending-group-bloqueado td {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  body[data-active-tab="pendentes"] .pending-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    white-space: nowrap;
+  }
+
+  .integration-pending {
+    display: inline-flex;
+    align-items: center;
+    white-space: nowrap;
+    line-height: 1;
+    background: rgba(239, 68, 68, 0.12) !important;
+    color: #dc2626 !important;
+    text-transform: uppercase;
+    font-size: 12px !important;
+    padding: 5px 8px !important;
+  }
+
+  .produtos-table td:nth-child(11) {
+    white-space: nowrap;
+  }
+
+  [data-theme="dark"] tbody tr.row-main.row-pendente {
+    background: transparent;
+  }
+
+  [data-theme="dark"] tbody tr.row-main.row-pendente:hover {
+    background: var(--row-hover);
+  }
+
+  [data-theme="dark"] .integration-pending {
+    background: rgba(239, 68, 68, 0.16) !important;
+    color: #fca5a5 !important;
+  }
+
+  [data-theme="dark"] body[data-active-tab="pendentes"] .content {
+    background: #07110e;
+  }
+
+  [data-theme="dark"] body[data-active-tab="pendentes"] .pending-table th {
+    background: #14231f;
+    color: #a9c0ba;
+  }
+
+  [data-theme="dark"] body[data-active-tab="pendentes"] .pending-table td,
+  [data-theme="dark"] body[data-active-tab="pendentes"] .pending-product-name {
+    color: #e5f3ee;
+  }
+
+  [data-theme="dark"] body[data-active-tab="pendentes"] .stat-card .value {
+    color: #e5f3ee;
+  }
+
+  [data-theme="dark"] body[data-active-tab="pendentes"] .pending-group-sem_sku td,
+  [data-theme="dark"] body[data-active-tab="pendentes"] .pending-group-sem_custo td {
+    background: rgba(245, 158, 11, 0.12);
+    color: #fbbf24;
+  }
+
+  [data-theme="dark"] body[data-active-tab="pendentes"] .pending-group-bloqueado td {
+    background: rgba(239, 68, 68, 0.14);
+    color: #fca5a5;
+  }
+
+  @media (max-width: 1320px) {
+    .top-user-meta {
+      display: none !important;
+    }
+
+    .top-user-caret {
+      display: none !important;
+    }
+  }
+
+  @media (max-width: 1100px) {
+    body[data-active-tab="dashboard"] .topbar {
+      grid-template-columns: 40px minmax(0, 1fr) auto;
+    }
+
+    body[data-active-tab="dashboard"] .topbar-right {
+      grid-column: 3;
+    }
+
+    body[data-active-tab="dashboard"] .search-kbd {
+      display: none;
+    }
+
+    body[data-active-tab="pendentes"] .pending-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 760px) {
+    .topbar {
+      grid-template-columns: 42px minmax(0, 1fr) auto !important;
+    }
+
+    .topbar-right {
+      grid-column: 3;
+    }
+  }
 </style>
 </head>
 <body>
@@ -5826,50 +6168,6 @@ function desenharGraficoHistorico(historico) {
 
 /* ================= PENDENTES ================= */
 
-async function sincronizarTinyIncrementalLegacy() {
-  if (!podeGerenciarProdutos()) {
-    return;
-  }
-
-  try {
-    const res = await api("/integracoes/tiny/sync/incremental", { method: "POST" });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      alert(`❌ Falha ao sincronizar Tiny\n\n${data.detail || "Erro desconhecido"}\n\nDica: use o botão "Testar conexão Tiny" para diagnosticar.`);
-      return;
-    }
-    alert(`✅ Sync finalizado.\nSincronizados: ${data.total_sincronizados || 0} | Pendentes: ${data.total_pendentes || 0} | Erros: ${data.total_erros || 0}`);
-    await carregarProdutos();
-    await atualizarWidgetTinySync();
-  } catch (err) {
-    alert("Erro de conexão ao sincronizar Tiny");
-  }
-}
-
-async function sincronizarTinyFullLegacy() {
-  if (!podeGerenciarProdutos()) {
-    return;
-  }
-
-  if (!confirm("A sincronização FULL pode levar mais tempo. Deseja continuar?")) {
-    return;
-  }
-
-  try {
-    const res = await api("/integracoes/tiny/sync/full", { method: "POST" });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      alert(`❌ Falha ao sincronizar Tiny (FULL)\n\n${data.detail || "Erro desconhecido"}\n\nDica: use o botão "Testar conexão Tiny" para diagnosticar.`);
-      return;
-    }
-    alert(`✅ Sync FULL finalizado.\nSincronizados: ${data.total_sincronizados || 0} | Pendentes: ${data.total_pendentes || 0} | Erros: ${data.total_erros || 0}`);
-    await carregarProdutos();
-    await atualizarWidgetTinySync();
-  } catch (err) {
-    alert("Erro de conexão ao sincronizar Tiny");
-  }
-}
-
 function montarResumoSyncTiny(data, rotulo) {
   const status = data.status === "parcial" ? " com avisos" : "";
   const linhas = [
@@ -5987,9 +6285,9 @@ function atualizarKpisPendentes() {
   const kpis = document.getElementById("pending-kpis");
   if (kpis) {
     kpis.innerHTML = `
-      <div class="stat-card"><div class="label">Total pendentes</div><div class="value">${total}</div><div class="sub">100% do total</div></div>
-      <div class="stat-card"><div class="label">Sem SKU</div><div class="value">${totalSemSku}</div><div class="sub">${fmtPct(totalSemSku)}</div></div>
-      <div class="stat-card"><div class="label">Sem custo</div><div class="value">${totalSemCusto}</div><div class="sub">${fmtPct(totalSemCusto)}</div></div>
+      <div class="stat-card"><span class="pending-stat-icon blue">&#128196;</span><div class="label">Total pendentes</div><div class="value">${total}</div><div class="sub">100% do total</div></div>
+      <div class="stat-card"><span class="pending-stat-icon orange">&#127991;</span><div class="label">Sem SKU</div><div class="value">${totalSemSku}</div><div class="sub">${fmtPct(totalSemSku)}</div></div>
+      <div class="stat-card"><span class="pending-stat-icon yellow">R$</span><div class="label">Sem custo</div><div class="value">${totalSemCusto}</div><div class="sub">${fmtPct(totalSemCusto)}</div></div>
       <div class="stat-card"><div class="label">Bloqueados para sugestão</div><div class="value">${totalBloqueados}</div><div class="sub">${fmtPct(totalBloqueados)}</div></div>
     `;
   }
@@ -6040,7 +6338,7 @@ function renderPendentesTabela() {
     const items = grupos[gm.key];
     if (!items.length) continue;
     if (showGroups) {
-      html += `<tr style="background:${gm.bg};"><td colspan="8" style="padding:8px 14px;font-size:13px;font-weight:700;color:${gm.color};">${gm.label} (${items.length})</td></tr>`;
+      html += `<tr class="pending-group-row pending-group-${gm.key}"><td colspan="8">${gm.label} (${items.length})</td></tr>`;
     }
     for (const p of items) {
       const curva = p.curva_abc || "C";
@@ -6068,18 +6366,20 @@ function renderPendentesTabela() {
         ? `<img src="${escapeHtml(p.imagem_url)}" style="width:30px;height:30px;border-radius:6px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">`
         : `<span style="display:inline-block;width:30px;height:30px;border-radius:6px;background:var(--secondary-bg);flex-shrink:0;"></span>`;
 
-      html += `<tr>
-        <td><div style="display:flex;align-items:center;gap:8px;">${imgHtml}<strong style="font-size:14px;">${escapeHtml(p.nome || "-")}</strong></div></td>
+      html += `<tr class="pending-data-row">
+        <td><div class="pending-product-cell">${imgHtml}<strong class="pending-product-name">${escapeHtml(p.nome || "-")}</strong></div></td>
         <td style="color:var(--text-muted);font-size:13px;">${tinyId}</td>
         <td style="color:var(--text-muted);font-size:13px;">${sku}</td>
         <td style="font-size:13px;">${custo}</td>
         <td><span class="curva-badge curva-${escapeHtml(curva)}">${escapeHtml(curva)}</span></td>
         <td>${badgesHtml}</td>
         <td style="font-size:13px;color:var(--text-muted);">${acaoText}</td>
-        <td style="text-align:right;white-space:nowrap;">
+        <td style="text-align:right;">
+          <div class="pending-actions">
           <button class="btn-edit" style="font-size:12px;padding:5px 10px;" onclick="abrirModalProduto('${p.id}')">Editar</button>
           ${extraBtn}
           <button class="btn-secondary" style="font-size:12px;padding:5px 10px;" onclick="ignorarPendente('${p.id}')">Ignorar</button>
+          </div>
         </td>
       </tr>`;
     }
@@ -6151,17 +6451,18 @@ async function renderTelaPendentes() {
               <button class="pending-tab" onclick="setPendentesTab('sem_custo')">Sem custo <span class="tab-count" id="ptab-count-sem_custo">0</span></button>
               <button class="pending-tab" onclick="setPendentesTab('bloqueado')">Bloqueados <span class="tab-count" id="ptab-count-bloqueado">0</span></button>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 0;">
-              <div style="flex:1;position:relative;">
+            <div class="pending-filter-row">
+              <div class="pending-search-wrap">
                 <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#9ca3af;pointer-events:none;">🔍</span>
                 <input type="text" id="pending-busca" placeholder="Buscar produto, SKU ou ID..."
                   style="width:100%;padding:8px 12px 8px 34px;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:13px;"
                   oninput="pendentesBuscaStr=this.value;renderPendentesTabela()">
               </div>
+              <button class="btn-secondary pending-filter-btn">Filtros</button>
             </div>
           </div>
           <div class="table-scroll">
-            <table>
+            <table class="pending-table">
               <thead>
                 <tr>
                   <th>Produto</th>
@@ -6899,8 +7200,8 @@ function statusIntegracaoBadge(status, pendencias = []) {
     return '<span class="badge approved">ok</span>';
   }
   if (st === "pendente") {
-    const txt = pendencias && pendencias.length ? `pendente (${pendencias.length})` : "pendente";
-    return `<span class="badge pending">${escapeHtml(txt)}</span>`;
+    const txt = pendencias && pendencias.length ? `PENDENTE (${pendencias.length})` : "PENDENTE";
+    return `<span class="badge integration-pending">${escapeHtml(txt)}</span>`;
   }
   return `<span class="badge viewer">${escapeHtml(status || "-")}</span>`;
 }
