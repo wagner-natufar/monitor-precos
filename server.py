@@ -705,6 +705,8 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
     total_sem_identificador = 0
     total_erros = 0
     erros: List[str] = []
+    total_avisos = 0
+    avisos: List[str] = []
 
     produtos_brutos: List[Dict[str, Any]] = []
 
@@ -745,7 +747,7 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
             while True:
                 params_pagina = dict(params)
                 params_pagina["pagina"] = pagina
-                resp = await tiny_api_post("produtos.alterados", params_pagina)
+                resp = await tiny_api_post("produtos.pesquisa", params_pagina)
                 itens = tiny_get_produtos_lista(resp)
                 if not itens:
                     break
@@ -756,8 +758,8 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
                 if pagina > 500:
                     break
         except HTTPException as exc:
-            registrar_erro_sync(erros, f"produtos.alterados falhou: {exc.detail}. Fallback produtos.pesquisa acionado.")
-            total_erros += 1
+            registrar_erro_sync(avisos, f"produtos.pesquisa incremental falhou: {exc.detail}. Fallback sem dataAlteracao acionado.")
+            total_avisos += 1
             # Fallback: busca todos os produtos caso alterados falhe
             try:
                 pagina = 1
@@ -858,8 +860,10 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
                 "total_sem_ean": total_sem_ean,
                 "total_sem_identificador": total_sem_identificador,
                 "total_erros": total_erros,
+                "total_avisos": total_avisos,
                 "status": status_sync,
                 "erros_recentes": erros[-TINY_MAX_RECENT_ERRORS:],
+                "avisos_recentes": avisos[-TINY_MAX_RECENT_ERRORS:],
                 "updated_at": fim,
             },
             "$setOnInsert": {"created_at": inicio},
@@ -880,8 +884,10 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
         "total_sem_ean": total_sem_ean,
         "total_sem_identificador": total_sem_identificador,
         "total_erros": total_erros,
+        "total_avisos": total_avisos,
         "status": status_sync,
         "erros_recentes": erros[-TINY_MAX_RECENT_ERRORS:],
+        "avisos_recentes": avisos[-TINY_MAX_RECENT_ERRORS:],
     }
  
  
