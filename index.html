@@ -1354,6 +1354,16 @@
     font-size: 13px;
   }
 
+  .sync-widget .sync-actions {
+    display: grid;
+    gap: 6px;
+  }
+
+  .sync-widget button.secondary {
+    background: rgba(255,255,255,0.08);
+    color: #dbfff0;
+  }
+
   .sidebar .user-block {
     border-top: 1px solid rgba(255,255,255,0.12);
     color: #ecfff5;
@@ -3806,6 +3816,13 @@
 </head>
 <body>
 
+<div id="screen-loading" class="auth-bg" style="display:none;">
+  <div class="auth-card">
+    <h1>Monitor de Preços</h1>
+    <p class="sub">Validando seu acesso...</p>
+  </div>
+</div>
+
 <div id="screen-login" class="auth-bg">
   <div class="auth-card">
     <h1>Monitor de Preços</h1>
@@ -3900,7 +3917,11 @@
       <div class="small">Última sincronização Tiny</div>
       <div class="when" id="tiny-sync-when">-</div>
       <div class="status" id="tiny-sync-status">Operacional</div>
-      <button onclick="sincronizarTinyIncremental()">Sincronizar agora</button>
+      <div class="sync-actions">
+        <button onclick="sincronizarTinyIncremental()">Sincronizar agora</button>
+        <button class="secondary" onclick="testarConexaoTiny()">Testar conexão</button>
+        <button class="secondary" onclick="sincronizarTinyFull()">Sync full</button>
+      </div>
     </div>
 
     <button class="theme-toggle" onclick="toggleTheme()">
@@ -4094,14 +4115,10 @@ const CORES = {
 
 const APP_TIMEZONE = "America/Sao_Paulo";
 
-const CANAIS_LABELS = {
-  mercado_livre: "Mercado Livre",
-  amazon: "Amazon",
-  shopee: "Shopee",
-  droga_raia: "Droga Raia",
-};
+const CANAIS_LABELS = CANAL_LABEL;
 
 let token = localStorage.getItem("token") || "";
+let refreshPromise = null;
 
 let usuario = {
   nome: localStorage.getItem("nome") || "Usuário",
@@ -4128,6 +4145,7 @@ let dashData = null;
 let dashEvolutionChart = null;
 let tabAtual = "dashboard";
 let dashProdutosMeta = [];
+let dashProdutosMetaMap = new Map();
 let dashDataInicio = "";
 let dashDataFim = "";
 let dashFiltrosAbertos = false;
@@ -4149,12 +4167,8 @@ let simProdutosCache = [];
 
 setDashRangePorDias(dashDias);
 aplicarTemaSalvo();
-
-if (token) {
-  iniciarApp();
-} else {
-  showScreen("login");
-}
+showScreen("loading");
+iniciarApp();
 
 document.getElementById("form-login").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -4166,6 +4180,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
     const res = await fetch("/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
       body: JSON.stringify({
         email: document.getElementById("login-email").value.trim(),
         senha: document.getElementById("login-senha").value,
@@ -4179,14 +4194,18 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
       return;
     }
 
-    token = data.token;
+    token = data.token || "";
 
     usuario = {
       nome: data.nome || "Usuário",
       perfil: data.perfil || "visualizador",
     };
 
-    localStorage.setItem("token", token);
+    if (token) {
+      localStorage.setItem("token", token);
+    } else {
+      localStorage.removeItem("token");
+    }
     localStorage.setItem("nome", usuario.nome);
     localStorage.setItem("perfil", usuario.perfil);
 
@@ -4206,6 +4225,7 @@ document.getElementById("form-register").addEventListener("submit", async (e) =>
     const res = await fetch("/auth/registrar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
       body: JSON.stringify({
         nome: document.getElementById("reg-nome").value.trim(),
         email: document.getElementById("reg-email").value.trim(),
@@ -4220,15 +4240,19 @@ document.getElementById("form-register").addEventListener("submit", async (e) =>
       return;
     }
 
-    if (data.token) {
-      token = data.token;
+    if (data.autenticado || data.token) {
+      token = data.token || "";
 
       usuario = {
         nome: data.nome || "Usuário",
         perfil: data.perfil || "master",
       };
 
-      localStorage.setItem("token", token);
+      if (token) {
+        localStorage.setItem("token", token);
+      } else {
+        localStorage.removeItem("token");
+      }
       localStorage.setItem("nome", usuario.nome);
       localStorage.setItem("perfil", usuario.perfil);
 
@@ -4278,14 +4302,13 @@ function podeGerenciarUsuarios() {
 }
 
 function showScreen(screen) {
+  document.getElementById("screen-loading").style.display = screen === "loading" ? "flex" : "none";
   document.getElementById("screen-login").style.display = screen === "login" ? "flex" : "none";
   document.getElementById("screen-register").style.display = screen === "register" ? "flex" : "none";
   document.getElementById("screen-app").style.display = screen === "app" ? "flex" : "none";
 }
 
 async function iniciarApp() {
-  showScreen("app");
-
   try {
     const res = await api("/auth/me");
     const me = await res.json();
@@ -4296,7 +4319,12 @@ async function iniciarApp() {
     localStorage.setItem("nome", usuario.nome);
     localStorage.setItem("perfil", usuario.perfil);
     localStorage.setItem("user_id", me.user_id || "");
-  } catch (e) {}
+  } catch (e) {
+    logout();
+    return;
+  }
+
+  showScreen("app");
 
   document.getElementById("user-name").textContent = usuario.nome;
   document.getElementById("user-role").textContent = usuario.perfil;
@@ -4340,7 +4368,15 @@ async function atualizarWidgetTinySync() {
     const avisos = Number(estado.total_avisos || 0);
     const pend = Number(estado.total_pendentes || 0);
     const sincronizados = Number(estado.total_sincronizados || 0);
-    if (erros > 0 && sincronizados === 0) {
+    if (data.status === "nunca_sincronizado") {
+      stEl.textContent = "Nunca";
+      stEl.style.background = "rgba(148,163,184,0.2)";
+      stEl.style.color = "#e5e7eb";
+    } else if (estado.running) {
+      stEl.textContent = "Em andamento";
+      stEl.style.background = "rgba(59,130,246,0.2)";
+      stEl.style.color = "#bfdbfe";
+    } else if (erros > 0 && sincronizados === 0) {
       stEl.textContent = "Com falhas";
       stEl.style.background = "rgba(239,68,68,0.2)";
       stEl.style.color = "#ffd3d3";
@@ -4366,6 +4402,10 @@ async function atualizarWidgetTinySync() {
 }
 
 function logout() {
+  fetch("/auth/logout", {
+    method: "POST",
+    credentials: "same-origin",
+  }).catch(() => {});
   token = "";
   localStorage.removeItem("token");
   localStorage.removeItem("nome");
@@ -4374,19 +4414,61 @@ function logout() {
   showScreen("login");
 }
 
-async function api(path, opts = {}) {
+async function refreshAuthSession() {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch("/auth/refresh", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        return false;
+      }
+      token = "";
+      localStorage.removeItem("token");
+      if (data.nome) {
+        usuario.nome = data.nome;
+        localStorage.setItem("nome", usuario.nome);
+      }
+      if (data.perfil) {
+        usuario.perfil = data.perfil;
+        localStorage.setItem("perfil", usuario.perfil);
+      }
+      return true;
+    } catch (err) {
+      return false;
+    } finally {
+      refreshPromise = null;
+    }
+  })();
+
+  return refreshPromise;
+}
+
+async function api(path, opts = {}, retryRefresh = true) {
   const headers = {
     ...(opts.headers || {}),
-    "Authorization": `Bearer ${token}`,
   };
 
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+ 
   if (opts.body && !headers["Content-Type"]) {
     headers["Content-Type"] = "application/json";
   }
-
-  const res = await fetch(path, { ...opts, headers });
-
+ 
+  const res = await fetch(path, { ...opts, headers, credentials: "same-origin" });
+ 
   if (res.status === 401) {
+    if (retryRefresh && await refreshAuthSession()) {
+      return api(path, opts, false);
+    }
     logout();
     throw new Error("Não autenticado");
   }
@@ -4521,9 +4603,6 @@ function configurarSinoDashboard() {
   const badge = bell.querySelector(".notify-pill");
   if (badge) {
     badge.id = "notify-count";
-    if (badge.textContent === "3") {
-      badge.textContent = "0";
-    }
   }
   if (!document.getElementById("notif-popover")) {
     bell.insertAdjacentHTML("afterend", `
@@ -4617,25 +4696,37 @@ function normalizarTextoDash(txt) {
     .trim();
 }
 
-async function carregarMetaProdutosDashboard() {
-  try {
-    const res = await api("/produtos");
-    dashProdutosMeta = await res.json();
-  } catch (e) {
-    dashProdutosMeta = [];
-  }
+function setDashProdutosMeta(lista) {
+  dashProdutosMeta = Array.isArray(lista) ? lista : [];
+  dashProdutosMetaMap = new Map();
+  dashProdutosMeta.forEach((p) => {
+    if (p.id) {
+      dashProdutosMetaMap.set(`id:${p.id}`, p);
+    }
+    const nome = normalizarTextoDash(p.nome);
+    if (nome && !dashProdutosMetaMap.has(`nome:${nome}`)) {
+      dashProdutosMetaMap.set(`nome:${nome}`, p);
+    }
+  });
 }
 
-function obterMetaProdutoDashboard(nomeProduto) {
-  const alvo = normalizarTextoDash(nomeProduto);
-  if (!alvo || !Array.isArray(dashProdutosMeta) || !dashProdutosMeta.length) {
+function obterMetaProdutoDashboard(item) {
+  if (!item || !dashProdutosMetaMap.size) {
     return null;
   }
-  return dashProdutosMeta.find(p => normalizarTextoDash(p.nome) === alvo) || null;
+  if (typeof item === "object") {
+    if (item.produto_id && dashProdutosMetaMap.has(`id:${item.produto_id}`)) {
+      return dashProdutosMetaMap.get(`id:${item.produto_id}`);
+    }
+    const nomeItem = normalizarTextoDash(item.produto || item.nome);
+    return dashProdutosMetaMap.get(`nome:${nomeItem}`) || null;
+  }
+  const alvo = normalizarTextoDash(item);
+  return dashProdutosMetaMap.get(`nome:${alvo}`) || null;
 }
 
 function renderDashboardProdutoThumb(item) {
-  const meta = obterMetaProdutoDashboard(item.produto) || {};
+  const meta = obterMetaProdutoDashboard(item) || {};
   const nome = String(item.produto || meta.nome || "P").trim();
   const initial = escapeHtml((nome.charAt(0) || "P").toUpperCase());
   const url = item.imagem_url || meta.imagem_url || meta.imagem || meta.foto_url || meta.thumbnail_url || "";
@@ -4886,10 +4977,10 @@ async function carregarDashboard() {
   try {
     const res = await api(`/dashboard?${params.toString()}`);
     dashData = await res.json();
-    await carregarMetaProdutosDashboard();
+    setDashProdutosMeta(dashData?.produtos_meta || []);
   } catch (e) {
     dashData = null;
-    dashProdutosMeta = [];
+    setDashProdutosMeta([]);
   }
 
   renderDashboardDados();
@@ -4960,10 +5051,6 @@ function renderDashboardDados() {
     </div>
   `;
 
-  const dateRange = document.getElementById("dash-date-range");
-  if (dateRange) {
-    dateRange.textContent = formatDashRangeLabel(dashDias);
-  }
   atualizarBotoesPeriodoDashboard();
 
   renderRankingEcommerce();
@@ -5088,13 +5175,13 @@ function renderStatusCompetitivo() {
           ${renderDashboardProdutoThumb(item)}
           <div>
             <div class="db-prod-name">${escapeHtml(item.produto)}</div>
-            <div class="db-prod-sku">SKU: ${escapeHtml(obterMetaProdutoDashboard(item.produto)?.sku || "-")}</div>
+            <div class="db-prod-sku">SKU: ${escapeHtml(obterMetaProdutoDashboard(item)?.sku || item.sku || "-")}</div>
           </div>
         </div>
       </td>
       <td>
-        <span class="db-curva-badge curva-${escapeHtml(obterMetaProdutoDashboard(item.produto)?.curva_abc || "C")}">
-          ${escapeHtml(obterMetaProdutoDashboard(item.produto)?.curva_abc || "C")}
+        <span class="db-curva-badge curva-${escapeHtml(obterMetaProdutoDashboard(item)?.curva_abc || item.curva_abc || "C")}">
+          ${escapeHtml(obterMetaProdutoDashboard(item)?.curva_abc || item.curva_abc || "C")}
         </span>
       </td>
       <td>${formatBRL(item.meu_preco)}</td>
@@ -5103,8 +5190,8 @@ function renderStatusCompetitivo() {
         <div class="db-delta">${formatPercentSigned(deltaPercent(item.menor_preco, item.meu_preco), 2)}</div>
       </td>
       <td>
-        <div>${formatBRL(obterMetaProdutoDashboard(item.produto)?.preco_sugerido ?? item.menor_preco)}</div>
-        <div class="db-delta">${formatPercentSigned(deltaPercent((obterMetaProdutoDashboard(item.produto)?.preco_sugerido ?? item.menor_preco), item.meu_preco), 2)}</div>
+        <div>${formatBRL(obterMetaProdutoDashboard(item)?.preco_sugerido ?? item.preco_sugerido ?? item.menor_preco)}</div>
+        <div class="db-delta">${formatPercentSigned(deltaPercent((obterMetaProdutoDashboard(item)?.preco_sugerido ?? item.preco_sugerido ?? item.menor_preco), item.meu_preco), 2)}</div>
       </td>
       <td><span class="db-status ${classeStatusDash(item.status)}">${escapeHtml(item.status)}</span></td>
     </tr>
@@ -5120,7 +5207,7 @@ function obterPrioridadesFiltradas() {
   }
 
   if (dashPrioridadeCurva !== "todos") {
-    lista = lista.filter(item => (obterMetaProdutoDashboard(item.produto)?.curva_abc || "C") === dashPrioridadeCurva);
+    lista = lista.filter(item => (obterMetaProdutoDashboard(item)?.curva_abc || item.curva_abc || "C") === dashPrioridadeCurva);
   }
 
   if (dashPrioridadeStatus !== "todos") {
@@ -5254,14 +5341,14 @@ function renderDetalhePrioridades() {
           ${renderDashboardProdutoThumb(item)}
           <div>
             <div class="db-prod-name">${escapeHtml(item.produto)}</div>
-            <div class="db-prod-sku">SKU: ${escapeHtml(obterMetaProdutoDashboard(item.produto)?.sku || "-")}</div>
+            <div class="db-prod-sku">SKU: ${escapeHtml(obterMetaProdutoDashboard(item)?.sku || item.sku || "-")}</div>
           </div>
         </div>
       </td>
-      <td><span class="db-curva-badge curva-${escapeHtml(obterMetaProdutoDashboard(item.produto)?.curva_abc || "C")}">${escapeHtml(obterMetaProdutoDashboard(item.produto)?.curva_abc || "C")}</span></td>
+      <td><span class="db-curva-badge curva-${escapeHtml(obterMetaProdutoDashboard(item)?.curva_abc || item.curva_abc || "C")}">${escapeHtml(obterMetaProdutoDashboard(item)?.curva_abc || item.curva_abc || "C")}</span></td>
       <td>${formatBRL(item.meu_preco)}</td>
       <td><div>${formatBRL(item.menor_preco)}</div><div class="db-delta">${formatPercentSigned(deltaPercent(item.menor_preco, item.meu_preco), 2)}</div></td>
-      <td><div>${formatBRL(obterMetaProdutoDashboard(item.produto)?.preco_sugerido ?? item.menor_preco)}</div><div class="db-delta">${formatPercentSigned(deltaPercent((obterMetaProdutoDashboard(item.produto)?.preco_sugerido ?? item.menor_preco), item.meu_preco), 2)}</div></td>
+      <td><div>${formatBRL(obterMetaProdutoDashboard(item)?.preco_sugerido ?? item.preco_sugerido ?? item.menor_preco)}</div><div class="db-delta">${formatPercentSigned(deltaPercent((obterMetaProdutoDashboard(item)?.preco_sugerido ?? item.preco_sugerido ?? item.menor_preco), item.meu_preco), 2)}</div></td>
       <td><span class="db-status ${classeStatusDash(item.status)}">${escapeHtml(item.status)}</span></td>
     </tr>
   `).join("");
@@ -6208,7 +6295,7 @@ async function carregarSaudeIntegracao() {
     const totalOk = Math.max(0, Number(estado.total_sincronizados || 0) - totalErros);
     const taxa = totalLidos > 0 ? ((totalOk / totalLidos) * 100).toFixed(1) + "%" : "-";
 
-    st.textContent = totalErros > 0 ? "Com falhas" : "Operacional";
+    st.textContent = data.status === "nunca_sincronizado" ? "Nunca sincronizado" : estado.running ? "Em andamento" : totalErros > 0 ? "Com falhas" : "Operacional";
     last.textContent = estado.last_sync_at ? `Último sync: ${formatData(estado.last_sync_at)}` : "Sem sincronização";
     succ.textContent = taxa;
     pend.textContent = String(totalPend);
@@ -6368,6 +6455,10 @@ function montarFalhaSyncTiny(data, rotulo) {
   return `${rotulo} falhou\n\n${data.detail || data.problema || "Erro desconhecido"}\n\nDica: use o botao "Testar conexao Tiny" para diagnosticar.`;
 }
 
+function syncFoiIniciado(data) {
+  return data && data.status === "iniciado";
+}
+
 async function sincronizarTinyIncremental() {
   if (!podeGerenciarProdutos()) {
     return;
@@ -6384,6 +6475,11 @@ async function sincronizarTinyIncremental() {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       alert(montarFalhaSyncTiny(data, "Sync incremental"));
+      return;
+    }
+    if (syncFoiIniciado(data)) {
+      alert(data.mensagem || "Sync incremental iniciado em segundo plano.");
+      await atualizarWidgetTinySync();
       return;
     }
     alert(montarResumoSyncTiny(data, "Sync incremental"));
@@ -6416,6 +6512,11 @@ async function sincronizarTinyFull() {
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
       alert(montarFalhaSyncTiny(data, "Sync FULL"));
+      return;
+    }
+    if (syncFoiIniciado(data)) {
+      alert(data.mensagem || "Sync FULL iniciado em segundo plano.");
+      await atualizarWidgetTinySync();
       return;
     }
     alert(montarResumoSyncTiny(data, "Sync FULL"));
@@ -6579,11 +6680,21 @@ function toggleRegrasPendentes(event) {
   }
 }
 
-function ignorarPendente(id) {
+async function ignorarPendente(id) {
   if (!confirm("Deseja ignorar esta pendência? O produto continuará sem sugestão de preço.")) return;
-  pendentesProdutos = pendentesProdutos.filter(p => p.id !== id);
-  atualizarKpisPendentes();
-  renderPendentesTabela();
+  try {
+    const res = await api(`/produtos/${id}/pendencias/ignorar`, { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(data.detail || "Erro ao ignorar pendência");
+      return;
+    }
+    pendentesProdutos = pendentesProdutos.filter(p => p.id !== id);
+    atualizarKpisPendentes();
+    renderPendentesTabela();
+  } catch (err) {
+    alert("Erro de conexão");
+  }
 }
 
 function baixarXlsx(nomeArquivo, nomeAba, cabecalho, linhas) {
@@ -6625,6 +6736,7 @@ async function exportarProdutos() {
     if (curvaFiltro !== "todos") params.set("curva", curvaFiltro);
     params.set("page", "1");
     params.set("limit", "10000");
+    params.set("exportar", "1");
     const res = await api(`/produtos?${params.toString()}`);
     const data = await res.json().catch(() => ({}));
     if (Array.isArray(data)) {
@@ -6919,6 +7031,8 @@ async function executarSimulacaoPreco() {
         ajuste_percentual: parseNum(document.getElementById("sim-ajuste")?.value),
         margem_minima_percentual: parseNum(document.getElementById("sim-margem")?.value),
         preco_minimo_grupo: parseNum(document.getElementById("sim-pmin-grupo")?.value),
+        preco_minimo_produto: parseNum(document.getElementById("sim-pmin-prod")?.value),
+        preco_maximo_produto: parseNum(document.getElementById("sim-pmax-prod")?.value),
       }),
     });
     const data = await res.json().catch(() => ({}));
@@ -6930,8 +7044,10 @@ async function executarSimulacaoPreco() {
 
     const m = data.metricas_mercado || {};
     const s = data.simulacao || {};
+    const alertas = Array.isArray(s.alertas) ? s.alertas : [];
     if (out) {
       out.innerHTML = `
+        ${alertas.length ? `<div class="alert error" style="margin-bottom:12px;">${alertas.map(escapeHtml).join("<br>")}</div>` : ""}
         <div class="stats" style="margin:0 0 12px;">
           <div class="stat-card"><div class="label">Menor Mercado</div><div class="value">${formatBRL(m.menor_preco_mercado)}</div></div>
           <div class="stat-card"><div class="label">Preço Médio</div><div class="value">${formatBRL(m.preco_medio_mercado)}</div></div>
