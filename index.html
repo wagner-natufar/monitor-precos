@@ -3917,10 +3917,12 @@
       <div class="small">Última sincronização Tiny</div>
       <div class="when" id="tiny-sync-when">-</div>
       <div class="status" id="tiny-sync-status">Operacional</div>
+      <div class="small" id="tiny-sync-progress">-</div>
       <div class="sync-actions">
         <button onclick="sincronizarTinyIncremental()">Sincronizar agora</button>
         <button class="secondary" onclick="testarConexaoTiny()">Testar conexão</button>
         <button class="secondary" onclick="sincronizarTinyFull()">Sync full</button>
+        <button class="secondary" onclick="liberarSyncTinyTravado()">Liberar travado</button>
       </div>
     </div>
 
@@ -4135,6 +4137,7 @@ let produtoDetalheCanal = "todos";
 let menuProdutoAbertoId = null;
 let menuUsuarioAbertoId = null;
 let tinySyncEmAndamento = false;
+let tinySyncPollingId = null;
 let detailChart = null;
 
 let dashBusca = "";
@@ -4348,11 +4351,13 @@ async function iniciarApp() {
 
 async function atualizarWidgetTinySync() {
   if (!podeGerenciarProdutos()) {
+    pararPollingTinySync();
     return;
   }
 
   const whenEl = document.getElementById("tiny-sync-when");
   const stEl = document.getElementById("tiny-sync-status");
+  const progressEl = document.getElementById("tiny-sync-progress");
   if (!whenEl || !stEl) {
     return;
   }
@@ -4361,6 +4366,13 @@ async function atualizarWidgetTinySync() {
     const res = await api("/integracoes/tiny/status");
     const data = await res.json().catch(() => ({}));
     const estado = data.estado || {};
+    tinySyncEmAndamento = Boolean(estado.running);
+    if (estado.running) {
+      iniciarPollingTinySync();
+    } else {
+      pararPollingTinySync();
+    }
+
     const quando = estado.last_sync_at ? formatData(estado.last_sync_at) : "Nunca sincronizado";
     whenEl.textContent = quando;
 
@@ -4368,6 +4380,22 @@ async function atualizarWidgetTinySync() {
     const avisos = Number(estado.total_avisos || 0);
     const pend = Number(estado.total_pendentes || 0);
     const sincronizados = Number(estado.total_sincronizados || 0);
+    const lidos = Number(estado.total_lidos || 0);
+    const processados = Number(estado.total_processados || 0);
+    const ignorados = Number(estado.total_ignorados || 0);
+    const fase = estado.fase || "-";
+    const ultimo = estado.ultimo_produto ? ` | Ultimo: ${estado.ultimo_produto}` : "";
+
+    if (progressEl) {
+      if (data.status === "nunca_sincronizado") {
+        progressEl.textContent = "-";
+      } else if (estado.running) {
+        progressEl.textContent = `${fase} | ${processados}/${lidos} processados | OK ${sincronizados} | Ignorados ${ignorados} | Erros ${erros}${ultimo}`;
+      } else {
+        progressEl.textContent = `${estado.status || fase} | Lidos ${lidos} | OK ${sincronizados} | Pendentes ${pend} | Ignorados ${ignorados} | Erros ${erros}`;
+      }
+    }
+
     if (data.status === "nunca_sincronizado") {
       stEl.textContent = "Nunca";
       stEl.style.background = "rgba(148,163,184,0.2)";
@@ -4376,6 +4404,10 @@ async function atualizarWidgetTinySync() {
       stEl.textContent = "Em andamento";
       stEl.style.background = "rgba(59,130,246,0.2)";
       stEl.style.color = "#bfdbfe";
+    } else if (estado.status === "travado") {
+      stEl.textContent = "Travado";
+      stEl.style.background = "rgba(239,68,68,0.2)";
+      stEl.style.color = "#ffd3d3";
     } else if (erros > 0 && sincronizados === 0) {
       stEl.textContent = "Com falhas";
       stEl.style.background = "rgba(239,68,68,0.2)";
@@ -4398,10 +4430,31 @@ async function atualizarWidgetTinySync() {
     stEl.textContent = "Indisponível";
     stEl.style.background = "rgba(239,68,68,0.2)";
     stEl.style.color = "#ffd3d3";
+    if (progressEl) {
+      progressEl.textContent = "-";
+    }
   }
 }
 
+function iniciarPollingTinySync() {
+  if (tinySyncPollingId) {
+    return;
+  }
+  tinySyncPollingId = setInterval(() => {
+    atualizarWidgetTinySync();
+  }, 8000);
+}
+
+function pararPollingTinySync() {
+  if (!tinySyncPollingId) {
+    return;
+  }
+  clearInterval(tinySyncPollingId);
+  tinySyncPollingId = null;
+}
+
 function logout() {
+  pararPollingTinySync();
   fetch("/auth/logout", {
     method: "POST",
     credentials: "same-origin",
@@ -6470,6 +6523,7 @@ async function sincronizarTinyIncremental() {
   }
 
   tinySyncEmAndamento = true;
+  let iniciouBackground = false;
   try {
     const res = await api("/integracoes/tiny/sync/incremental", { method: "POST" });
     const data = await res.json().catch(() => ({}));
@@ -6478,6 +6532,7 @@ async function sincronizarTinyIncremental() {
       return;
     }
     if (syncFoiIniciado(data)) {
+      iniciouBackground = true;
       alert(data.mensagem || "Sync incremental iniciado em segundo plano.");
       await atualizarWidgetTinySync();
       return;
@@ -6488,7 +6543,9 @@ async function sincronizarTinyIncremental() {
   } catch (err) {
     alert("Erro de conexao ao sincronizar Tiny. Verifique se o servidor esta online.");
   } finally {
-    tinySyncEmAndamento = false;
+    if (!iniciouBackground) {
+      tinySyncEmAndamento = false;
+    }
   }
 }
 
@@ -6507,6 +6564,7 @@ async function sincronizarTinyFull() {
   }
 
   tinySyncEmAndamento = true;
+  let iniciouBackground = false;
   try {
     const res = await api("/integracoes/tiny/sync/full", { method: "POST" });
     const data = await res.json().catch(() => ({}));
@@ -6515,6 +6573,7 @@ async function sincronizarTinyFull() {
       return;
     }
     if (syncFoiIniciado(data)) {
+      iniciouBackground = true;
       alert(data.mensagem || "Sync FULL iniciado em segundo plano.");
       await atualizarWidgetTinySync();
       return;
@@ -6525,7 +6584,9 @@ async function sincronizarTinyFull() {
   } catch (err) {
     alert("Erro de conexao ao sincronizar Tiny. Verifique se o servidor esta online.");
   } finally {
-    tinySyncEmAndamento = false;
+    if (!iniciouBackground) {
+      tinySyncEmAndamento = false;
+    }
   }
 }
 
@@ -6542,6 +6603,31 @@ async function testarConexaoTiny() {
     }
   } catch (err) {
     alert("Erro ao testar conexão com Tiny");
+  }
+}
+
+async function liberarSyncTinyTravado() {
+  if (!podeGerenciarProdutos()) {
+    return;
+  }
+
+  if (!confirm("Liberar o estado de sincronizacao em andamento? Use isso apenas se ela estiver travada.")) {
+    return;
+  }
+
+  try {
+    const res = await api("/integracoes/tiny/sync/reset", { method: "POST" });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      alert(data.detail || "Erro ao liberar sincronizacao Tiny.");
+      return;
+    }
+
+    tinySyncEmAndamento = false;
+    alert(data.mensagem || "Sync Tiny liberado.");
+    await atualizarWidgetTinySync();
+  } catch (err) {
+    alert("Erro de conexao ao liberar sincronizacao Tiny.");
   }
 }
 
