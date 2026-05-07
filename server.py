@@ -6,18 +6,19 @@ import hmac
 import secrets
 import json
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Any, Dict, List
 from urllib.parse import urlencode
 from urllib.request import Request as UrlRequest, urlopen
 from urllib.error import HTTPError, URLError
  
-from fastapi import FastAPI, HTTPException, Depends, Header, Request
+from fastapi import FastAPI, HTTPException, Depends, Header, Request, BackgroundTasks, Response, Cookie
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 from motor.motor_asyncio import AsyncIOMotorClient
 from bson import ObjectId
+from pymongo.errors import DuplicateKeyError, OperationFailure
 import uvicorn
  
 # === Config ===
@@ -39,6 +40,15 @@ CORS_ALLOW_ORIGINS = [
 TINY_API_TOKEN = os.getenv("TINY_API_TOKEN", "").strip()
 TINY_API_BASE_URL = os.getenv("TINY_API_BASE_URL", "https://api.tiny.com.br/api2").strip()
 TINY_SYNC_INTERVAL_MINUTES = int(os.getenv("TINY_SYNC_INTERVAL_MINUTES", "30"))
+JWT_ACCESS_TOKEN_HOURS = int(os.getenv("JWT_ACCESS_TOKEN_HOURS", "1"))
+REFRESH_TOKEN_DAYS = int(os.getenv("REFRESH_TOKEN_DAYS", "14"))
+ACCESS_COOKIE_NAME = os.getenv("ACCESS_COOKIE_NAME", "mp_access_token")
+REFRESH_COOKIE_NAME = os.getenv("REFRESH_COOKIE_NAME", "mp_refresh_token")
+COOKIE_SECURE = os.getenv("AUTH_COOKIE_SECURE", "false").strip().lower() in {"1", "true", "yes", "on"}
+COOKIE_SAMESITE = os.getenv("AUTH_COOKIE_SAMESITE", "lax").strip().lower()
+PRICING_GROUPS_CACHE_TTL_SECONDS = int(os.getenv("PRICING_GROUPS_CACHE_TTL_SECONDS", "300"))
+PRODUTOS_MAX_PAGE_LIMIT = int(os.getenv("PRODUTOS_MAX_PAGE_LIMIT", "100"))
+PRODUTOS_MAX_EXPORT_LIMIT = int(os.getenv("PRODUTOS_MAX_EXPORT_LIMIT", "10000"))
 
 if not JWT_SECRET:
     raise RuntimeError("JWT_SECRET não configurado. Defina a variável de ambiente JWT_SECRET.")
@@ -51,6 +61,8 @@ historico_col = db.historico
 usuarios_col = db.usuarios
 pricing_groups_col = db.pricing_groups
 tiny_sync_state_col = db.tiny_sync_state
+app_state_col = db.app_state
+admin_events_col = db.admin_events
  
 # === App ===
 app = FastAPI(title="Monitor de Preços")
@@ -58,7 +70,7 @@ app = FastAPI(title="Monitor de Preços")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ALLOW_ORIGINS,
-    allow_credentials=False,
+    allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
@@ -70,32 +82,101 @@ CURVAS_ABC = ["A", "B", "C"]
  
 # === Helpers ===
  
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def serial_value(value):
+    if isinstance(value, ObjectId):
+        return str(value)
+    if isinstance(value, datetime):
+        return value.isoformat()
+    if isinstance(value, list):
+        return [serial_value(item) for item in value]
+    if isinstance(value, dict):
+        return {
+            ("id" if k == "_id" else k): serial_value(v)
+            for k, v in value.items()
+        }
+    return value
+
+
 def serial(doc):
     if doc is None:
         return None
  
-    out = {}
- 
-    for k, v in dict(doc).items():
-        key = "id" if k == "_id" else k
- 
-        if isinstance(v, ObjectId):
-            out[key] = str(v)
-        elif isinstance(v, datetime):
-            out[key] = v.isoformat()
-        elif isinstance(v, dict):
-            out[key] = {
-                kk: (
-                    str(vv) if isinstance(vv, ObjectId)
-                    else vv.isoformat() if isinstance(vv, datetime)
-                    else vv
-                )
-                for kk, vv in v.items()
-            }
-        else:
-            out[key] = v
- 
+    return serial_value(dict(doc))
+
+
+def normalizar_email(email: str) -> str:
+    return str(email or "").strip().lower()
+
+
+def sanitizar_usuario(doc: Dict[str, Any]) -> Dict[str, Any]:
+    out = serial(doc)
+    for campo in (
+        "senha_hash",
+        "senha",
+        "password",
+        "refresh_token_hash",
+        "refresh_token_expires_at",
+    ):
+        out.pop(campo, None)
     return out
+
+
+async def registrar_evento_admin(
+    acao: str,
+    alvo_id: str,
+    actor: Optional[Dict[str, Any]] = None,
+    detalhes: Optional[Dict[str, Any]] = None,
+) -> None:
+    await admin_events_col.insert_one({
+        "acao": acao,
+        "alvo_id": alvo_id,
+        "actor_id": actor.get("user_id") if actor else None,
+        "actor_email": actor.get("email") if actor else None,
+        "detalhes": detalhes or {},
+        "criado_em": utcnow(),
+    })
+
+
+async def criar_indice_seguro(collection, keys, **kwargs) -> None:
+    try:
+        await collection.create_index(keys, **kwargs)
+    except (OperationFailure, DuplicateKeyError) as exc:
+        print(f"[startup] Falha ao criar índice {keys}: {exc}")
+
+
+@app.on_event("startup")
+async def startup_setup() -> None:
+    await criar_indice_seguro(usuarios_col, [("email", 1)], unique=True)
+    await criar_indice_seguro(
+        usuarios_col,
+        [("refresh_token_hash", 1)],
+        unique=True,
+        partialFilterExpression={"refresh_token_hash": {"$type": "string", "$gt": ""}},
+    )
+    await criar_indice_seguro(
+        produtos_col,
+        [("sku", 1)],
+        unique=True,
+        partialFilterExpression={"sku": {"$type": "string", "$gt": ""}},
+    )
+    await criar_indice_seguro(
+        produtos_col,
+        [("ean", 1)],
+        partialFilterExpression={"ean": {"$type": "string", "$gt": ""}},
+    )
+    await criar_indice_seguro(
+        produtos_col,
+        [("tiny_id", 1)],
+        unique=True,
+        partialFilterExpression={"tiny_id": {"$type": "string", "$gt": ""}},
+    )
+    await criar_indice_seguro(historico_col, [("produto_id", 1), ("canal", 1), ("data", -1)])
+    await criar_indice_seguro(pricing_groups_col, [("grupo", 1)], unique=True)
+    await garantir_grupos_precificacao()
  
  
 def hash_senha(senha: str) -> str:
@@ -147,12 +228,75 @@ def verificar_senha(senha: str, senha_hash: str) -> bool:
  
  
 def criar_token(user_id: str, perfil: str) -> str:
+    emitido_em = utcnow()
     payload = {
         "user_id": user_id,
         "perfil": perfil,
-        "exp": datetime.utcnow() + timedelta(days=30),
+        "iat": emitido_em,
+        "exp": emitido_em + timedelta(hours=JWT_ACCESS_TOKEN_HOURS),
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALG)
+
+
+def hash_refresh_token(token: str) -> str:
+    return hmac.new(
+        JWT_SECRET.encode("utf-8"),
+        token.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def set_cookie_seguro(response: Response, nome: str, valor: str, max_age: int) -> None:
+    response.set_cookie(
+        key=nome,
+        value=valor,
+        max_age=max_age,
+        httponly=True,
+        secure=COOKIE_SECURE,
+        samesite=COOKIE_SAMESITE,
+        path="/",
+    )
+
+
+def limpar_cookies_auth(response: Response) -> None:
+    response.delete_cookie(ACCESS_COOKIE_NAME, path="/")
+    response.delete_cookie(REFRESH_COOKIE_NAME, path="/")
+
+
+async def emitir_cookies_auth(
+    response: Response,
+    user_id: str,
+    perfil: str,
+) -> str:
+    access_token = criar_token(user_id, perfil)
+    refresh_token = secrets.token_urlsafe(48)
+    agora = utcnow()
+    refresh_expira_em = agora + timedelta(days=REFRESH_TOKEN_DAYS)
+
+    await usuarios_col.update_one(
+        {"_id": ObjectId(user_id)},
+        {
+            "$set": {
+                "refresh_token_hash": hash_refresh_token(refresh_token),
+                "refresh_token_expires_at": refresh_expira_em,
+                "ultimo_login_em": agora,
+            }
+        },
+    )
+
+    set_cookie_seguro(
+        response,
+        ACCESS_COOKIE_NAME,
+        access_token,
+        JWT_ACCESS_TOKEN_HOURS * 60 * 60,
+    )
+    set_cookie_seguro(
+        response,
+        REFRESH_COOKIE_NAME,
+        refresh_token,
+        REFRESH_TOKEN_DAYS * 24 * 60 * 60,
+    )
+    return access_token
  
  
 def object_id_or_400(value: str):
@@ -172,11 +316,18 @@ def normalizar_canal(canal: Optional[str] = None) -> Optional[str]:
     return canal
  
  
-async def get_user(authorization: Optional[str] = Header(None)):
-    if not authorization or not authorization.startswith("Bearer "):
+async def get_user(
+    authorization: Optional[str] = Header(None),
+    access_cookie: Optional[str] = Cookie(None, alias=ACCESS_COOKIE_NAME),
+):
+    token = None
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split(" ", 1)[1]
+    elif access_cookie:
+        token = access_cookie
+
+    if not token:
         raise HTTPException(status_code=401, detail="Não autenticado")
- 
-    token = authorization.split(" ", 1)[1]
  
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALG])
@@ -192,6 +343,26 @@ async def get_user(authorization: Optional[str] = Header(None)):
  
     if user_db.get("status", "aprovado") != "aprovado":
         raise HTTPException(status_code=403, detail="Usuário sem acesso aprovado")
+
+    invalidado_em = user_db.get("token_invalidado_em")
+    emitido_em = payload.get("iat")
+    if invalidado_em and emitido_em:
+        if isinstance(emitido_em, (int, float)):
+            emitido_dt = datetime.fromtimestamp(float(emitido_em), tz=timezone.utc)
+        elif isinstance(emitido_em, str):
+            try:
+                emitido_dt = datetime.fromisoformat(emitido_em.replace("Z", "+00:00"))
+            except ValueError:
+                emitido_dt = None
+        else:
+            emitido_dt = None
+
+        if isinstance(invalidado_em, datetime) and invalidado_em.tzinfo is None:
+            invalidado_em = invalidado_em.replace(tzinfo=timezone.utc)
+        if emitido_dt and emitido_dt.tzinfo is None:
+            emitido_dt = emitido_dt.replace(tzinfo=timezone.utc)
+        if emitido_dt and invalidado_em and emitido_dt < invalidado_em:
+            raise HTTPException(status_code=401, detail="Token expirado por alteração de acesso")
  
     return {
         "user_id": str(user_db["_id"]),
@@ -281,23 +452,42 @@ def obter_grupo_default(grupo: str) -> Dict[str, Any]:
     return defaults[grupo]
 
 
+pricing_groups_cache: Dict[str, Any] = {
+    "expires_at": None,
+    "data": None,
+}
+
+
+def invalidar_cache_grupos_precificacao() -> None:
+    pricing_groups_cache["expires_at"] = None
+    pricing_groups_cache["data"] = None
+
+
 async def garantir_grupos_precificacao() -> None:
     for grupo in CURVAS_ABC:
         atual = await pricing_groups_col.find_one({"grupo": grupo})
         if not atual:
             doc = obter_grupo_default(grupo)
-            doc["criado_em"] = datetime.utcnow()
-            doc["atualizado_em"] = datetime.utcnow()
+            doc["criado_em"] = utcnow()
+            doc["atualizado_em"] = utcnow()
             await pricing_groups_col.insert_one(doc)
 
 
 async def obter_mapa_grupos_precificacao() -> Dict[str, Dict[str, Any]]:
+    agora = utcnow()
+    expires_at = pricing_groups_cache.get("expires_at")
+    data_cache = pricing_groups_cache.get("data")
+    if data_cache and isinstance(expires_at, datetime) and expires_at > agora:
+        return data_cache
+
     await garantir_grupos_precificacao()
     docs = await pricing_groups_col.find().to_list(20)
     mapa = {d.get("grupo", "C"): d for d in docs}
     for grupo in CURVAS_ABC:
         if grupo not in mapa:
             mapa[grupo] = obter_grupo_default(grupo)
+    pricing_groups_cache["data"] = mapa
+    pricing_groups_cache["expires_at"] = agora + timedelta(seconds=PRICING_GROUPS_CACHE_TTL_SECONDS)
     return mapa
 
 
@@ -312,6 +502,37 @@ def calcular_pendencias_produto(doc: Dict[str, Any]) -> List[str]:
         pendencias.append("sem_custo")
 
     return pendencias
+
+
+def validar_numero_nao_negativo(nome: str, valor: Any) -> None:
+    num = to_float(valor)
+    if num is not None and num < 0:
+        raise HTTPException(status_code=400, detail=f"{nome} não pode ser negativo")
+
+
+def validar_produto_negocio(produto: Any) -> None:
+    if not str(produto.nome or "").strip():
+        raise HTTPException(status_code=400, detail="Nome do produto é obrigatório")
+
+    campos = {
+        "Custo unitário": produto.custo_unitario,
+        "Estoque atual": produto.estoque_atual,
+        "Preço mínimo do produto": produto.preco_minimo_produto,
+        "Preço máximo do produto": produto.preco_maximo_produto,
+    }
+    for nome, valor in campos.items():
+        validar_numero_nao_negativo(nome, valor)
+
+    pmin = to_float(produto.preco_minimo_produto)
+    pmax = to_float(produto.preco_maximo_produto)
+    if pmin is not None and pmax is not None and pmax > 0 and pmin > pmax:
+        raise HTTPException(status_code=400, detail="Preço mínimo do produto não pode ser maior que o preço máximo")
+
+    precos = produto.precos_praticados.dict() if produto.precos_praticados else {}
+    for canal, valor in precos.items():
+        num = to_float(valor)
+        if num is not None and num <= 0:
+            raise HTTPException(status_code=400, detail=f"Preço praticado de {canal} deve ser maior que zero")
 
 
 def normalizar_doc_produto(doc: Dict[str, Any]) -> Dict[str, Any]:
@@ -399,6 +620,7 @@ def calcular_preco_sugerido(
     metricas: Dict[str, Optional[float]],
     config: Dict[str, Any],
 ) -> Dict[str, Any]:
+    alertas: List[str] = []
     estrategia = config.get("estrategia_base") or "menor_preco"
     base = metricas.get("menor_preco_mercado") if estrategia == "menor_preco" else metricas.get("preco_medio_mercado")
     if base is None:
@@ -406,6 +628,7 @@ def calcular_preco_sugerido(
             "preco_sugerido": None,
             "base_estrategia": estrategia,
             "motivo": "Sem dados de mercado suficientes",
+            "alertas": ["Sem dados de mercado suficientes"],
         }
 
     ajuste_percentual = to_float(config.get("ajuste_percentual")) or 0.0
@@ -442,6 +665,32 @@ def calcular_preco_sugerido(
     preco_sugerido = max(preco_ajustado, piso_final) if piso_final is not None else preco_ajustado
 
     preco_maximo_produto = to_float(produto.get("preco_maximo_produto"))
+    conflito_preco_maximo = bool(
+        preco_maximo_produto is not None
+        and preco_maximo_produto > 0
+        and piso_final is not None
+        and preco_maximo_produto < piso_final
+    )
+    if conflito_preco_maximo:
+        alertas.append(
+            "Preço máximo do produto está abaixo do piso mínimo calculado por custo/margem. Revise a regra antes de publicar."
+        )
+        return {
+            "preco_sugerido": None,
+            "base_estrategia": estrategia,
+            "base_valor": round(base, 2),
+            "ajuste_percentual": ajuste_percentual,
+            "preco_ajustado": round(preco_ajustado, 2),
+            "piso_custo": round(piso_custo, 2) if piso_custo is not None else None,
+            "piso_final": round(piso_final, 2) if piso_final is not None else None,
+            "preco_maximo_produto": round(preco_maximo_produto, 2),
+            "preco_sem_teto": round(preco_sugerido, 2),
+            "estoque_baixo_aplicado": estoque_baixo_aplicado,
+            "conflito_preco_maximo": True,
+            "motivo": "Conflito entre preço máximo e piso mínimo",
+            "alertas": alertas,
+        }
+
     if preco_maximo_produto is not None and preco_maximo_produto > 0:
         preco_sugerido = min(preco_sugerido, preco_maximo_produto)
 
@@ -454,6 +703,8 @@ def calcular_preco_sugerido(
         "piso_custo": round(piso_custo, 2) if piso_custo is not None else None,
         "piso_final": round(piso_final, 2) if piso_final is not None else None,
         "estoque_baixo_aplicado": estoque_baixo_aplicado,
+        "conflito_preco_maximo": False,
+        "alertas": alertas,
     }
 
 
@@ -676,9 +927,9 @@ async def upsert_produto_tiny(base: Dict[str, Any], detalhe: Dict[str, Any], est
         "tiny_id": tiny_id or doc.get("tiny_id"),
         "custo_unitario": custo if custo is not None else doc.get("custo_unitario"),
         "estoque_atual": estoque if estoque is not None else doc.get("estoque_atual"),
-        "tiny_updated_at": datetime.utcnow(),
+        "tiny_updated_at": utcnow(),
         "sync_origem": "tiny",
-        "atualizado_em": datetime.utcnow(),
+        "atualizado_em": utcnow(),
     })
     doc = normalizar_doc_produto(doc)
 
@@ -687,7 +938,7 @@ async def upsert_produto_tiny(base: Dict[str, Any], detalhe: Dict[str, Any], est
         selector,
         {
             "$set": update_doc,
-            "$setOnInsert": {"criado_em": datetime.utcnow()},
+            "$setOnInsert": {"criado_em": utcnow()},
         },
         upsert=True,
     )
@@ -696,7 +947,7 @@ async def upsert_produto_tiny(base: Dict[str, Any], detalhe: Dict[str, Any], est
 
 
 async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
-    inicio = datetime.utcnow()
+    inicio = utcnow()
     total_lidos = 0
     total_sincronizados = 0
     total_pendentes = 0
@@ -844,7 +1095,7 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
 
     total_ignorados = total_inativos + total_sem_ean + total_sem_identificador
     status_sync = "parcial" if total_erros else "sucesso"
-    fim = datetime.utcnow()
+    fim = utcnow()
     await tiny_sync_state_col.update_one(
         {"_id": "tiny"},
         {
@@ -862,6 +1113,7 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
                 "total_erros": total_erros,
                 "total_avisos": total_avisos,
                 "status": status_sync,
+                "running": False,
                 "erros_recentes": erros[-TINY_MAX_RECENT_ERRORS:],
                 "avisos_recentes": avisos[-TINY_MAX_RECENT_ERRORS:],
                 "updated_at": fim,
@@ -888,6 +1140,79 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
         "status": status_sync,
         "erros_recentes": erros[-TINY_MAX_RECENT_ERRORS:],
         "avisos_recentes": avisos[-TINY_MAX_RECENT_ERRORS:],
+    }
+
+
+async def executar_sync_tiny_background(full: bool, user_id: str) -> None:
+    try:
+        await executar_sync_tiny(full=full)
+    except Exception as err:
+        agora = utcnow()
+        await tiny_sync_state_col.update_one(
+            {"_id": "tiny"},
+            {
+                "$set": {
+                    "running": False,
+                    "status": "falha",
+                    "last_error": str(err),
+                    "total_erros": 1,
+                    "updated_at": agora,
+                    "finished_at": agora,
+                },
+                "$push": {
+                    "erros_recentes": {
+                        "$each": [str(err)[:300]],
+                        "$slice": -TINY_MAX_RECENT_ERRORS,
+                    }
+                },
+            },
+            upsert=True,
+        )
+
+
+async def iniciar_sync_tiny_background(
+    full: bool,
+    user: Dict[str, Any],
+    background_tasks: BackgroundTasks,
+) -> Dict[str, Any]:
+    agora = utcnow()
+    stale_after = agora - timedelta(hours=2)
+    modo = "full" if full else "incremental"
+
+    try:
+        res = await tiny_sync_state_col.update_one(
+            {
+                "_id": "tiny",
+                "$or": [
+                    {"running": {"$ne": True}},
+                    {"started_at": {"$lt": stale_after}},
+                ],
+            },
+            {
+                "$set": {
+                    "running": True,
+                    "status": "em_andamento",
+                    "last_sync_type": modo,
+                    "started_at": agora,
+                    "requested_by": user.get("user_id"),
+                    "updated_at": agora,
+                },
+                "$setOnInsert": {"created_at": agora},
+            },
+            upsert=True,
+        )
+    except DuplicateKeyError:
+        raise HTTPException(status_code=409, detail="Já existe uma sincronização Tiny em andamento")
+
+    if res.matched_count == 0 and res.upserted_id is None:
+        raise HTTPException(status_code=409, detail="Já existe uma sincronização Tiny em andamento")
+
+    background_tasks.add_task(executar_sync_tiny_background, full, user.get("user_id", ""))
+    return {
+        "status": "iniciado",
+        "modo": modo,
+        "mensagem": "Sincronização Tiny iniciada em segundo plano.",
+        "started_at": agora.isoformat(),
     }
  
  
@@ -954,6 +1279,8 @@ class PricingSimulacaoInput(BaseModel):
     ajuste_percentual: Optional[float] = None
     margem_minima_percentual: Optional[float] = None
     preco_minimo_grupo: Optional[float] = None
+    preco_minimo_produto: Optional[float] = None
+    preco_maximo_produto: Optional[float] = None
     estoque_baixo_limite: Optional[float] = None
     estoque_baixo_ajuste_percentual: Optional[float] = None
  
@@ -961,32 +1288,51 @@ class PricingSimulacaoInput(BaseModel):
 # === Auth ===
  
 @app.post("/auth/registrar")
-async def registrar(data: CadastroInput):
-    existente = await usuarios_col.find_one({"email": data.email})
+async def registrar(data: CadastroInput, response: Response):
+    email = normalizar_email(data.email)
+    if not email:
+        raise HTTPException(status_code=400, detail="E-mail inválido")
+    if len(data.senha or "") < 8:
+        raise HTTPException(status_code=400, detail="A senha deve ter pelo menos 8 caracteres")
+
+    existente = await usuarios_col.find_one({"email": email})
  
     if existente:
         raise HTTPException(status_code=400, detail="E-mail já cadastrado")
  
     total = await usuarios_col.count_documents({})
-    primeiro_master = total == 0
+    primeiro_master = False
+    if total == 0:
+        try:
+            await app_state_col.insert_one({
+                "_id": "bootstrap_master",
+                "email": email,
+                "criado_em": utcnow(),
+            })
+            primeiro_master = True
+        except DuplicateKeyError:
+            primeiro_master = False
  
     novo = {
         "nome": data.nome,
-        "email": data.email,
+        "email": email,
         "senha_hash": hash_senha(data.senha),
         "perfil": "master" if primeiro_master else "visualizador",
         "status": "aprovado" if primeiro_master else "pendente",
-        "criado_em": datetime.utcnow(),
+        "criado_em": utcnow(),
     }
  
-    res = await usuarios_col.insert_one(novo)
+    try:
+        res = await usuarios_col.insert_one(novo)
+    except DuplicateKeyError:
+        raise HTTPException(status_code=400, detail="E-mail já cadastrado")
     user_id = str(res.inserted_id)
  
     if primeiro_master:
-        token = criar_token(user_id, "master")
+        await emitir_cookies_auth(response, user_id, "master")
  
         return {
-            "token": token,
+            "autenticado": True,
             "perfil": "master",
             "nome": data.nome,
             "primeiro_master": True,
@@ -999,8 +1345,9 @@ async def registrar(data: CadastroInput):
  
  
 @app.post("/auth/login")
-async def login(data: LoginInput):
-    user = await usuarios_col.find_one({"email": data.email})
+async def login(data: LoginInput, response: Response):
+    email = normalizar_email(data.email)
+    user = await usuarios_col.find_one({"email": email})
  
     if not user:
         raise HTTPException(status_code=401, detail="E-mail ou senha incorretos")
@@ -1020,7 +1367,10 @@ async def login(data: LoginInput):
     if is_hash_legacy_sha256(senha_armazenada):
         await usuarios_col.update_one(
             {"_id": user["_id"]},
-            {"$set": {"senha_hash": hash_senha(data.senha)}},
+            {
+                "$set": {"senha_hash": hash_senha(data.senha)},
+                "$unset": {"senha": "", "password": ""},
+            },
         )
  
     status = user.get("status", "aprovado")
@@ -1048,13 +1398,72 @@ async def login(data: LoginInput):
     user_id = str(user["_id"])
     nome = user.get("nome", user.get("email", ""))
  
-    token = criar_token(user_id, perfil)
+    await emitir_cookies_auth(response, user_id, perfil)
  
     return {
-        "token": token,
+        "autenticado": True,
         "perfil": perfil,
         "nome": nome,
     }
+
+
+@app.post("/auth/refresh")
+async def refresh_session(
+    response: Response,
+    refresh_cookie: Optional[str] = Cookie(None, alias=REFRESH_COOKIE_NAME),
+):
+    if not refresh_cookie:
+        limpar_cookies_auth(response)
+        raise HTTPException(status_code=401, detail="Sessão expirada")
+
+    token_hash = hash_refresh_token(refresh_cookie)
+    usuario = await usuarios_col.find_one({"refresh_token_hash": token_hash})
+    if not usuario:
+        limpar_cookies_auth(response)
+        raise HTTPException(status_code=401, detail="Sessão inválida")
+
+    expira_em = usuario.get("refresh_token_expires_at")
+    if isinstance(expira_em, datetime) and expira_em.tzinfo is None:
+        expira_em = expira_em.replace(tzinfo=timezone.utc)
+    if not isinstance(expira_em, datetime) or expira_em <= utcnow():
+        limpar_cookies_auth(response)
+        await usuarios_col.update_one(
+            {"_id": usuario["_id"]},
+            {"$unset": {"refresh_token_hash": "", "refresh_token_expires_at": ""}},
+        )
+        raise HTTPException(status_code=401, detail="Sessão expirada")
+
+    if usuario.get("status", "aprovado") != "aprovado":
+        limpar_cookies_auth(response)
+        raise HTTPException(status_code=403, detail="Usuário sem acesso aprovado")
+
+    perfil = usuario.get("perfil", "visualizador")
+    await emitir_cookies_auth(response, str(usuario["_id"]), perfil)
+    return {
+        "autenticado": True,
+        "perfil": perfil,
+        "nome": usuario.get("nome", usuario.get("email", "")),
+    }
+
+
+@app.post("/auth/logout")
+async def logout(
+    response: Response,
+    refresh_cookie: Optional[str] = Cookie(None, alias=REFRESH_COOKIE_NAME),
+):
+    limpar_cookies_auth(response)
+    if refresh_cookie:
+        await usuarios_col.update_one(
+            {"refresh_token_hash": hash_refresh_token(refresh_cookie)},
+            {
+                "$unset": {
+                    "refresh_token_hash": "",
+                    "refresh_token_expires_at": "",
+                },
+                "$set": {"token_invalidado_em": utcnow()},
+            },
+        )
+    return {"mensagem": "Sessão encerrada"}
  
  
 @app.get("/auth/me")
@@ -1068,25 +1477,39 @@ async def me(user=Depends(get_user)):
  
  
 # === Usuários ===
+
+async def buscar_usuario_ou_404(user_id: str) -> Dict[str, Any]:
+    oid = object_id_or_400(user_id)
+    doc = await usuarios_col.find_one({"_id": oid})
+    if not doc:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    return doc
+
+
+async def garantir_nao_ultimo_master_alterado(user_id: str, alvo: Optional[Dict[str, Any]] = None) -> None:
+    alvo = alvo or await buscar_usuario_ou_404(user_id)
+    if alvo.get("perfil") != "master" or alvo.get("status", "aprovado") != "aprovado":
+        return
+
+    masters = await usuarios_col.count_documents({
+        "perfil": "master",
+        "status": "aprovado",
+    })
+    if masters <= 1:
+        raise HTTPException(status_code=400, detail="Não é permitido remover ou rebaixar o último master aprovado")
  
 @app.get("/pendentes")
 async def listar_pendentes(user=Depends(master_required)):
     docs = await usuarios_col.find({"status": "pendente"}).to_list(1000)
  
-    return [
-        {**serial(d), "senha_hash": None}
-        for d in docs
-    ]
+    return [sanitizar_usuario(d) for d in docs]
  
  
 @app.get("/usuarios")
 async def listar_usuarios(user=Depends(master_required)):
     docs = await usuarios_col.find().to_list(1000)
  
-    return [
-        {**serial(d), "senha_hash": None}
-        for d in docs
-    ]
+    return [sanitizar_usuario(d) for d in docs]
  
  
 @app.post("/aprovar/{user_id}")
@@ -1099,29 +1522,55 @@ async def aprovar(
         raise HTTPException(status_code=400, detail="Perfil inválido")
  
     oid = object_id_or_400(user_id)
+    agora = utcnow()
  
     res = await usuarios_col.update_one(
         {"_id": oid},
-        {"$set": {"status": "aprovado", "perfil": perfil}},
+        {
+            "$set": {
+                "status": "aprovado",
+                "perfil": perfil,
+                "aprovado_por": user["user_id"],
+                "aprovado_em": agora,
+                "atualizado_em": agora,
+            },
+            "$unset": {"rejeitado_por": "", "rejeitado_em": ""},
+        },
     )
  
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    await registrar_evento_admin("aprovar_usuario", user_id, user, {"perfil": perfil})
  
     return {"mensagem": "Usuário aprovado"}
  
  
 @app.post("/rejeitar/{user_id}")
 async def rejeitar(user_id: str, user=Depends(master_required)):
-    oid = object_id_or_400(user_id)
+    alvo = await buscar_usuario_ou_404(user_id)
+    await garantir_nao_ultimo_master_alterado(user_id, alvo)
+    oid = alvo["_id"]
+    agora = utcnow()
  
     res = await usuarios_col.update_one(
         {"_id": oid},
-        {"$set": {"status": "rejeitado"}},
+        {
+            "$set": {
+                "status": "rejeitado",
+                "rejeitado_por": user["user_id"],
+                "rejeitado_em": agora,
+                "token_invalidado_em": agora,
+                "atualizado_em": agora,
+            },
+            "$unset": {"refresh_token_hash": "", "refresh_token_expires_at": ""},
+        },
     )
  
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    await registrar_evento_admin("rejeitar_usuario", user_id, user)
  
     return {"mensagem": "Usuário rejeitado"}
  
@@ -1135,27 +1584,51 @@ async def alterar_perfil_usuario(
     if perfil not in PERFIS:
         raise HTTPException(status_code=400, detail="Perfil inválido")
  
-    oid = object_id_or_400(user_id)
+    alvo = await buscar_usuario_ou_404(user_id)
+    if perfil != "master":
+        await garantir_nao_ultimo_master_alterado(user_id, alvo)
+    oid = alvo["_id"]
+    agora = utcnow()
  
     res = await usuarios_col.update_one(
         {"_id": oid},
-        {"$set": {"perfil": perfil}},
+        {
+            "$set": {
+                "perfil": perfil,
+                "perfil_alterado_por": user["user_id"],
+                "perfil_alterado_em": agora,
+                "token_invalidado_em": agora,
+                "atualizado_em": agora,
+            },
+            "$unset": {"refresh_token_hash": "", "refresh_token_expires_at": ""},
+        },
     )
  
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    await registrar_evento_admin(
+        "alterar_perfil_usuario",
+        user_id,
+        user,
+        {"perfil_anterior": alvo.get("perfil"), "perfil_novo": perfil},
+    )
  
     return {"mensagem": "Função atualizada"}
  
  
 @app.delete("/usuarios/{user_id}")
 async def excluir_usuario(user_id: str, user=Depends(master_required)):
-    oid = object_id_or_400(user_id)
+    alvo = await buscar_usuario_ou_404(user_id)
+    await garantir_nao_ultimo_master_alterado(user_id, alvo)
+    oid = alvo["_id"]
  
     res = await usuarios_col.delete_one({"_id": oid})
  
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    await registrar_evento_admin("excluir_usuario", user_id, user, {"email": alvo.get("email")})
  
     return {"mensagem": "Usuário excluído"}
  
@@ -1169,6 +1642,7 @@ async def listar_produtos(
     status: Optional[str] = None,
     page: Optional[int] = None,
     limit: Optional[int] = None,
+    exportar: bool = False,
     user=Depends(get_user),
 ):
     filtros = []
@@ -1200,7 +1674,8 @@ async def listar_produtos(
     filtro = {"$and": filtros} if filtros else {}
     paginar = page is not None or limit is not None
     page_num = max(1, int(page or 1))
-    limit_num = min(100, max(1, int(limit or 9)))
+    limite_maximo = PRODUTOS_MAX_EXPORT_LIMIT if exportar else PRODUTOS_MAX_PAGE_LIMIT
+    limit_num = min(limite_maximo, max(1, int(limit or 9)))
     skip = (page_num - 1) * limit_num
  
     total = await produtos_col.count_documents(filtro)
@@ -1215,7 +1690,7 @@ async def listar_produtos(
     produto_ids = [p["id"] for p in itens if p.get("id")]
     ultimos = await obter_ultimos_precos_por_produto(
         produto_ids,
-        datetime.utcnow() - timedelta(days=30),
+        utcnow() - timedelta(days=30),
     )
     grupos = await obter_mapa_grupos_precificacao()
 
@@ -1234,7 +1709,7 @@ async def listar_produtos(
         produto["maior_canal_mercado"] = metricas.get("maior_canal_mercado")
         produto["preco_sugerido"] = simulacao.get("preco_sugerido")
         produto["pendencias"] = produto.get("pendencias") or []
-        produto["status_integracao"] = produto.get("status_integracao") or ("pendente" if produto["pendencias"] else "ok")
+        produto["status_integracao"] = "ignorado" if produto.get("pendencias_ignoradas") else produto.get("status_integracao") or ("pendente" if produto["pendencias"] else "ok")
 
     if not paginar:
         return itens
@@ -1245,10 +1720,24 @@ async def listar_produtos(
         "page": page_num,
         "limit": limit_num,
     }
- 
- 
+
+
+@app.get("/produtos/pendentes")
+async def listar_produtos_pendentes(user=Depends(get_user)):
+    docs = await produtos_col.find({
+        "pendencias_ignoradas": {"$ne": True},
+        "$or": [
+            {"status_integracao": "pendente"},
+            {"pendencias.0": {"$exists": True}},
+        ]
+    }).to_list(5000)
+
+    return [serial(d) for d in docs]
+  
+  
 @app.post("/produtos")
 async def cadastrar_produto(produto: Produto, user=Depends(product_manager_required)):
+    validar_produto_negocio(produto)
     sku = (produto.sku or "").strip()
     ean = (produto.ean or "").strip()
 
@@ -1267,10 +1756,13 @@ async def cadastrar_produto(produto: Produto, user=Depends(product_manager_requi
     doc = normalizar_doc_produto(produto.dict())
     doc["sku"] = sku
     doc["ean"] = ean
-    doc["criado_em"] = datetime.utcnow()
-    doc["atualizado_em"] = datetime.utcnow()
+    doc["criado_em"] = utcnow()
+    doc["atualizado_em"] = utcnow()
  
-    res = await produtos_col.insert_one(doc)
+    try:
+        res = await produtos_col.insert_one(doc)
+    except DuplicateKeyError:
+        raise HTTPException(status_code=400, detail="Produto já cadastrado com SKU, EAN ou ID Tiny informado")
  
     return {
         "id": str(res.inserted_id),
@@ -1284,6 +1776,7 @@ async def editar_produto(
     produto: Produto,
     user=Depends(product_manager_required),
 ):
+    validar_produto_negocio(produto)
     oid = object_id_or_400(produto_id)
     sku = (produto.sku or "").strip()
     ean = (produto.ean or "").strip()
@@ -1303,12 +1796,15 @@ async def editar_produto(
     doc = normalizar_doc_produto(produto.dict())
     doc["sku"] = sku
     doc["ean"] = ean
-    doc["atualizado_em"] = datetime.utcnow()
+    doc["atualizado_em"] = utcnow()
  
-    res = await produtos_col.update_one(
-        {"_id": oid},
-        {"$set": doc},
-    )
+    try:
+        res = await produtos_col.update_one(
+            {"_id": oid},
+            {"$set": doc},
+        )
+    except DuplicateKeyError:
+        raise HTTPException(status_code=400, detail="Outro produto já usa o SKU, EAN ou ID Tiny informado")
  
     if res.matched_count == 0:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
@@ -1322,26 +1818,34 @@ async def excluir_produto(produto_id: str, user=Depends(product_manager_required
  
     res = await produtos_col.delete_one({"_id": oid})
  
-    await historico_col.delete_many({"produto_id": produto_id})
- 
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Produto não encontrado")
+
+    await historico_col.delete_many({"produto_id": produto_id})
  
     return {"mensagem": "Produto excluído"}
 
 
-@app.get("/produtos/pendentes")
-async def listar_produtos_pendentes(user=Depends(get_user)):
-    docs = await produtos_col.find({
-        "$or": [
-            {"status_integracao": "pendente"},
-            {"pendencias.0": {"$exists": True}},
-        ]
-    }).to_list(5000)
+@app.post("/produtos/{produto_id}/pendencias/ignorar")
+async def ignorar_pendencias_produto(produto_id: str, user=Depends(product_manager_required)):
+    oid = object_id_or_400(produto_id)
+    agora = utcnow()
+    res = await produtos_col.update_one(
+        {"_id": oid},
+        {
+            "$set": {
+                "pendencias_ignoradas": True,
+                "pendencias_ignoradas_por": user["user_id"],
+                "pendencias_ignoradas_em": agora,
+                "atualizado_em": agora,
+            }
+        },
+    )
+    if res.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    return {"mensagem": "Pendências ignoradas para este produto"}
 
-    return [serial(d) for d in docs]
- 
- 
+
 # === Histórico ===
  
 @app.get("/produtos/{produto_id}/historico")
@@ -1353,7 +1857,7 @@ async def historico_produto(
 ):
     canal = normalizar_canal(canal)
  
-    desde = datetime.utcnow() - timedelta(days=dias)
+    desde = utcnow() - timedelta(days=dias)
  
     filtro = {
         "produto_id": produto_id,
@@ -1376,29 +1880,48 @@ async def canais_produto(
 ):
     canal = normalizar_canal(canal)
  
-    desde = datetime.utcnow() - timedelta(days=7)
+    desde = utcnow() - timedelta(days=7)
     resultado = {}
  
     canais_consulta = [canal] if canal else CANAIS
  
+    docs = await historico_col.find({
+        "produto_id": produto_id,
+        "canal": {"$in": canais_consulta},
+        "data": {"$gte": desde},
+    }).sort("data", 1).to_list(20000)
+
+    por_canal: Dict[str, List[Dict[str, Any]]] = {c: [] for c in canais_consulta}
+    for doc in docs:
+        c = doc.get("canal")
+        if c in por_canal:
+            por_canal[c].append(doc)
+
     for c in canais_consulta:
-        docs = await historico_col.find({
-            "produto_id": produto_id,
-            "canal": c,
-            "data": {"$gte": desde},
-        }).sort("data", 1).to_list(10000)
- 
-        if not docs:
+        docs_canal = por_canal.get(c, [])
+        if not docs_canal:
             resultado[c] = {
                 "menor_preco_atual": None,
+                "ultimo_preco": None,
                 "variacao_media_7d": None,
                 "registros": 0,
             }
             continue
- 
-        precos = [d["preco"] for d in docs]
-        menor_atual = precos[-1]
- 
+
+        precos = [to_float(d.get("preco")) for d in docs_canal]
+        precos = [p for p in precos if p is not None]
+        if not precos:
+            resultado[c] = {
+                "menor_preco_atual": None,
+                "ultimo_preco": None,
+                "variacao_media_7d": None,
+                "registros": len(docs_canal),
+            }
+            continue
+
+        menor_atual = min(precos)
+        ultimo_preco = precos[-1]
+
         variacoes = []
         anterior = precos[0]
  
@@ -1412,8 +1935,9 @@ async def canais_produto(
  
         resultado[c] = {
             "menor_preco_atual": menor_atual,
+            "ultimo_preco": ultimo_preco,
             "variacao_media_7d": media,
-            "registros": len(docs),
+            "registros": len(docs_canal),
         }
  
     return resultado
@@ -1432,7 +1956,7 @@ async def registrar_preco(data: HistoricoInput, user=Depends(product_manager_req
         "canal": data.canal,
         "preco": float(data.preco),
         "url": data.url or "",
-        "data": datetime.utcnow(),
+        "data": utcnow(),
     }
  
     res = await historico_col.insert_one(doc)
@@ -1461,8 +1985,8 @@ async def dashboard(
         except ValueError:
             raise HTTPException(status_code=400, detail="Datas inválidas. Use o formato AAAA-MM-DD.")
     else:
-        ate = datetime.utcnow() + timedelta(days=1)
-        desde = datetime.utcnow() - timedelta(days=dias)
+        ate = utcnow() + timedelta(days=1)
+        desde = utcnow() - timedelta(days=dias)
  
     filtro_produtos = {}
  
@@ -1492,11 +2016,13 @@ async def dashboard(
     ultima_coleta = ultimo["data"].isoformat() if ultimo else None
  
     comparacoes = []
+    produtos_meta = []
     vitorias_ecommerce = {c: 0 for c in CANAIS}
     total_vitorias = 0
  
     canais_consulta = [canal] if canal else CANAIS
     ultimos_precos_por_produto = {}
+    grupos_precificacao = await obter_mapa_grupos_precificacao()
 
     if produto_ids:
         pipeline_ultimos = [
@@ -1535,6 +2061,21 @@ async def dashboard(
         pp = produto.get("precos_praticados") or {}
 
         precos_por_canal = ultimos_precos_por_produto.get(produto_id, {})
+        metricas_produto = consolidar_metricas_mercado(precos_por_canal)
+        curva_produto = normalizar_curva_abc(produto.get("curva_abc"))
+        config_produto = grupos_precificacao.get(curva_produto) or obter_grupo_default(curva_produto)
+        simulacao_produto = calcular_preco_sugerido(serial(produto), metricas_produto, config_produto)
+        produtos_meta.append({
+            "id": produto_id,
+            "nome": produto.get("nome", ""),
+            "imagem_url": produto.get("imagem_url") or produto.get("imagem") or produto.get("foto_url") or "",
+            "sku": produto.get("sku", ""),
+            "ean": produto.get("ean", ""),
+            "curva_abc": curva_produto,
+            "preco_sugerido": simulacao_produto.get("preco_sugerido"),
+            "status_integracao": "ignorado" if produto.get("pendencias_ignoradas") else produto.get("status_integracao") or ("pendente" if produto.get("pendencias") else "ok"),
+            "pendencias": produto.get("pendencias") or [],
+        })
  
         if precos_por_canal:
             menor_global = min(precos_por_canal.values())
@@ -1565,9 +2106,13 @@ async def dashboard(
                 "imagem_url": produto.get("imagem_url") or produto.get("imagem") or produto.get("foto_url") or "",
                 "sku": produto.get("sku", ""),
                 "ean": produto.get("ean", ""),
+                "curva_abc": curva_produto,
                 "canal": c,
                 "meu_preco": meu_preco,
                 "menor_preco": menor_preco,
+                "preco_sugerido": simulacao_produto.get("preco_sugerido"),
+                "status_integracao": produto.get("status_integracao") or ("pendente" if produto.get("pendencias") else "ok"),
+                "pendencias": produto.get("pendencias") or [],
                 "gap": gap,
                 "status": status,
             })
@@ -1666,6 +2211,7 @@ async def dashboard(
         "gap_medio": gap_medio,
         "ranking_ecommerce": ranking_ecommerce,
         "status_competitivo": comparacoes,
+        "produtos_meta": produtos_meta,
         "evolucao_por_canal": {
             "labels": labels_ordenadas,
             "series": series,
@@ -1719,9 +2265,10 @@ async def atualizar_grupo_precificacao(
     data: PricingGrupoInput,
     user=Depends(product_manager_required),
 ):
-    grupo = normalizar_curva_abc(grupo)
-    if grupo not in CURVAS_ABC:
+    grupo_raw = str(grupo or "").strip().upper()
+    if grupo_raw not in CURVAS_ABC:
         raise HTTPException(status_code=400, detail="Grupo inválido. Use A, B ou C.")
+    grupo = grupo_raw
 
     doc = {
         "grupo": grupo,
@@ -1732,17 +2279,18 @@ async def atualizar_grupo_precificacao(
         "estoque_baixo_limite": to_float(data.estoque_baixo_limite),
         "estoque_baixo_ajuste_percentual": to_float(data.estoque_baixo_ajuste_percentual) or 0.0,
         "ativo": bool(data.ativo),
-        "atualizado_em": datetime.utcnow(),
+        "atualizado_em": utcnow(),
     }
 
     await pricing_groups_col.update_one(
         {"grupo": grupo},
         {
             "$set": doc,
-            "$setOnInsert": {"criado_em": datetime.utcnow()},
+            "$setOnInsert": {"criado_em": utcnow()},
         },
         upsert=True,
     )
+    invalidar_cache_grupos_precificacao()
     novo = await pricing_groups_col.find_one({"grupo": grupo})
     return serial(novo)
 
@@ -1766,8 +2314,23 @@ async def simular_precificacao(
         raise HTTPException(status_code=404, detail="Produto não encontrado")
 
     produto_serial = serial(produto)
+    if data.preco_minimo_produto is not None:
+        if data.preco_minimo_produto < 0:
+            raise HTTPException(status_code=400, detail="Preço mínimo do produto não pode ser negativo")
+        produto_serial["preco_minimo_produto"] = data.preco_minimo_produto
+    if data.preco_maximo_produto is not None:
+        if data.preco_maximo_produto < 0:
+            raise HTTPException(status_code=400, detail="Preço máximo do produto não pode ser negativo")
+        produto_serial["preco_maximo_produto"] = data.preco_maximo_produto
+    if (
+        data.preco_minimo_produto is not None
+        and data.preco_maximo_produto is not None
+        and data.preco_maximo_produto > 0
+        and data.preco_minimo_produto > data.preco_maximo_produto
+    ):
+        raise HTTPException(status_code=400, detail="Preço mínimo do produto não pode ser maior que o preço máximo")
     pid = produto_serial.get("id")
-    mapa_ultimos = await obter_ultimos_precos_por_produto([pid], datetime.utcnow() - timedelta(days=30))
+    mapa_ultimos = await obter_ultimos_precos_por_produto([pid], utcnow() - timedelta(days=30))
     metricas = consolidar_metricas_mercado(mapa_ultimos.get(pid, {}))
 
     grupo = normalizar_curva_abc(data.grupo or produto_serial.get("curva_abc"))
@@ -1873,17 +2436,23 @@ async def tiny_testar(user=Depends(product_manager_required)):
 # === Tiny integration ===
 
 @app.post("/integracoes/tiny/sync/full")
-async def tiny_sync_full(user=Depends(product_manager_required)):
-    return await executar_sync_tiny(full=True)
+async def tiny_sync_full(
+    background_tasks: BackgroundTasks,
+    user=Depends(product_manager_required),
+):
+    return await iniciar_sync_tiny_background(True, user, background_tasks)
 
 
 @app.post("/integracoes/tiny/sync/incremental")
-async def tiny_sync_incremental(user=Depends(product_manager_required)):
-    return await executar_sync_tiny(full=False)
+async def tiny_sync_incremental(
+    background_tasks: BackgroundTasks,
+    user=Depends(product_manager_required),
+):
+    return await iniciar_sync_tiny_background(False, user, background_tasks)
 
 
 @app.get("/integracoes/tiny/status")
-async def tiny_sync_status(user=Depends(product_manager_required)):
+async def tiny_sync_status(user=Depends(get_user)):
     estado = await tiny_sync_state_col.find_one({"_id": "tiny"})
     if not estado:
         return {
@@ -1903,8 +2472,13 @@ async def tiny_sync_status(user=Depends(product_manager_required)):
  
 @app.get("/")
 async def root():
-    index_candidates = [p for p in ("index.html", "index.txt") if os.path.exists(p)]
-    index_path = max(index_candidates, key=os.path.getmtime) if index_candidates else "index.html"
+    base_dir = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
+    index_candidates = [
+        os.path.join(base_dir, p)
+        for p in ("index.html", "index.txt")
+        if os.path.exists(os.path.join(base_dir, p))
+    ]
+    index_path = max(index_candidates, key=os.path.getmtime) if index_candidates else os.path.join(base_dir, "index.html")
     return FileResponse(
         index_path,
         media_type="text/html; charset=utf-8",
@@ -1933,8 +2507,7 @@ async def ml_notificacoes(request: Request):
 
 if __name__ == "__main__":
     uvicorn.run(
-        "server:app",
+        app,
         host="0.0.0.0",
         port=8080,
-        reload=True,
     )
