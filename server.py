@@ -40,6 +40,8 @@ CORS_ALLOW_ORIGINS = [
 TINY_API_TOKEN = os.getenv("TINY_API_TOKEN", "").strip()
 TINY_API_BASE_URL = os.getenv("TINY_API_BASE_URL", "https://api.tiny.com.br/api2").strip()
 TINY_SYNC_INTERVAL_MINUTES = int(os.getenv("TINY_SYNC_INTERVAL_MINUTES", "30"))
+TINY_SYNC_STALE_MINUTES = int(os.getenv("TINY_SYNC_STALE_MINUTES", "10"))
+TINY_SYNC_PROGRESS_EVERY = max(1, int(os.getenv("TINY_SYNC_PROGRESS_EVERY", "5")))
 JWT_ACCESS_TOKEN_HOURS = int(os.getenv("JWT_ACCESS_TOKEN_HOURS", "1"))
 REFRESH_TOKEN_DAYS = int(os.getenv("REFRESH_TOKEN_DAYS", "14"))
 ACCESS_COOKIE_NAME = os.getenv("ACCESS_COOKIE_NAME", "mp_access_token")
@@ -747,6 +749,17 @@ def registrar_erro_sync(erros: List[str], mensagem: str) -> None:
         del erros[:-TINY_MAX_RECENT_ERRORS]
 
 
+async def atualizar_estado_sync_tiny(**campos: Any) -> None:
+    agora = utcnow()
+    campos["heartbeat_at"] = agora
+    campos["updated_at"] = agora
+    await tiny_sync_state_col.update_one(
+        {"_id": "tiny"},
+        {"$set": campos, "$setOnInsert": {"created_at": agora}},
+        upsert=True,
+    )
+
+
 async def tiny_api_post(metodo: str, payload: Dict[str, Any], _retries: int = 3) -> Dict[str, Any]:
     if not TINY_API_TOKEN:
         raise HTTPException(status_code=400, detail="TINY_API_TOKEN nao configurado no ambiente")
@@ -949,6 +962,7 @@ async def upsert_produto_tiny(base: Dict[str, Any], detalhe: Dict[str, Any], est
 async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
     inicio = utcnow()
     total_lidos = 0
+    total_processados = 0
     total_sincronizados = 0
     total_pendentes = 0
     total_inativos = 0
@@ -960,6 +974,24 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
     avisos: List[str] = []
 
     produtos_brutos: List[Dict[str, Any]] = []
+    modo_sync = "full" if full else "incremental"
+    await atualizar_estado_sync_tiny(
+        running=True,
+        status="em_andamento",
+        fase="iniciando",
+        last_sync_type=modo_sync,
+        started_at=inicio,
+        total_lidos=0,
+        total_processados=0,
+        total_sincronizados=0,
+        total_pendentes=0,
+        total_ignorados=0,
+        total_inativos=0,
+        total_sem_ean=0,
+        total_sem_identificador=0,
+        total_erros=0,
+        total_avisos=0,
+    )
 
     if full:
         pagina = 1
@@ -967,6 +999,11 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
             if pagina > 1:
                 await asyncio.sleep(TINY_INTER_REQUEST_DELAY * 3)  # delay maior entre páginas
             try:
+                await atualizar_estado_sync_tiny(
+                    fase="buscando_lista",
+                    pagina_atual=pagina,
+                    total_lidos=len(produtos_brutos),
+                )
                 resp = await tiny_api_post("produtos.pesquisa", {"pagina": pagina})
             except HTTPException as exc:
                 if pagina > 1 and produtos_brutos:
@@ -982,6 +1019,11 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
             if not itens:
                 break
             produtos_brutos.extend(itens)
+            await atualizar_estado_sync_tiny(
+                fase="buscando_lista",
+                pagina_atual=pagina,
+                total_lidos=len(produtos_brutos),
+            )
             if len(itens) < 100:
                 break
             pagina += 1
@@ -998,11 +1040,21 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
             while True:
                 params_pagina = dict(params)
                 params_pagina["pagina"] = pagina
+                await atualizar_estado_sync_tiny(
+                    fase="buscando_lista_incremental",
+                    pagina_atual=pagina,
+                    total_lidos=len(produtos_brutos),
+                )
                 resp = await tiny_api_post("produtos.pesquisa", params_pagina)
                 itens = tiny_get_produtos_lista(resp)
                 if not itens:
                     break
                 produtos_brutos.extend(itens)
+                await atualizar_estado_sync_tiny(
+                    fase="buscando_lista_incremental",
+                    pagina_atual=pagina,
+                    total_lidos=len(produtos_brutos),
+                )
                 if len(itens) < 100:
                     break
                 pagina += 1
@@ -1018,11 +1070,21 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
                 while True:
                     if pagina > 1:
                         await asyncio.sleep(TINY_INTER_REQUEST_DELAY * 3)
+                    await atualizar_estado_sync_tiny(
+                        fase="fallback_busca_full",
+                        pagina_atual=pagina,
+                        total_lidos=len(produtos_brutos),
+                    )
                     resp = await tiny_api_post("produtos.pesquisa", {"pagina": pagina})
                     itens = tiny_get_produtos_lista(resp)
                     if not itens:
                         break
                     produtos_brutos.extend(itens)
+                    await atualizar_estado_sync_tiny(
+                        fase="fallback_busca_full",
+                        pagina_atual=pagina,
+                        total_lidos=len(produtos_brutos),
+                    )
                     if len(itens) < 100:
                         break
                     pagina += 1
@@ -1038,8 +1100,13 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
                 )
 
     total_lidos = len(produtos_brutos)
+    await atualizar_estado_sync_tiny(
+        fase="processando_produtos",
+        total_lidos=total_lidos,
+        total_processados=0,
+    )
 
-    for base in produtos_brutos:
+    for index, base in enumerate(produtos_brutos, 1):
         try:
             # Respeitar rate limit: pequeno delay entre cada produto
             await asyncio.sleep(TINY_INTER_REQUEST_DELAY)
@@ -1092,6 +1159,26 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
             ref = str(base.get("id") or base.get("codigo") or base.get("nome") or "sem identificador")
             registrar_erro_sync(erros, f"Produto {ref}: {err}")
             total_erros += 1
+        finally:
+            total_processados = index
+            if total_processados % TINY_SYNC_PROGRESS_EVERY == 0 or total_processados == total_lidos:
+                total_ignorados_atual = total_inativos + total_sem_ean + total_sem_identificador
+                await atualizar_estado_sync_tiny(
+                    fase="processando_produtos",
+                    total_lidos=total_lidos,
+                    total_processados=total_processados,
+                    total_sincronizados=total_sincronizados,
+                    total_pendentes=total_pendentes,
+                    total_ignorados=total_ignorados_atual,
+                    total_inativos=total_inativos,
+                    total_sem_ean=total_sem_ean,
+                    total_sem_identificador=total_sem_identificador,
+                    total_erros=total_erros,
+                    total_avisos=total_avisos,
+                    ultimo_produto=str(base.get("id") or base.get("codigo") or base.get("nome") or "sem identificador"),
+                    erros_recentes=erros[-TINY_MAX_RECENT_ERRORS:],
+                    avisos_recentes=avisos[-TINY_MAX_RECENT_ERRORS:],
+                )
 
     total_ignorados = total_inativos + total_sem_ean + total_sem_identificador
     status_sync = "parcial" if total_erros else "sucesso"
@@ -1104,6 +1191,7 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
                 "last_sync_type": "full" if full else "incremental",
                 "last_duration_seconds": round((fim - inicio).total_seconds(), 2),
                 "total_lidos": total_lidos,
+                "total_processados": total_processados,
                 "total_sincronizados": total_sincronizados,
                 "total_pendentes": total_pendentes,
                 "total_ignorados": total_ignorados,
@@ -1114,6 +1202,9 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
                 "total_avisos": total_avisos,
                 "status": status_sync,
                 "running": False,
+                "fase": "finalizado",
+                "finished_at": fim,
+                "heartbeat_at": fim,
                 "erros_recentes": erros[-TINY_MAX_RECENT_ERRORS:],
                 "avisos_recentes": avisos[-TINY_MAX_RECENT_ERRORS:],
                 "updated_at": fim,
@@ -1129,6 +1220,7 @@ async def executar_sync_tiny(full: bool) -> Dict[str, Any]:
         "fim": fim.isoformat(),
         "duracao_segundos": round((fim - inicio).total_seconds(), 2),
         "total_lidos": total_lidos,
+        "total_processados": total_processados,
         "total_sincronizados": total_sincronizados,
         "total_pendentes": total_pendentes,
         "total_ignorados": total_ignorados,
@@ -1154,9 +1246,11 @@ async def executar_sync_tiny_background(full: bool, user_id: str) -> None:
                 "$set": {
                     "running": False,
                     "status": "falha",
+                    "fase": "falha",
                     "last_error": str(err),
                     "total_erros": 1,
                     "updated_at": agora,
+                    "heartbeat_at": agora,
                     "finished_at": agora,
                 },
                 "$push": {
@@ -1176,7 +1270,7 @@ async def iniciar_sync_tiny_background(
     background_tasks: BackgroundTasks,
 ) -> Dict[str, Any]:
     agora = utcnow()
-    stale_after = agora - timedelta(hours=2)
+    stale_after = agora - timedelta(minutes=TINY_SYNC_STALE_MINUTES)
     modo = "full" if full else "incremental"
 
     try:
@@ -1185,19 +1279,28 @@ async def iniciar_sync_tiny_background(
                 "_id": "tiny",
                 "$or": [
                     {"running": {"$ne": True}},
-                    {"started_at": {"$lt": stale_after}},
+                    {"heartbeat_at": {"$lt": stale_after}},
+                    {
+                        "heartbeat_at": {"$exists": False},
+                        "started_at": {"$lt": stale_after},
+                    },
                 ],
             },
             {
                 "$set": {
                     "running": True,
                     "status": "em_andamento",
+                    "fase": "aguardando_execucao",
                     "last_sync_type": modo,
                     "started_at": agora,
+                    "heartbeat_at": agora,
                     "requested_by": user.get("user_id"),
                     "updated_at": agora,
+                    "total_lidos": 0,
+                    "total_processados": 0,
                 },
                 "$setOnInsert": {"created_at": agora},
+                "$unset": {"last_error": ""},
             },
             upsert=True,
         )
@@ -2458,14 +2561,58 @@ async def tiny_sync_status(user=Depends(get_user)):
         return {
             "configurado": bool(TINY_API_TOKEN),
             "intervalo_recomendado_minutos": TINY_SYNC_INTERVAL_MINUTES,
+            "travado_apos_minutos": TINY_SYNC_STALE_MINUTES,
             "status": "nunca_sincronizado",
         }
+
+    if estado.get("running"):
+        agora = utcnow()
+        heartbeat = estado.get("heartbeat_at") or estado.get("started_at")
+        if isinstance(heartbeat, datetime) and heartbeat.tzinfo is None:
+            heartbeat = heartbeat.replace(tzinfo=timezone.utc)
+        if isinstance(heartbeat, datetime) and heartbeat < agora - timedelta(minutes=TINY_SYNC_STALE_MINUTES):
+            await tiny_sync_state_col.update_one(
+                {"_id": "tiny"},
+                {
+                    "$set": {
+                        "running": False,
+                        "status": "travado",
+                        "fase": "travado_sem_heartbeat",
+                        "last_error": f"Sync sem heartbeat por mais de {TINY_SYNC_STALE_MINUTES} minutos",
+                        "updated_at": agora,
+                    }
+                },
+            )
+            estado = await tiny_sync_state_col.find_one({"_id": "tiny"}) or estado
 
     return {
         "configurado": bool(TINY_API_TOKEN),
         "intervalo_recomendado_minutos": TINY_SYNC_INTERVAL_MINUTES,
+        "travado_apos_minutos": TINY_SYNC_STALE_MINUTES,
         "estado": serial(estado),
     }
+
+
+@app.post("/integracoes/tiny/sync/reset")
+async def tiny_sync_reset(user=Depends(product_manager_required)):
+    agora = utcnow()
+    await tiny_sync_state_col.update_one(
+        {"_id": "tiny"},
+        {
+            "$set": {
+                "running": False,
+                "status": "cancelado",
+                "fase": "cancelado_manual",
+                "last_error": "Sincronização liberada manualmente pelo usuário",
+                "reset_by": user.get("user_id"),
+                "updated_at": agora,
+                "heartbeat_at": agora,
+                "finished_at": agora,
+            }
+        },
+        upsert=True,
+    )
+    return {"mensagem": "Estado de sincronização liberado"}
  
  
 # === Static ===
